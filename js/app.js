@@ -1,4 +1,4 @@
-/* Ruscha o‘rganamiz — app logic. Plain JavaScript, no build step. */
+/* Rusbek — app logic. Plain JavaScript, no build step. */
 (function () {
   "use strict";
 
@@ -588,7 +588,7 @@
 
     show(
       h("header", { class: "top" },
-        h("h1", null, "📘 Ruscha o‘rganamiz"),
+        h("h1", null, "📘 Rusbek"),
         h("button", { type: "button", class: "help-link", onclick: () => go("#/help") }, "❓ Yordam")),
       h("p", { class: "subtitle" }, "Tinglang → Takrorlang → Gapiring → Takrorlab turing"),
       voiceNote,
