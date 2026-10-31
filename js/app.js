@@ -184,15 +184,65 @@
     const v = viewTok;
     setTimeout(() => { if (v === viewTok) fn(); }, ms);
   }
+  /* =====================================================================
+     Navigation. Every screen is a history entry (state.d = steps from the first screen),
+     so "⬅ Orqaga" and the phone's back button both go back exactly one step.
+     ===================================================================== */
+  function depth() { return (history.state && history.state.d) || 0; }
   function go(hash) {
-    if (location.hash === hash) route();
-    else location.hash = hash;
+    if (location.hash === hash) return route();
+    history.pushState({ d: depth() + 1 }, "", hash);
+    route();
+  }
+  /* Open a screen in place of the current one (used when a link is broken). */
+  function redirect(hash) {
+    history.replaceState({ d: depth() }, "", hash);
+    route();
+  }
+  /* One step back; if this screen was opened directly (no step to go back to), open its parent. */
+  function goBack(fallback) {
+    if (depth() > 0) history.back();
+    else redirect(fallback || "#/");
   }
 
-  function header(title, back) {
+  /* A "guard" entry under the first screen: when the back button reaches it, the app shows the home
+     screen instead of closing. Browsers skip entries added without a tap, so it is set up on a tap. */
+  let armed = false;
+  function arm() {
+    if (armed) return;
+    armed = true;
+    if (history.state && history.state.d != null) return; // guard already below (e.g. after a reload)
+    const here = location.hash || "#/";
+    history.replaceState({ g: 1 }, "", "#/");
+    history.pushState({ d: 0 }, "", here);
+  }
+  window.addEventListener("click", arm, true);
+  window.addEventListener("keydown", arm, true);
+  window.addEventListener("popstate", e => {
+    if (e.state && e.state.g) {
+      armed = false; // set up again on the next tap
+      route();
+      toast("🏠 Siz bosh sahifadasiz");
+      return;
+    }
+    route();
+  });
+
+  function toast(text) {
+    const old = document.querySelector(".toast");
+    if (old) old.remove();
+    const t = h("div", { class: "toast", role: "status" }, text);
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2500);
+  }
+
+  /* Screen title with its path above it, e.g. "Mavzular › Xarid va ovqat ›" / "Bozor". */
+  function header(title, back, crumbs) {
     return h("header", { class: "top" },
-      back ? h("button", { type: "button", class: "back", onclick: () => go(back) }, "⬅ Orqaga") : null,
-      h("h1", null, title));
+      back ? h("button", { type: "button", class: "back", onclick: () => goBack(back) }, "⬅ Orqaga") : null,
+      h("div", { class: "titles" },
+        crumbs && crumbs.length ? h("p", { class: "crumbs" }, crumbs.join(" › ") + " ›") : null,
+        h("h1", null, title)));
   }
   function btn(icon, label, onclick, cls) {
     return h("button", { type: "button", class: "btn " + (cls || ""), onclick },
@@ -231,18 +281,21 @@
   /* =====================================================================
      Speaking check
      ===================================================================== */
+  function micError(err) {
+    const denied = "🎤 Mikrofonga ruxsat berilmagan. Brauzer so‘raganda «Ruxsat berish» (Allow) tugmasini bosing.";
+    return {
+      "not-allowed": denied,
+      "service-not-allowed": denied,
+      "network": "🌐 Ovozni tekshirish uchun internet kerak.",
+      "audio-capture": "🎤 Mikrofon topilmadi. Mikrofon ulanganini tekshiring.",
+      "no-speech": "🙉 Ovoz eshitilmadi. Mikrofonga yaqinroq bo‘lib, balandroq gapiring."
+    }[err] || "🙉 Ovozni tanib bo‘lmadi. Qaytadan urinib ko‘ring.";
+  }
+
   function judge(expected, res) {
     if (res.error) {
       if (res.error === "aborted") return { cls: "", nodes: [] };
-      const denied = "🎤 Mikrofonga ruxsat berilmagan. Brauzer so‘raganda «Ruxsat berish» (Allow) tugmasini bosing.";
-      const msg = {
-        "not-allowed": denied,
-        "service-not-allowed": denied,
-        "network": "🌐 Ovozni tekshirish uchun internet kerak.",
-        "audio-capture": "🎤 Mikrofon topilmadi. Mikrofon ulanganini tekshiring.",
-        "no-speech": "🙉 Ovoz eshitilmadi. Mikrofonga yaqinroq bo‘lib, balandroq gapiring."
-      }[res.error] || "🙉 Ovozni tanib bo‘lmadi. Qaytadan urinib ko‘ring.";
-      return { cls: "warn", nodes: [msg] };
+      return { cls: "warn", nodes: [micError(res.error)] };
     }
     const s = Speech.score(expected, res.alts);
     let text, cls;
@@ -483,7 +536,7 @@
     const st = { i: 0, steps: cfg.steps, ok: 0, asked: 0, grades: { 5: 0, 3: 0, 1: 0 }, requeued: {} };
     function frame(body) {
       const pct = Math.round((st.i / st.steps.length) * 100);
-      show(header(cfg.title, cfg.back), progressBar(pct),
+      show(header(cfg.title, cfg.back, cfg.crumbs), progressBar(pct),
         h("p", { class: "count" }, (st.i + 1) + " / " + st.steps.length), body);
     }
     function next() { st.i++; render(); }
@@ -491,7 +544,7 @@
       newView();
       window.scrollTo(0, 0);
       if (st.i >= st.steps.length) {
-        show(header(cfg.title, cfg.back), cfg.finish(st));
+        show(header(cfg.title, cfg.back, cfg.crumbs), cfg.finish(st));
         return;
       }
       const s = st.steps[st.i];
@@ -528,13 +581,58 @@
     return { reviews, fresh: phrases.slice(0, nP).concat(words.slice(0, nW)) };
   }
 
+  /* Topic groups on the "Mavzular" screen. A topic that is not listed here goes to "Boshqa mavzular". */
+  const GROUPS = [
+    { id: "kundalik", icon: "🏡", title: "Kundalik hayot", topics: ["tanishuv", "raqamlar", "oila", "ob-havo", "bayramlar"] },
+    { id: "xarid", icon: "🛍️", title: "Xarid va ovqat", topics: ["bozor", "dokon", "kafe"] },
+    { id: "shahar", icon: "🏙️", title: "Shahar va safar", topics: ["transport", "yol-sorash", "aeroport", "mehmonxona", "pochta", "sartarosh"] },
+    { id: "salomatlik", icon: "🩺", title: "Sog‘liq va xavfsizlik", topics: ["shifokor", "favqulodda"] },
+    { id: "hujjat", icon: "📄", title: "Hujjatlar va pul", topics: ["hujjatlar", "bank", "telefon", "uy-ijarasi", "ish", "maktab"] }
+  ];
+  function topicGroups() {
+    const used = new Set();
+    const groups = GROUPS.map(g => {
+      const list = g.topics.map(id => R.topicById[id]).filter(t => t && !t.section);
+      list.forEach(t => used.add(t.id));
+      return { id: g.id, icon: g.icon, title: g.title, list };
+    });
+    const rest = R.topics.filter(t => !t.section && !used.has(t.id));
+    if (rest.length) groups.push({ id: "boshqa", icon: "📁", title: "Boshqa mavzular", list: rest });
+    return groups.filter(g => g.list.length);
+  }
+  /* Where a topic lives: its parent screen and the path shown above its title. */
+  function placeOf(t) {
+    if (t.section === "kasblar") return { back: "#/jobs", crumbs: ["Kasblar"] };
+    const g = topicGroups().find(x => x.list.includes(t));
+    return g ? { back: "#/group/" + g.id, crumbs: ["Mavzular", g.title] } : { back: "#/topics", crumbs: ["Mavzular"] };
+  }
+  /* Path for screens inside a topic or word list (lessons, cards, test, dialogues). */
+  function crumbsOf(s) { return (s.kind === "w" ? ["So‘zlar"] : placeOf(s).crumbs).concat(s.title); }
+
+  function topicTile(t) {
+    return h("button", { type: "button", class: "tile" + (t.soon ? " soon" : ""), onclick: () => go("#/topic/" + t.id) },
+      h("span", { class: "tile-ic", "aria-hidden": "true" }, t.icon || "📁"),
+      h("span", { class: "tile-title" }, t.title),
+      h("span", { class: "tile-sub" }, t.soon ? "⏳ Tez orada" : seenIn(t.items) + " / " + t.items.length));
+  }
+  /* Big button: large icon, name, one short description line (and an optional progress line). */
+  function navButton(icon, title, sub, hash, extra) {
+    return h("button", { type: "button", class: "nav-btn", onclick: () => go(hash) },
+      h("span", { class: "nav-ic", "aria-hidden": "true" }, icon),
+      h("span", { class: "nav-text" },
+        h("span", { class: "nav-title" }, title),
+        h("span", { class: "nav-sub" }, sub),
+        extra ? h("span", { class: "nav-extra" }, extra) : null),
+      h("span", { class: "nav-arrow", "aria-hidden": "true" }, "›"));
+  }
+
   function home() {
     const plan = planLesson();
     const doneToday = S.lessonDay === today();
     let sub;
     if (!plan.reviews.length && !plan.fresh.length) sub = "Hamma narsa takrorlandi! Ertaga yana keling.";
     else if (doneToday) sub = "✓ Bugungi dars bajarildi. Yana mashq qilsangiz bo‘ladi.";
-    else sub = plan.reviews.length + " ta takrorlash · " + plan.fresh.length + " ta yangi ibora";
+    else sub = "10 daqiqa · " + plan.reviews.length + " ta takrorlash · " + plan.fresh.length + " ta yangi ibora";
 
     const voiceNote = h("div");
     later(() => {
@@ -546,68 +644,189 @@
       }
     }, 1500);
 
+    const last = S.lastTopic && R.topicById[S.lastTopic];
+    const topics = R.topics.filter(t => !t.section);
+    const jobs = R.topics.filter(t => t.section === "kasblar");
+    const words = R.lists.reduce((n, l) => n + l.items.length, 0);
+
+    show(
+      header("📘 Rusbek"),
+      h("p", { class: "subtitle" }, "Tinglang → Takrorlang → Gapiring → Takrorlab turing"),
+      voiceNote,
+      h("div", { class: "stats" },
+        h("div", { class: "stat" }, h("b", null, String(learnedCount())), "📖 O‘rganilgan so‘zlar"),
+        h("div", { class: "stat" }, h("b", null, String(streakNow())), "🔥 Ketma-ket kunlar")),
+      h("button", { type: "button", class: "lesson-btn", onclick: () => go("#/lesson") },
+        h("span", { class: "lesson-title" }, "▶ Bugungi dars"),
+        h("span", { class: "lesson-sub" }, sub)),
+      last ? h("button", { type: "button", class: "continue-btn", onclick: () => go("#/topic/" + last.id) },
+        h("span", { class: "continue-ic", "aria-hidden": "true" }, last.icon || "📁"),
+        h("span", { class: "continue-text" }, "Davom ettirish: " + last.title),
+        h("span", { class: "continue-arrow", "aria-hidden": "true" }, "→")) : null,
+      navButton("📂", "Mavzular", topics.length + " ta mavzu: bozor, shifokor, hujjatlar…", "#/topics"),
+      jobs.length ? navButton("👷", "Kasblar", jobs.length + " ta kasb: quruvchi, kuryer, taksi…", "#/jobs") : null,
+      R.lists.length ? navButton("📚", "So‘zlar", words + " ta eng kerakli so‘z (A1)", "#/words") : null,
+      R.loadErrors.length ? h("p", { class: "note" }, "⚠️ Ba’zi fayllar yuklanmadi: " + R.loadErrors.join(", ")) : null);
+  }
+
+  function topicsScreen() {
+    show(header("📂 Mavzular", "#/"),
+      h("p", { class: "hint" }, "Bo‘limni tanlang."),
+      topicGroups().map(g => {
+        const items = g.list.flatMap(t => t.items);
+        return navButton(g.icon, g.title, g.list.map(t => t.title).join(", "), "#/group/" + g.id,
+          "O‘rganilgan: " + seenIn(items) + " / " + items.length);
+      }));
+  }
+
+  function groupScreen(id) {
+    const g = topicGroups().find(x => x.id === id);
+    if (!g) return redirect("#/topics");
+    show(header(g.icon + " " + g.title, "#/topics", ["Mavzular"]),
+      h("p", { class: "hint" }, "Mavzuni tanlang."),
+      h("div", { class: "tiles" }, g.list.map(topicTile)));
+  }
+
+  function jobsScreen() {
+    show(header("👷 Kasblar", "#/"),
+      h("p", { class: "hint" }, "Kasbingizni tanlang: ishda eshitadigan va aytadigan iboralar."),
+      h("div", { class: "tiles" }, R.topics.filter(t => t.section === "kasblar").map(topicTile)));
+  }
+
+  function wordListsScreen() {
+    show(header("📚 So‘zlar", "#/"),
+      R.lists.map(l => h("button", { type: "button", class: "tile wide", onclick: () => go("#/words/" + l.id) },
+        h("span", { class: "tile-ic", "aria-hidden": "true" }, l.icon || "📚"),
+        h("span", { class: "tile-title" }, l.title),
+        h("span", { class: "tile-sub" }, seenIn(l.items) + " / " + l.items.length + " ta so‘z"))));
+  }
+
+  function searchScreen() {
     const input = h("input", { type: "search", id: "search", placeholder: "Masalan: rahmat yoki спасибо", autocomplete: "off" });
     const results = h("div", { class: "results" });
-    const main = h("div");
     let timer = null;
+    /* Shows matches for the text in the box; returns how many were found. */
     function runSearch() {
       const q = sn(input.value);
       results.textContent = "";
-      main.hidden = !!q;
       clearBtn.hidden = !input.value;
-      if (!q) return;
+      if (!q) return 0;
       const found = Object.values(R.items).filter(it => it.search.includes(q)).slice(0, 50);
       add(results, h("p", { class: "results-head" },
         found.length ? "🔍 Topildi: " + found.length + " ta" : "🔍 Hech narsa topilmadi. Boshqacha yozib ko‘ring."));
       found.forEach(it => add(results, itemRow(it, "📂 " + it.src.title)));
+      return found.length;
     }
     input.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(runSearch, 150); });
     const clearBtn = btn("✕", "Tozalash", () => { input.value = ""; runSearch(); input.focus(); }, "small");
     clearBtn.hidden = true;
 
-    const topicTile = t => h("button", {
-      type: "button", class: "tile" + (t.soon ? " soon" : ""), onclick: () => go("#/topic/" + t.id)
-    },
-      h("span", { class: "tile-ic", "aria-hidden": "true" }, t.icon || "📁"),
-      h("span", { class: "tile-title" }, t.title),
-      h("span", { class: "tile-sub" }, t.soon ? "⏳ Tez orada" : seenIn(t.items) + " / " + t.items.length));
-    const jobs = R.topics.filter(t => t.section === "kasblar");
+    /* 🎤 Voice search: Uzbek first; Russian if Uzbek is not supported, or on request when nothing matched. */
+    let voice = null;
+    if (Speech.canListen()) {
+      const v = viewTok;
+      const status = h("div", { class: "feedback", role: "status" });
+      const label = h("span", null, "Ovoz bilan qidirish");
+      const mic = h("button", { type: "button", class: "btn mic big" }, h("span", { class: "ic", "aria-hidden": "true" }, "🎤"), label);
+      const ruBtn = btn("🎤", "Ruscha aytib ko‘ring", () => listenAndSearch("ru-RU"));
+      ruBtn.hidden = true;
+      const listenAndSearch = async lang => {
+        if (mic.disabled) return;
+        mic.disabled = true;
+        mic.classList.add("listening");
+        label.textContent = "Tinglayapman… gapiring";
+        status.className = "feedback";
+        status.textContent = "";
+        ruBtn.hidden = true;
+        let res = await Speech.listen(lang);
+        if (v !== viewTok) return;
+        if (lang === "uz-UZ" && res.error === "language-not-supported") {
+          lang = "ru-RU";
+          res = await Speech.listen(lang);
+          if (v !== viewTok) return;
+        }
+        mic.disabled = false;
+        mic.classList.remove("listening");
+        label.textContent = "Ovoz bilan qidirish";
+        if (res.error) {
+          if (res.error !== "aborted") { status.className = "feedback warn"; status.textContent = micError(res.error); }
+          return;
+        }
+        // Use the first recognised variant that finds something.
+        let n = 0;
+        for (const alt of res.alts) {
+          input.value = alt.trim();
+          n = runSearch();
+          if (n) break;
+        }
+        if (!n) {
+          input.value = res.alts[0].trim();
+          runSearch();
+          if (lang === "uz-UZ") ruBtn.hidden = false;
+        }
+      };
+      mic.addEventListener("click", () => listenAndSearch("uz-UZ"));
+      voice = h("div", { class: "voice" }, mic, ruBtn, status);
+    }
 
-    add(main, [
-      h("h2", null, "📂 Mavzular"),
-      h("div", { class: "tiles" }, R.topics.filter(t => !t.section).map(topicTile)),
-      jobs.length ? h("h2", null, "👷 Kasblar") : null,
-      jobs.length ? h("div", { class: "tiles" }, jobs.map(topicTile)) : null,
-      R.lists.length ? h("h2", null, "📚 So‘zlar") : null,
-      R.lists.map(l => h("button", { type: "button", class: "tile wide", onclick: () => go("#/words/" + l.id) },
-        h("span", { class: "tile-ic", "aria-hidden": "true" }, l.icon || "📚"),
-        h("span", { class: "tile-title" }, l.title),
-        h("span", { class: "tile-sub" }, seenIn(l.items) + " / " + l.items.length + " ta so‘z"))),
-      h("h2", null, "✨ Qo‘shimcha"),
-      h("button", { type: "button", class: "tile wide", onclick: () => go("#/ai") },
-        h("span", { class: "tile-ic", "aria-hidden": "true" }, "🤖"),
-        h("span", { class: "tile-title" }, "AI suhbatdosh"),
-        h("span", { class: "tile-sub" }, "⏳ Tez orada")),
-      R.loadErrors.length ? h("p", { class: "note" }, "⚠️ Ba’zi fayllar yuklanmadi: " + R.loadErrors.join(", ")) : null
-    ]);
-
-    show(
-      h("header", { class: "top" },
-        h("h1", null, "📘 Rusbek"),
-        h("button", { type: "button", class: "help-link", onclick: () => go("#/help") }, "❓ Yordam")),
-      h("p", { class: "subtitle" }, "Tinglang → Takrorlang → Gapiring → Takrorlab turing"),
-      voiceNote,
-      h("button", { type: "button", class: "lesson-btn", onclick: () => go("#/lesson") },
-        h("span", { class: "lesson-title" }, "▶ Bugungi dars (10 daqiqa)"),
-        h("span", { class: "lesson-sub" }, sub)),
-      h("div", { class: "stats" },
-        h("div", { class: "stat" }, h("b", null, String(learnedCount())), "📖 O‘rganilgan so‘zlar"),
-        h("div", { class: "stat" }, h("b", null, String(streakNow())), "🔥 Ketma-ket kunlar")),
+    show(header("🔍 Qidirish", "#/"),
       h("div", { class: "search" },
-        h("label", { for: "search" }, "🔍 Qidirish (ruscha yoki o‘zbekcha)"),
+        h("label", { for: "search" }, "Ruscha yoki o‘zbekcha yozing"),
         h("div", { class: "search-row" }, input, clearBtn)),
-      results,
-      main);
+      voice,
+      results);
+  }
+
+  function reviewRoute() {
+    const due = dueItems().slice(0, 20);
+    if (!due.length) {
+      show(header("🔁 Takrorlash", "#/"),
+        doneView("🌟", "Hozircha takrorlash yo‘q", [
+          "Takrorlash kerak bo‘lgan kartochkalar qolmadi.",
+          "Yangi iboralarni «Bugungi dars»da o‘rganing."
+        ], btn("▶", "Bugungi dars", () => go("#/lesson"), "primary big")));
+      return;
+    }
+    runSession({
+      title: "🔁 Takrorlash",
+      back: "#/",
+      steps: due.map(item => ({ type: "card", item })),
+      finish: st => doneView("🎉", "Takrorlash tugadi!", [
+        "✅ Bilaman: " + st.grades[5] + " · 🤔 Qiyin: " + st.grades[3] + " · ❌ Bilmayman: " + st.grades[1],
+        "Qiyin iboralar ertaga yana chiqadi."
+      ], btn("🏠", "Bosh sahifa", () => go("#/"), "primary big"))
+    });
+  }
+
+  /* Fixed bottom bar, shown on every screen. */
+  const NAV = [
+    ["home", "🏠", "Bosh sahifa", "#/"],
+    ["review", "🔁", "Takrorlash", "#/review"],
+    ["search", "🔍", "Qidirish", "#/search"],
+    ["help", "❓", "Yordam", "#/help"]
+  ];
+  const navBtns = {};
+  let dueBadge = null;
+  function buildBottomNav() {
+    const nav = h("nav", { class: "bottom-nav", "aria-label": "Asosiy menyu" });
+    NAV.forEach(([key, icon, label, hash]) => {
+      const badge = key === "review" ? (dueBadge = h("span", { class: "badge", hidden: true })) : null;
+      navBtns[key] = h("button", { type: "button", onclick: () => go(hash) },
+        h("span", { class: "bn-ic", "aria-hidden": "true" }, icon), badge,
+        h("span", { class: "bn-label" }, label));
+      nav.appendChild(navBtns[key]);
+    });
+    document.body.appendChild(nav);
+  }
+  function updateBottomNav(screen) {
+    Object.keys(navBtns).forEach(k => {
+      if (k === screen) navBtns[k].setAttribute("aria-current", "page");
+      else navBtns[k].removeAttribute("aria-current");
+    });
+    const n = dueItems().length;
+    dueBadge.hidden = !n;
+    dueBadge.textContent = n > 99 ? "99+" : String(n);
+    navBtns.review.setAttribute("aria-label", "Takrorlash" + (n ? ": " + n + " ta kartochka" : ""));
   }
 
   function lessonRoute() {
@@ -644,10 +863,11 @@
 
   function topicScreen(id) {
     const t = R.topicById[id];
-    if (!t) return go("#/");
+    if (!t) return redirect("#/topics");
     const title = (t.icon || "") + " " + t.title;
+    const place = placeOf(t);
     if (t.soon) {
-      show(header(title, "#/"),
+      show(header(title, place.back, place.crumbs),
         h("div", { class: "soon-box" },
           h("div", { class: "big-ic", "aria-hidden": "true" }, "⏳"),
           h("h2", null, "Tez orada"),
@@ -655,8 +875,10 @@
         btn("🏠", "Bosh sahifa", () => go("#/"), "primary big"));
       return;
     }
+    S.lastTopic = t.id; // for "Davom ettirish" on the home screen
+    save();
     const seen = seenIn(t.items);
-    show(header(title, "#/"),
+    show(header(title, place.back, place.crumbs),
       h("p", { class: "topic-progress" }, "O‘rganilgan: " + seen + " / " + t.items.length),
       progressBar(Math.round((seen / t.items.length) * 100)),
       btn("🎧", "Tinglash va takrorlash", () => go("#/learn/t/" + t.id), "primary big"),
@@ -685,12 +907,13 @@
 
   function learnRoute(kind, id, g) {
     const s = srcOf(kind, id);
-    if (!s || !s.items.length) return go("#/");
+    if (!s || !s.items.length) return redirect("#/");
     const group = g != null && s.groups ? s.groups[+g] : null;
     const items = group ? group.items : nextChunk(s.items, 10);
     runSession({
-      title: "🎧 " + (group ? group.theme : s.title),
+      title: "🎧 " + (group ? group.theme : "Tinglash va takrorlash"),
       back: backOf(s),
+      crumbs: crumbsOf(s),
       steps: items.map(item => ({ type: "learn", item })),
       finish: () => doneView("🎉", "Barakalla!", [
         items.length + " ta " + noun(s) + " tingladingiz va takrorladingiz.",
@@ -698,40 +921,42 @@
       ], [
         btn("🃏", "Kartochkalar bilan takrorlash", () => go("#/cards/" + kind + "/" + id), "primary big"),
         group ? null : btn("➜", "Yana 10 ta", () => route()),
-        btn("⬅", "Orqaga", () => go(backOf(s)))
+        btn("⬅", "Orqaga", () => goBack(backOf(s)))
       ])
     });
   }
 
   function cardsRoute(kind, id) {
     const s = srcOf(kind, id);
-    if (!s || !s.items.length) return go("#/");
+    if (!s || !s.items.length) return redirect("#/");
     const t = today();
     const due = s.items.filter(i => S.cards[i.id] && S.cards[i.id].d <= t);
     const fresh = s.items.filter(i => !S.cards[i.id]).slice(0, 10);
     const rest = s.items.filter(i => S.cards[i.id] && S.cards[i.id].d > t).sort((a, b) => S.cards[a.id].d - S.cards[b.id].d);
     const list = due.concat(fresh, rest).slice(0, 15);
     runSession({
-      title: "🃏 " + s.title,
+      title: "🃏 Kartochkalar",
       back: backOf(s),
+      crumbs: crumbsOf(s),
       steps: list.map(item => ({ type: "card", item })),
       finish: st => doneView("🎉", "Kartochkalar tugadi!", [
         "✅ Bilaman: " + st.grades[5] + " · 🤔 Qiyin: " + st.grades[3] + " · ❌ Bilmayman: " + st.grades[1],
         "Qiyin so‘zlar ertaga yana chiqadi."
       ], [
         btn("✅", "Test topshirish", () => go("#/quiz/" + kind + "/" + id), "primary big"),
-        btn("⬅", "Orqaga", () => go(backOf(s)))
+        btn("⬅", "Orqaga", () => goBack(backOf(s)))
       ])
     });
   }
 
   function quizRoute(kind, id) {
     const s = srcOf(kind, id);
-    if (!s || !s.items.length) return go("#/");
+    if (!s || !s.items.length) return redirect("#/");
     const qs = buildQuiz(s.items, kind === "t" ? [s] : [], 10);
     runSession({
-      title: "✅ Test: " + s.title,
+      title: "✅ Test",
       back: backOf(s),
+      crumbs: crumbsOf(s),
       steps: qs.map(q => ({ type: "quiz", q })),
       finish: st => {
         const r = st.asked ? st.ok / st.asked : 0;
@@ -739,7 +964,7 @@
           "Hechqisi yo‘q! Iboralarni yana tinglab, qaytadan urinib ko‘ring.";
         return doneView("🏁", "Test tugadi!", [h("p", { class: "score" }, st.ok + " / " + st.asked), msg], [
           btn("🔁", "Yana test", () => route(), "primary big"),
-          btn("⬅", "Orqaga", () => go(backOf(s)))
+          btn("⬅", "Orqaga", () => goBack(backOf(s)))
         ]);
       }
     });
@@ -747,8 +972,8 @@
 
   function dialogsList(id) {
     const t = R.topicById[id];
-    if (!t || !t.dialogues.length) return go("#/topic/" + id);
-    show(header("💬 Suhbatlar", "#/topic/" + id),
+    if (!t || !t.dialogues.length) return redirect("#/topic/" + id);
+    show(header("💬 Suhbatlar", "#/topic/" + id, crumbsOf(t)),
       h("p", { class: "hint" }, "Suhbatni tanlang. Avval tinglang, keyin bitta rolni o‘zingiz gapiring."),
       t.dialogues.map((d, n) => h("button", { type: "button", class: "tile wide", onclick: () => go("#/dialog/" + id + "/" + n) },
         h("span", { class: "tile-ic", "aria-hidden": "true" }, "💬"),
@@ -759,7 +984,7 @@
   function dialogScreen(id, n) {
     const t = R.topicById[id];
     const d = t && t.dialogues[n];
-    if (!d) return go("#/");
+    if (!d) return redirect("#/");
     const back = "#/dialogs/" + id;
     const name = w => (w === "a" ? d.a : d.b);
     function bubble(l) {
@@ -794,7 +1019,7 @@
         }
         if (my === playTok) els.forEach(e => e.classList.remove("active"));
       }
-      show(header("💬 " + d.title, back),
+      show(header("💬 " + d.title, back, crumbsOf(t).concat("Suhbatlar")),
         h("p", { class: "hint" }, "1-qadam: suhbatni tinglang. 2-qadam: bitta rolni tanlab, o‘zingiz gapiring."),
         btn("▶", "Suhbatni tinglash", () => playAll(false), "primary big"),
         btn("🐢", "Sekin tinglash", () => playAll(true)),
@@ -812,7 +1037,7 @@
       const chat = h("div", { class: "chat" });
       const ctrl = h("div", { class: "turn" });
       let k = 0;
-      show(header("🎭 Siz — " + name(me), back),
+      show(header("🎭 Siz — " + name(me), back, crumbsOf(t).concat("Suhbatlar")),
         h("p", { class: "hint" }, "Siz «" + name(me) + "» bo‘lasiz. Navbatingiz kelganda gapiring."),
         chat, ctrl);
       function setCtrl(kids) { ctrl.textContent = ""; add(ctrl, kids); }
@@ -860,9 +1085,9 @@
 
   function wordsScreen(id) {
     const l = R.listById[id];
-    if (!l) return go("#/");
+    if (!l) return redirect("#/words");
     const seen = seenIn(l.items);
-    show(header((l.icon || "📚") + " " + l.title, "#/"),
+    show(header((l.icon || "📚") + " " + l.title, "#/words", ["So‘zlar"]),
       l.note ? h("p", { class: "hint" }, l.note) : null,
       h("p", { class: "topic-progress" }, "O‘rganilgan: " + seen + " / " + l.items.length),
       progressBar(Math.round((seen / l.items.length) * 100)),
@@ -878,7 +1103,7 @@
   }
 
   function aiScreen() {
-    show(header("🤖 AI suhbatdosh", "#/"),
+    show(header("🤖 AI suhbatdosh", "#/help", ["Yordam"]),
       h("div", { class: "soon-box" },
         h("div", { class: "big-ic", "aria-hidden": "true" }, "🤖"),
         h("h2", null, "Tez orada!"),
@@ -911,7 +1136,12 @@
         h("li", null, "🔊 Tinglang, keyin ovoz chiqarib takrorlang. 🐢 tugmasi sekin aytadi."),
         h("li", null, "🎤 «Gapiring» tugmasini bosib, ruscha ayting — dastur sizni tekshiradi."),
         h("li", null, "Kartochkalarda halol javob bering: «Bilaman», «Qiyin» yoki «Bilmayman». Qiyin iboralar tez-tez qaytadi."),
-        h("li", null, "Mavzulardagi «Suhbatlar»da rol o‘ynab, haqiqiy vaziyatga tayyorlaning.")),
+        h("li", null, "Mavzulardagi «Suhbatlar»da rol o‘ynab, haqiqiy vaziyatga tayyorlaning."),
+        h("li", null, "Pastdagi tugmalar har doim ko‘rinadi: 🏠 Bosh sahifa, 🔁 Takrorlash, 🔍 Qidirish, ❓ Yordam. «⬅ Orqaga» bir qadam orqaga qaytaradi.")),
+      h("button", { type: "button", class: "tile wide", onclick: () => go("#/ai") },
+        h("span", { class: "tile-ic", "aria-hidden": "true" }, "🤖"),
+        h("span", { class: "tile-title" }, "AI suhbatdosh"),
+        h("span", { class: "tile-sub" }, "⏳ Tez orada")),
       h("h2", null, "Brauzeringiz"),
       h("ul", { class: "status-list" },
         h("li", null, st.tts ? (st.ru || !st.loaded ? "🔊 Ruscha ovoz: ishlaydi" : "🔇 Ruscha ovoz topilmadi — Google Chrome yoki Microsoft Edge tavsiya etiladi") :
@@ -926,18 +1156,26 @@
   /* =====================================================================
      Router
      ===================================================================== */
+  let ready = false;
   function route() {
+    if (!ready) return;
     newView();
     window.scrollTo(0, 0);
     const p = (location.hash || "").replace(/^#\/?/, "").split("/").filter(Boolean).map(decodeURIComponent);
+    updateBottomNav(p[0] || "home");
     switch (p[0]) {
+      case "topics": return topicsScreen();
+      case "group": return groupScreen(p[1]);
+      case "jobs": return jobsScreen();
+      case "search": return searchScreen();
+      case "review": return reviewRoute();
       case "topic": return topicScreen(p[1]);
       case "learn": return learnRoute(p[1], p[2], p[3]);
       case "cards": return cardsRoute(p[1], p[2]);
       case "quiz": return quizRoute(p[1], p[2]);
       case "dialogs": return dialogsList(p[1]);
       case "dialog": return dialogScreen(p[1], +p[2]);
-      case "words": return wordsScreen(p[1]);
+      case "words": return p[1] ? wordsScreen(p[1]) : wordListsScreen();
       case "lesson": return lessonRoute();
       case "ai": return aiScreen();
       case "help": return helpScreen();
@@ -946,7 +1184,8 @@
   }
 
   loadFiles(window.RUSCHA_FILES || [], () => {
-    window.addEventListener("hashchange", route);
+    buildBottomNav();
+    ready = true;
     route();
   });
 })();

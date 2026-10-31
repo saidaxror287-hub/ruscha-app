@@ -73,14 +73,15 @@ var Speech = (function () {
 
   function canListen() { return !!SR; }
 
-  /* Listen once in Russian. Resolves { alts: [strings], error: string|null }. */
-  function listen() {
+  /* Listen once (Russian unless another language is given, e.g. "uz-UZ" for voice search).
+     Resolves { alts: [strings], error: string|null }. */
+  function listen(lang) {
     return new Promise(resolve => {
       if (!SR) return resolve({ alts: [], error: "unsupported" });
       stopSpeaking();
       stopListening();
       const r = new SR();
-      r.lang = "ru-RU";
+      r.lang = lang || "ru-RU";
       r.interimResults = false;
       r.continuous = false;
       r.maxAlternatives = 5;
