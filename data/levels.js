@@ -64,6 +64,7 @@ var RUSCHA_LEVELS = [
       "data/a2/words/a2-part1.js",
       "data/a2/words/a2-part2.js",
       "data/a2/words/a2-part3.js",
+      "data/a2/words/a2-part4.js",
 
       "data/a2/listening/yangi-ish.js",
       "data/a2/listening/kvartira.js",
