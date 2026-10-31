@@ -24,6 +24,12 @@ var RUSCHA_FILES = [
   "data/topics/oila.js",
   "data/topics/ob-havo.js",
   "data/topics/favqulodda.js",
+  "data/topics/aeroport.js",
+  "data/topics/mehmonxona.js",
+  "data/topics/pochta.js",
+  "data/topics/sartarosh.js",
+  "data/topics/maktab.js",
+  "data/topics/bayramlar.js",
 
   "data/kasblar/quruvchi.js",
   "data/kasblar/kuryer.js",
