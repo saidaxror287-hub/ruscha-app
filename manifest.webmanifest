@@ -1,0 +1,17 @@
+{
+  "id": "./",
+  "name": "Ruscha o‘rganamiz",
+  "short_name": "Ruscha",
+  "description": "O‘zbeklar uchun rus tili: kundalik iboralar, dialoglar va A1 so‘zlar.",
+  "lang": "uz",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f3ee",
+  "theme_color": "#0a53c4",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

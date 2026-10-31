@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ruscha o‘rganamiz</title>
+  <meta name="description" content="O‘zbeklar uchun rus tili: kundalik iboralar, dialoglar va A1 so‘zlar.">
+  <meta name="theme-color" content="#0a53c4">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" href="icons/favicon.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-title" content="Ruscha">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main id="app" aria-live="polite">
+    <p class="loading">⏳ Yuklanmoqda…</p>
+  </main>
+  <noscript>
+    <p class="note">Bu dastur ishlashi uchun brauzerda JavaScript yoqilgan bo‘lishi kerak.</p>
+  </noscript>
+
+  <!-- List of content files (topics and word lists) -->
+  <script src="data/index.js"></script>
+  <!-- App -->
+  <script src="js/speech.js"></script>
+  <script src="js/app.js"></script>
+  <!-- Install on phone + offline + "Yangi versiya bor" -->
+  <script src="js/pwa.js"></script>
+</body>
+</html>
