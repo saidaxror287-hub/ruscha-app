@@ -3,9 +3,17 @@
   "use strict";
 
   /* =====================================================================
-     Content registry. Each file in data/ calls Ruscha.addTopic or Ruscha.addWords.
+     Content registry. Each file in data/ calls Ruscha.addTopic, addWords, addListening or addTest.
+     Everything a file adds belongs to the level that file is listed under in data/levels.js
+     (Kasblar files belong to no level and are shown at every level).
      ===================================================================== */
-  const R = (window.Ruscha = { topics: [], topicById: {}, lists: [], listById: {}, items: {}, loadErrors: [] });
+  const R = (window.Ruscha = {
+    levels: window.RUSCHA_LEVELS || [], levelById: {},
+    topics: [], topicById: {}, lists: [], listById: {}, listening: [], listeningById: {}, tests: {},
+    items: {}, loadErrors: []
+  });
+  R.levels.forEach(l => { R.levelById[l.id] = l; });
+  let loadingLevel = ""; // level of the file being loaded right now
 
   /* Normalize text for search and comparison (Russian + Uzbek Latin, apostrophes ignored). */
   function sn(s) {
@@ -21,7 +29,7 @@
   function addItem(kind, ru, pr, uz, sit, src) {
     const id = kind + ":" + sn(ru);
     if (R.items[id]) return R.items[id];
-    const it = { id, kind, ru, pr: pr || "", uz: uz || "", sit: sit || "", src };
+    const it = { id, kind, ru, pr: pr || "", uz: uz || "", sit: sit || "", src, level: src.level };
     it.search = sn(ru + " " + it.pr + " " + it.uz);
     R.items[id] = it;
     return it;
@@ -30,6 +38,7 @@
   R.addTopic = function (t) {
     if (!t || !t.id || R.topicById[t.id]) return;
     t.kind = "t";
+    t.level = t.section ? "" : loadingLevel;
     t.phrases = t.phrases || [];
     t.templates = t.templates || [];
     t.dialogues = (t.dialogues || []).map(d => ({
@@ -47,6 +56,7 @@
   R.addWords = function (l) {
     if (!l || !l.id || R.listById[l.id]) return;
     l.kind = "w";
+    l.level = loadingLevel;
     l.items = [];
     l.groups = (l.groups || []).map(g => {
       const items = g.words.map(w => addItem("w", w[0], w[1], w[2], "", l));
@@ -57,12 +67,32 @@
     R.listById[l.id] = l;
   };
 
-  /* Load every file listed in data/index.js, one after another (works from file://). */
-  function loadFiles(files, done) {
+  /* Listening text: lines [[ru, pr, uz]], questions [{ q, options, answer, line }]. */
+  R.addListening = function (x) {
+    if (!x || !x.id || R.listeningById[x.id]) return;
+    x.level = loadingLevel;
+    x.lines = (x.lines || []).map(l => ({ ru: l[0], pr: l[1], uz: l[2] }));
+    x.questions = x.questions || [];
+    R.listening.push(x);
+    R.listeningById[x.id] = x;
+  };
+
+  /* Level test: questions [{ q, audio?, text?, options, answer, full?, pr, uz }]. */
+  R.addTest = function (x) {
+    if (!x || !loadingLevel) return;
+    x.level = loadingLevel;
+    R.tests[loadingLevel] = x;
+  };
+
+  /* Load every file from data/levels.js, one after another (works from file://). */
+  function loadFiles(done) {
+    const files = (window.RUSCHA_SHARED || []).map(f => ({ f, level: "" }))
+      .concat(...R.levels.map(l => l.files.map(f => ({ f, level: l.id }))));
     let i = 0;
     (function next() {
-      if (i >= files.length) return done();
-      const f = files[i++];
+      if (i >= files.length) { loadingLevel = ""; return done(); }
+      const f = files[i].f;
+      loadingLevel = files[i++].level;
       const s = document.createElement("script");
       s.src = f;
       s.onload = next;
@@ -280,8 +310,14 @@
         note ? h("span", { class: "src" }, note) : null),
       it.id && S.cards[it.id] ? h("span", { class: "tick", title: "O‘rganilgan", "aria-label": "O‘rganilgan" }, "✓") : null);
   }
-  function srcOf(kind, id) { return kind === "w" ? R.listById[id] : R.topicById[id]; }
-  function backOf(s) { return s.kind === "w" ? "#/words/" + s.id : "#/topic/" + s.id; }
+  function srcOf(kind, id) {
+    if (kind === "l") {
+      const L = R.levelById[id];
+      return L && { kind: "l", id, level: id, title: L.name, items: levelItems(L), topics: levelTopics(L) };
+    }
+    return kind === "w" ? R.listById[id] : R.topicById[id];
+  }
+  function backOf(s) { return s.kind === "l" ? "#/test" : s.kind === "w" ? "#/words/" + s.id : "#/topic/" + s.id; }
   function noun(s) { return s.kind === "w" ? "so‘z" : "ibora"; }
 
   /* =====================================================================
@@ -576,10 +612,41 @@
   /* =====================================================================
      Screens
      ===================================================================== */
+  /* =====================================================================
+     Levels (A1, A2, …). The chosen level is saved on this device; progress stays in KEY.
+     ===================================================================== */
+  const LEVEL_KEY = "rusbek_level";
+  let LV = (() => { try { return localStorage.getItem(LEVEL_KEY); } catch (e) { return null; } })();
+  function level() { return R.levelById[LV] || R.levels[0] || { id: "-", name: "", desc: "", files: [] }; }
+  function setLevel(id) {
+    LV = id;
+    try { localStorage.setItem(LEVEL_KEY, id); } catch (e) { /* private mode: remembered until reload */ }
+  }
+  function ofLevel(L, list) { return list.filter(x => x.level === L.id); }
+  function levelTopics(L) { return ofLevel(L, R.topics); }
+  function levelItems(L) { return levelTopics(L).concat(ofLevel(L, R.lists)).flatMap(s => s.items); }
+  function hasContent(L) { return levelItems(L).length > 0 || ofLevel(L, R.listening).length > 0 || !!R.tests[L.id]; }
+  function levelPct(L) {
+    const items = levelItems(L);
+    return items.length ? Math.round((seenIn(items) / items.length) * 100) : 0;
+  }
+  /* The item belongs to level L, or to Kasblar (shown at every level). */
+  function inLevel(it, L) { return !it.level || it.level === L.id; }
+  function levelName(id) { return R.levelById[id] ? R.levelById[id].name : ""; }
+
+  function soonBox(L) {
+    return h("div", { class: "soon-box" },
+      h("div", { class: "big-ic", "aria-hidden": "true" }, "⏳"),
+      h("h2", null, L.name + " — tez orada"),
+      h("p", null, "«" + L.desc + "» darajasi ustida ishlayapmiz. Hozircha boshqa darajani tanlang yoki «Kasblar»ni o‘rganing."));
+  }
+
   function planLesson() {
-    const reviews = dueItems().slice(0, 15);
-    const phrases = R.topics.flatMap(t => t.items).filter(i => !S.cards[i.id]);
-    const words = R.lists.flatMap(l => l.items).filter(i => !S.cards[i.id]);
+    const L = level();
+    if (!hasContent(L)) return { reviews: [], fresh: [] };
+    const reviews = dueItems().filter(i => inLevel(i, L)).slice(0, 15);
+    const phrases = levelTopics(L).concat(R.topics.filter(t => !t.level)).flatMap(t => t.items).filter(i => !S.cards[i.id]);
+    const words = ofLevel(L, R.lists).flatMap(l => l.items).filter(i => !S.cards[i.id]);
     let nP = Math.min(4, phrases.length);
     let nW = Math.min(2, words.length);
     if (nW < 2) nP = Math.min(6 - nW, phrases.length);
@@ -587,33 +654,34 @@
     return { reviews, fresh: phrases.slice(0, nP).concat(words.slice(0, nW)) };
   }
 
-  /* Topic groups on the "Mavzular" screen. A topic that is not listed here goes to "Boshqa mavzular". */
-  const GROUPS = [
-    { id: "kundalik", icon: "🏡", title: "Kundalik hayot", topics: ["tanishuv", "raqamlar", "oila", "ob-havo", "bayramlar"] },
-    { id: "xarid", icon: "🛍️", title: "Xarid va ovqat", topics: ["bozor", "dokon", "kafe"] },
-    { id: "shahar", icon: "🏙️", title: "Shahar va safar", topics: ["transport", "yol-sorash", "aeroport", "mehmonxona", "pochta", "sartarosh"] },
-    { id: "salomatlik", icon: "🩺", title: "Sog‘liq va xavfsizlik", topics: ["shifokor", "favqulodda"] },
-    { id: "hujjat", icon: "📄", title: "Hujjatlar va pul", topics: ["hujjatlar", "bank", "telefon", "uy-ijarasi", "ish", "maktab"] }
-  ];
-  function topicGroups() {
+  /* Big tiles on the Mavzular screen, from "groups" in data/levels.js (null if the level has none).
+     A topic that is in no group goes to "Boshqa mavzular". */
+  function topicGroups(L) {
+    if (!L.groups) return null;
     const used = new Set();
-    const groups = GROUPS.map(g => {
-      const list = g.topics.map(id => R.topicById[id]).filter(t => t && !t.section);
+    const groups = L.groups.map(g => {
+      const list = g.topics.map(id => R.topicById[id]).filter(t => t && t.level === L.id);
       list.forEach(t => used.add(t.id));
       return { id: g.id, icon: g.icon, title: g.title, list };
     });
-    const rest = R.topics.filter(t => !t.section && !used.has(t.id));
+    const rest = levelTopics(L).filter(t => !used.has(t.id));
     if (rest.length) groups.push({ id: "boshqa", icon: "📁", title: "Boshqa mavzular", list: rest });
     return groups.filter(g => g.list.length);
   }
   /* Where a topic lives: its parent screen and the path shown above its title. */
   function placeOf(t) {
-    if (t.section === "kasblar") return { back: "#/jobs", crumbs: ["Kasblar"] };
-    const g = topicGroups().find(x => x.list.includes(t));
-    return g ? { back: "#/group/" + g.id, crumbs: ["Mavzular", g.title] } : { back: "#/topics", crumbs: ["Mavzular"] };
+    if (!t.level) return { back: "#/jobs", crumbs: ["Kasblar"] };
+    const L = R.levelById[t.level];
+    const top = L.name + " · Mavzular";
+    const g = (topicGroups(L) || []).find(x => x.list.includes(t));
+    return g ? { back: "#/group/" + g.id, crumbs: [top, g.title] } : { back: "#/topics", crumbs: [top] };
   }
-  /* Path for screens inside a topic or word list (lessons, cards, test, dialogues). */
-  function crumbsOf(s) { return (s.kind === "w" ? ["So‘zlar"] : placeOf(s).crumbs).concat(s.title); }
+  /* Path for screens inside a topic, word list or level practice (lessons, cards, test, dialogues). */
+  function crumbsOf(s) {
+    if (s.kind === "l") return [s.title + " · Test"];
+    if (s.kind === "w") return [levelName(s.level) + " · So‘zlar", s.title];
+    return placeOf(s).crumbs.concat(s.title);
+  }
 
   function topicTile(t) {
     return h("button", { type: "button", class: "tile" + (t.soon ? " soon" : ""), onclick: () => go("#/topic/" + t.id) },
@@ -632,7 +700,19 @@
       h("span", { class: "nav-arrow", "aria-hidden": "true" }, "›"));
   }
 
+  function levelSwitch(cur) {
+    return h("div", { class: "level-switch", role: "group", "aria-label": "Darajani tanlang" },
+      R.levels.map(L => h("button", {
+        type: "button", class: "lvl", style: "--lvl:" + L.color, "aria-pressed": String(L.id === cur.id),
+        onclick: () => { if (L.id !== cur.id) { setLevel(L.id); route(); } }
+      },
+        h("span", { class: "lvl-name" }, L.name),
+        h("span", { class: "lvl-sub" }, hasContent(L) ? levelPct(L) + "%" : "Tez orada"))));
+  }
+
   function home() {
+    const L = level();
+    const ready = hasContent(L);
     const plan = planLesson();
     const doneToday = S.lessonDay === today();
     let sub;
@@ -650,44 +730,75 @@
       }
     }, 1500);
 
+    // About 70% of this level learned → suggest the next level (nothing is ever locked).
+    const pct = levelPct(L);
+    const nextL = R.levels[R.levels.indexOf(L) + 1];
+    const suggest = ready && pct >= 70 && nextL && hasContent(nextL) ? h("div", { class: "suggest", style: "--lvl:" + nextL.color },
+      h("p", { class: "suggest-title" }, "🎉 Barakalla! " + L.name + " darajasining " + pct + " foizini o‘rgandingiz."),
+      h("p", null, nextL.name + " — «" + nextL.desc + "» darajasiga o‘tishga tayyorsiz. " + L.name + " ham ochiq qoladi."),
+      btn("➜", nextL.name + " darajasiga o‘tish", () => { setLevel(nextL.id); route(); }, "primary")) : null;
+
     const last = S.lastTopic && R.topicById[S.lastTopic];
-    const topics = R.topics.filter(t => !t.section);
+    const topics = levelTopics(L);
+    const lists = ofLevel(L, R.lists);
+    const texts = ofLevel(L, R.listening);
+    const dialogs = topics.reduce((n, t) => n + t.dialogues.length, 0);
     const jobs = R.topics.filter(t => t.section === "kasblar");
-    const words = R.lists.reduce((n, l) => n + l.items.length, 0);
+    const test = R.tests[L.id];
+    const topicItems = topics.flatMap(t => t.items);
+    const wordItems = lists.flatMap(l => l.items);
 
     show(
+      levelSwitch(L),
       h("section", { class: "hero" },
         h("div", { class: "hero-bg", "aria-hidden": "true" },
           h("span", { class: "blob b1" }), h("span", { class: "blob b2" }), h("span", { class: "blob b3" })),
         h("span", { class: "hero-word", "aria-hidden": "true" }, "Русский"),
-        h("p", { class: "eyebrow" }, "Rus tili · o‘zbeklar uchun"),
+        h("p", { class: "eyebrow" }, L.name + " · " + L.desc),
         h("h1", null, "Rusbek"),
         h("p", { class: "hero-lead" }, "Tinglang → Takrorlang → Gapiring → Takrorlab turing"),
         h("div", { class: "hero-stats" },
           h("div", { class: "stat" }, h("b", null, String(learnedCount())), "📖 O‘rganilgan so‘zlar"),
           h("div", { class: "stat" }, h("b", null, String(streakNow())), "🔥 Ketma-ket kunlar")),
-        h("button", { type: "button", class: "lesson-btn", onclick: () => go("#/lesson") },
+        ready ? h("button", { type: "button", class: "lesson-btn", onclick: () => go("#/lesson") },
           h("span", { class: "play-ring", "aria-hidden": "true" }, "▶"),
           h("span", { class: "lesson-text" },
             h("span", { class: "lesson-title" }, "Bugungi dars"),
-            h("span", { class: "lesson-sub" }, sub)))),
+            h("span", { class: "lesson-sub" }, sub))) :
+          h("p", { class: "hero-soon" }, "⏳ " + L.name + " darajasi tez orada. Hozircha boshqa darajani tanlang.")),
       voiceNote,
-      last ? h("button", { type: "button", class: "continue-btn", onclick: () => go("#/topic/" + last.id) },
+      suggest,
+      last && (!last.level || last.level === L.id) ? h("button", { type: "button", class: "continue-btn", onclick: () => go("#/topic/" + last.id) },
         h("span", { class: "continue-ic", "aria-hidden": "true" }, last.icon || "📁"),
         h("span", { class: "continue-text" }, "Davom ettirish: " + last.title),
         h("span", { class: "continue-arrow", "aria-hidden": "true" }, "→")) : null,
-      h("p", { class: "section-label" }, "Bo‘limlar"),
+      h("p", { class: "section-label" }, L.name + " · Bo‘limlar"),
+      ready ? null : soonBox(L),
       h("div", { class: "home-nav" },
-        navButton("📂", "Mavzular", topics.length + " ta mavzu: bozor, shifokor, hujjatlar…", "#/topics"),
-        jobs.length ? navButton("👷", "Kasblar", jobs.length + " ta kasb: quruvchi, kuryer, taksi…", "#/jobs") : null,
-        R.lists.length ? navButton("📚", "So‘zlar", words + " ta eng kerakli so‘z (A1)", "#/words") : null),
+        topics.length ? navButton("📂", "Mavzular", topics.length + " ta mavzu: " + topics.slice(0, 3).map(t => t.title.split(" ")[0]).join(", ") + "…",
+          "#/topics", "O‘rganilgan: " + seenIn(topicItems) + " / " + topicItems.length) : null,
+        lists.length ? navButton("📚", "So‘zlar", wordItems.length + " ta eng kerakli so‘z (" + L.name + ")",
+          "#/words", "O‘rganilgan: " + seenIn(wordItems) + " / " + wordItems.length) : null,
+        texts.length || dialogs ? navButton("🎧", "Tinglash",
+          [texts.length ? texts.length + " ta matn" : "", dialogs ? dialogs + " ta suhbat" : ""].filter(Boolean).join(" · "), "#/listen") : null,
+        ready ? navButton("✅", "Test", test ? test.questions.length + " savollik daraja testi va mashqlar" : "Aralash mashq testi", "#/test",
+          S.tests && S.tests[L.id] != null ? "Eng yaxshi natija: " + S.tests[L.id] + "%" : null) : null,
+        jobs.length ? navButton("👷", "Kasblar", jobs.length + " ta kasb: quruvchi, kuryer, taksi… (barcha darajalar uchun)", "#/jobs") : null),
       R.loadErrors.length ? h("p", { class: "note" }, "⚠️ Ba’zi fayllar yuklanmadi: " + R.loadErrors.join(", ")) : null);
   }
 
   function topicsScreen() {
-    show(header("📂 Mavzular", "#/"),
+    const L = level();
+    const head = header("📂 Mavzular", "#/", [L.name]);
+    const topics = levelTopics(L);
+    if (!topics.length) return show(head, soonBox(L));
+    const groups = topicGroups(L);
+    if (!groups) {
+      return show(head, h("p", { class: "hint" }, "Mavzuni tanlang."), h("div", { class: "tiles" }, topics.map(topicTile)));
+    }
+    show(head,
       h("p", { class: "hint" }, "Bo‘limni tanlang."),
-      topicGroups().map(g => {
+      groups.map(g => {
         const items = g.list.flatMap(t => t.items);
         return navButton(g.icon, g.title, g.list.map(t => t.title).join(", "), "#/group/" + g.id,
           "O‘rganilgan: " + seenIn(items) + " / " + items.length);
@@ -695,9 +806,10 @@
   }
 
   function groupScreen(id) {
-    const g = topicGroups().find(x => x.id === id);
+    const L = level();
+    const g = (topicGroups(L) || []).find(x => x.id === id);
     if (!g) return redirect("#/topics");
-    show(header(g.icon + " " + g.title, "#/topics", ["Mavzular"]),
+    show(header(g.icon + " " + g.title, "#/topics", [L.name + " · Mavzular"]),
       h("p", { class: "hint" }, "Mavzuni tanlang."),
       h("div", { class: "tiles" }, g.list.map(topicTile)));
   }
@@ -709,28 +821,184 @@
   }
 
   function wordListsScreen() {
-    show(header("📚 So‘zlar", "#/"),
-      R.lists.map(l => h("button", { type: "button", class: "tile wide", onclick: () => go("#/words/" + l.id) },
+    const L = level();
+    const lists = ofLevel(L, R.lists);
+    const head = header("📚 So‘zlar", "#/", [L.name]);
+    if (!lists.length) return show(head, soonBox(L));
+    show(head,
+      lists.map(l => h("button", { type: "button", class: "tile wide", onclick: () => go("#/words/" + l.id) },
         h("span", { class: "tile-ic", "aria-hidden": "true" }, l.icon || "📚"),
         h("span", { class: "tile-title" }, l.title),
         h("span", { class: "tile-sub" }, seenIn(l.items) + " / " + l.items.length + " ta so‘z"))));
   }
 
+  /* 🎧 Tinglash: listening texts and every dialogue of the level. */
+  function listenScreen() {
+    const L = level();
+    const texts = ofLevel(L, R.listening);
+    const dialogs = levelTopics(L).flatMap(t => t.dialogues.map((d, n) => ({ t, d, n })));
+    const head = header("🎧 Tinglash", "#/", [L.name]);
+    if (!texts.length && !dialogs.length) return show(head, soonBox(L));
+    const done = S.listen || {};
+    show(head,
+      h("p", { class: "hint" }, "Avval tinglang, keyin savollarga javob bering yoki suhbatni o‘zingiz gapiring."),
+      texts.length ? [
+        h("h2", null, "📻 Tinglash matnlari (" + texts.length + ")"),
+        h("div", { class: "tiles" }, texts.map(x => h("button", { type: "button", class: "tile", onclick: () => go("#/listen/" + x.id) },
+          h("span", { class: "tile-ic", "aria-hidden": "true" }, x.icon || "📻"),
+          h("span", { class: "tile-title" }, x.title),
+          h("span", { class: "tile-sub" }, done[x.id] != null ? "✓ Natija: " + done[x.id] + " / " + x.questions.length : x.lines.length + " ta gap · " + x.questions.length + " ta savol"))))
+      ] : null,
+      dialogs.length ? [
+        h("h2", null, "💬 Suhbatlar (" + dialogs.length + ")"),
+        h("div", { class: "tiles" }, dialogs.map(({ t, d, n }) => h("button", { type: "button", class: "tile", onclick: () => go("#/dialog/" + t.id + "/" + n) },
+          h("span", { class: "tile-ic", "aria-hidden": "true" }, t.icon || "💬"),
+          h("span", { class: "tile-title" }, d.title),
+          h("span", { class: "tile-sub" }, t.title))))
+      ] : null);
+  }
+
+  function listenText(id) {
+    const x = R.listeningById[id];
+    if (!x) return redirect("#/listen");
+    const v = viewTok;
+    let playTok = 0;
+    const rows = x.lines.map(l => {
+      const b = h("div", { class: "bubble a", role: "button", tabindex: "0" },
+        h("div", { class: "ru", lang: "ru" }, l.ru),
+        h("div", { class: "pr" }, l.pr),
+        h("div", { class: "uz" }, l.uz));
+      b.addEventListener("click", () => { playTok++; Speech.speak(l.ru); });
+      return b;
+    });
+    const text = h("div", { class: "chat", hidden: true }, rows);
+    async function playAll(slow) {
+      const my = ++playTok;
+      for (let k = 0; k < rows.length; k++) {
+        if (my !== playTok || v !== viewTok) return;
+        rows.forEach(e => e.classList.remove("active"));
+        rows[k].classList.add("active");
+        if (!text.hidden) rows[k].scrollIntoView({ block: "nearest", behavior: "smooth" });
+        await Speech.speak(x.lines[k].ru, { slow });
+        await wait(350);
+      }
+      if (my === playTok) rows.forEach(e => e.classList.remove("active"));
+    }
+    const toggleLabel = h("span", null, "Matnni ko‘rsatish");
+    const toggle = h("button", { type: "button", class: "btn", onclick: () => {
+      text.hidden = !text.hidden;
+      toggleLabel.textContent = text.hidden ? "Matnni ko‘rsatish" : "Matnni yashirish";
+    } }, h("span", { class: "ic", "aria-hidden": "true" }, "👁"), toggleLabel);
+    show(header((x.icon || "📻") + " " + x.title, "#/listen", [levelName(x.level) + " · Tinglash"]),
+      x.about ? h("p", { class: "hint" }, x.about) : null,
+      h("p", { class: "hint" }, "1. Matnni tinglang (bir necha marta bo‘lsa ham). 2. Savollarga javob bering. Qiyin bo‘lsa, matnni oching."),
+      btn("▶", "Matnni tinglash", () => playAll(false), "primary big"),
+      h("div", { class: "grid2" },
+        btn("🐢", "Sekin tinglash", () => playAll(true)),
+        toggle),
+      text,
+      x.questions.length ? btn("✅", "Savollarga javob berish (" + x.questions.length + " ta)", () => go("#/lq/" + x.id), "ok big") : null);
+  }
+
+  /* A question written in a data file: { q, audio?, text?, options, answer } → quizView format. */
+  function fileQuestion(q, reveal) {
+    return {
+      title: q.q,
+      audio: q.audio || null,
+      prompt: q.text ? h("div", { class: "ask-uz", lang: "ru" }, q.text) : null,
+      options: shuffle(q.options.map((o, k) => ({ text: o, ok: k === q.answer, ru: /[а-яё]/i.test(o) }))),
+      reveal
+    };
+  }
+
+  function listenQuiz(id) {
+    const x = R.listeningById[id];
+    if (!x || !x.questions.length) return redirect("#/listen");
+    runSession({
+      title: "✅ Savollar",
+      back: "#/listen/" + x.id,
+      crumbs: [levelName(x.level) + " · Tinglash", x.title],
+      steps: x.questions.map(q => ({ type: "quiz", q: fileQuestion(q, x.lines[q.line] || x.lines[0]) })),
+      finish: st => {
+        S.listen = S.listen || {};
+        S.listen[x.id] = Math.max(S.listen[x.id] || 0, st.ok);
+        save();
+        return doneView("🏁", "Barakalla!", [
+          h("p", { class: "score" }, st.ok + " / " + st.asked),
+          st.ok === st.asked ? "Hammasi to‘g‘ri! 🌟" : "Matnni yana bir marta tinglab, qaytadan urinib ko‘ring."
+        ], [
+          btn("🎧", "Matnni qayta tinglash", () => goBack("#/listen/" + x.id), "primary big"),
+          btn("📻", "Boshqa matnlar", () => go("#/listen"))
+        ]);
+      }
+    });
+  }
+
+  /* ✅ Test: the level test (data/<level>/test.js) and a mixed practice test from the level's items. */
+  function testScreen() {
+    const L = level();
+    const T = R.tests[L.id];
+    const items = levelItems(L);
+    const head = header("✅ Test", "#/", [L.name]);
+    if (!T && !items.length) return show(head, soonBox(L));
+    const best = S.tests && S.tests[L.id];
+    show(head,
+      T ? navButton("🎓", L.name + " daraja testi", T.questions.length + " ta savol: tinglash va to‘g‘ri javobni tanlash",
+        "#/leveltest/" + L.id, best != null ? "Eng yaxshi natija: " + best + "%" : null) : null,
+      items.length ? navButton("🔀", "Aralash mashq", "10 ta savol — " + L.name + " iboralari va so‘zlaridan", "#/quiz/l/" + L.id) : null,
+      h("p", { class: "hint" }, "Test faqat o‘zingiz uchun. Hech narsa yopilmaydi — xohlagan darajani o‘rganishingiz mumkin."));
+  }
+
+  function levelTestRoute(id) {
+    const L = R.levelById[id];
+    const T = R.tests[id];
+    if (!L || !T || !T.questions.length) return redirect("#/test");
+    runSession({
+      title: "🎓 " + L.name + " daraja testi",
+      back: "#/test",
+      crumbs: [L.name + " · Test"],
+      steps: T.questions.map(q => ({ type: "quiz", q: fileQuestion(q, { ru: q.full || q.audio || q.text || "", pr: q.pr || "", uz: q.uz || "" }) })),
+      finish: st => {
+        const pct = st.asked ? Math.round((st.ok / st.asked) * 100) : 0;
+        S.tests = S.tests || {};
+        S.tests[id] = Math.max(S.tests[id] || 0, pct);
+        save();
+        const next = R.levels[R.levels.indexOf(L) + 1];
+        const msg = pct >= 70
+          ? "🌟 Ajoyib! Siz " + L.name + " darajasini yaxshi bilasiz." + (next && hasContent(next) ? " " + next.name + " darajasini boshlashingiz mumkin." : "")
+          : pct >= 50 ? "Yaxshi! " + L.name + " mavzularini yana takrorlang va testni qayta topshiring."
+          : "Hechqisi yo‘q! " + L.name + " darajasini o‘rganishda davom eting, keyin yana urinib ko‘ring.";
+        return doneView("🏁", "Test tugadi!", [h("p", { class: "score" }, st.ok + " / " + st.asked + " (" + pct + "%)"), msg], [
+          btn("🔁", "Qaytadan topshirish", () => route(), "primary big"),
+          btn("⬅", "Orqaga", () => goBack("#/test"))
+        ]);
+      }
+    });
+  }
+
   function searchScreen() {
+    const L = level();
     const input = h("input", { type: "search", id: "search", placeholder: "Masalan: rahmat yoki спасибо", autocomplete: "off" });
     const results = h("div", { class: "results" });
     let timer = null;
-    /* Shows matches for the text in the box; returns how many were found. */
+    /* Shows matches for the text in the box (chosen level + Kasblar first); returns how many were found. */
     function runSearch() {
       const q = sn(input.value);
       results.textContent = "";
       clearBtn.hidden = !input.value;
       if (!q) return 0;
-      const found = Object.values(R.items).filter(it => it.search.includes(q)).slice(0, 50);
+      const all = Object.values(R.items).filter(it => it.search.includes(q));
+      const here = all.filter(it => inLevel(it, L)).slice(0, 50);
+      const other = all.filter(it => !inLevel(it, L)).slice(0, 20);
       add(results, h("p", { class: "results-head" },
-        found.length ? "🔍 Topildi: " + found.length + " ta" : "🔍 Hech narsa topilmadi. Boshqacha yozib ko‘ring."));
-      found.forEach(it => add(results, itemRow(it, "📂 " + it.src.title)));
-      return found.length;
+        here.length ? "🔍 Topildi: " + here.length + " ta" :
+        other.length ? "🔍 " + L.name + " darajasida topilmadi." : "🔍 Hech narsa topilmadi. Boshqacha yozib ko‘ring."));
+      here.forEach(it => add(results, itemRow(it, "📂 " + it.src.title)));
+      if (other.length) {
+        add(results, h("p", { class: "results-head" }, "Boshqa darajalarda: " + other.length + " ta"));
+        other.forEach(it => add(results, itemRow(it, "📂 " + levelName(it.level) + " · " + it.src.title)));
+      }
+      return here.length + other.length;
     }
     input.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(runSearch, 150); });
     const clearBtn = btn("✕", "Tozalash", () => { input.value = ""; runSearch(); input.focus(); }, "small");
@@ -784,7 +1052,7 @@
       voice = h("div", { class: "voice" }, mic, ruBtn, status);
     }
 
-    show(header("🔍 Qidirish", "#/"),
+    show(header("🔍 Qidirish", "#/", [L.name]),
       h("div", { class: "search" },
         h("label", { for: "search" }, "Ruscha yoki o‘zbekcha yozing"),
         h("div", { class: "search-row" }, input, clearBtn)),
@@ -967,7 +1235,7 @@
   function quizRoute(kind, id) {
     const s = srcOf(kind, id);
     if (!s || !s.items.length) return redirect("#/");
-    const qs = buildQuiz(s.items, kind === "t" ? [s] : [], 10);
+    const qs = buildQuiz(s.items, kind === "t" ? [s] : kind === "l" ? s.topics : [], 10);
     runSession({
       title: "✅ Test",
       back: backOf(s),
@@ -1102,7 +1370,7 @@
     const l = R.listById[id];
     if (!l) return redirect("#/words");
     const seen = seenIn(l.items);
-    show(header((l.icon || "📚") + " " + l.title, "#/words", ["So‘zlar"]),
+    show(header((l.icon || "📚") + " " + l.title, "#/words", crumbsOf(l).slice(0, -1)),
       l.note ? h("p", { class: "hint" }, l.note) : null,
       h("p", { class: "topic-progress" }, "O‘rganilgan: " + seen + " / " + l.items.length),
       progressBar(Math.round((seen / l.items.length) * 100)),
@@ -1163,6 +1431,7 @@
       h("div", { class: "size-picker", role: "group", "aria-label": "Matn o‘lchami" }, sizeBtns),
       h("h2", null, "Qanday o‘rganish kerak?"),
       h("ol", { class: "steps" },
+        h("li", null, "Yuqoridagi A1, A2, B1… tugmalari bilan darajangizni tanlang. Hech narsa yopilmagan."),
         h("li", null, "Har kuni «Bugungi dars» tugmasini bosing. 10 daqiqa yetarli."),
         h("li", null, "🔊 Tinglang, keyin ovoz chiqarib takrorlang. 🐢 tugmasi sekin aytadi."),
         h("li", null, "🎤 «Gapiring» tugmasini bosib, ruscha ayting — dastur sizni tekshiradi."),
@@ -1207,6 +1476,10 @@
       case "dialogs": return dialogsList(p[1]);
       case "dialog": return dialogScreen(p[1], +p[2]);
       case "words": return p[1] ? wordsScreen(p[1]) : wordListsScreen();
+      case "listen": return p[1] ? listenText(p[1]) : listenScreen();
+      case "lq": return listenQuiz(p[1]);
+      case "test": return testScreen();
+      case "leveltest": return levelTestRoute(p[1]);
       case "lesson": return lessonRoute();
       case "ai": return aiScreen();
       case "help": return helpScreen();
@@ -1214,7 +1487,7 @@
     }
   }
 
-  loadFiles(window.RUSCHA_FILES || [], () => {
+  loadFiles(() => {
     buildBottomNav();
     ready = true;
     route();

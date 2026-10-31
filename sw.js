@@ -7,7 +7,7 @@
 const VERSION = "2026-10-31-3";
 const CACHE = "ruscha-" + VERSION;
 
-importScripts("data/index.js"); // defines RUSCHA_FILES: every topic and word list
+importScripts("data/levels.js"); // defines RUSCHA_FILES: every content file of every level
 
 const FILES = [
   "./",
@@ -20,7 +20,7 @@ const FILES = [
   "js/speech.js",
   "js/app.js",
   "js/pwa.js",
-  "data/index.js",
+  "data/levels.js",
   "icons/favicon.png",
   "icons/icon-192.png",
   "icons/icon-512.png",

@@ -1,0 +1,66 @@
+/*
+  Level test format (one file per level: data/<level>/test.js):
+    questions: {
+      q:       the task in Uzbek,
+      audio:   (optional) Russian sentence the app reads aloud — for listening questions,
+      text:    (optional) Russian sentence shown on screen, "..." marks the gap,
+      options: answers (Uzbek or Russian),
+      answer:  number of the right option (0 = first; the app shuffles them),
+      full:    the complete right sentence in Russian (needed when there is a "text"),
+      pr, uz:  pronunciation and meaning of the right sentence (shown after answering)
+    }
+*/
+Ruscha.addTest({
+  title: "A2 daraja testi",
+  questions: [
+    { q: "🎧 Tinglang. Bu nima degani?", audio: "Я опоздал на автобус, поэтому пришёл поздно.",
+      options: ["Avtobusga kechikdim, shuning uchun kech keldim.", "Avtobusda erta keldim.", "Avtobus kelmadi, uyda qoldim."], answer: 0,
+      pr: "Ya apazdal na aftobus, paetamu prishol pozdna.", uz: "Avtobusga kechikdim, shuning uchun kech keldim." },
+    { q: "🎧 Tinglang. Bu nima degani?", audio: "Завтра у меня выходной, я поеду к брату.",
+      options: ["Kecha akamnikida edim.", "Ertaga dam olish kunim, akamnikiga boraman.", "Ertaga ishlayman, akam keladi."], answer: 1,
+      pr: "Zaftra u minya vixadnoy, ya payedu k bratu.", uz: "Ertaga dam olish kunim, akamnikiga boraman." },
+    { q: "🎧 Tinglang. Shifokor nima dedi?", audio: "Врач сказал, что мне нужно меньше работать и больше отдыхать.",
+      options: ["Ko‘proq ishlash kerak", "Dori ichish mumkin emas", "Kamroq ishlab, ko‘proq dam olish kerak"], answer: 2,
+      pr: "Vrach skazal, shto mne nujna menshe rabotat i bolshe atdixat.", uz: "Shifokor kamroq ishlab, ko‘proq dam olishim kerakligini aytdi." },
+    { q: "🎧 Tinglang. Qachon qo‘ng‘iroq qilish kerak?", audio: "Позвоните мне, пожалуйста, после обеда.",
+      options: ["Tushlikdan keyin", "Ertalab", "Kechasi"], answer: 0,
+      pr: "Pazvanite mne, pajalusta, posli abeda.", uz: "Iltimos, tushlikdan keyin menga qo‘ng‘iroq qiling." },
+    { q: "🎧 Tinglang. Kvartira haqida nima deyildi?", audio: "Квартира хорошая, но слишком дорогая для нас.",
+      options: ["Arzon, lekin kichik", "Yaxshi, lekin biz uchun juda qimmat", "Juda yoqdi, olamiz"], answer: 1,
+      pr: "Kvartira xaroshaya, no slishkam daragaya dlya nas.", uz: "Kvartira yaxshi, lekin biz uchun juda qimmat." },
+    { q: "🎧 Tinglang. Uchrashuv qachon?", audio: "Давай встретимся в субботу в половине седьмого.",
+      options: ["Shanba, soat 7:30 da", "Yakshanba, soat 6:00 da", "Shanba, soat 6:30 da"], answer: 2,
+      pr: "Davay fstretimsya f subotu f palavine sidmova.", uz: "Kel, shanba kuni soat oltiyu o‘ttizda uchrashaylik." },
+    { q: "🎧 Tinglang. Bu odam nima qilmoqchi?", audio: "Я хочу поменять билет на более раннее время.",
+      options: ["Chiptani ertaroq vaqtga almashtirmoqchi", "Chiptani qaytarmoqchi", "Yangi chipta sotib olmoqchi"], answer: 0,
+      pr: "Ya xachu pamenyat bilet na boleye ranneye vremya.", uz: "Chiptani ertaroq vaqtga almashtirmoqchiman." },
+    { q: "🎧 Tinglang. Bu gapni qayerda eshitasiz?", audio: "Сдайте, пожалуйста, багаж и покажите посадочный талон.",
+      options: ["Shifoxonada", "Aeroportda", "Do‘konda"], answer: 1,
+      pr: "Zdayte, pajalusta, bagash i pakajite pasadachniy talon.", uz: "Iltimos, bagajni topshiring va posadka talonini ko‘rsating." },
+
+    { q: "To‘g‘ri so‘zni tanlang:", text: "Вчера я ... в кино с друзьями.", options: ["ходил", "хожу", "пойду"], answer: 0,
+      full: "Вчера я ходил в кино с друзьями.", pr: "Fchira ya xadil f kino z druzyami.", uz: "Kecha do‘stlarim bilan kinoga bordim." },
+    { q: "To‘g‘ri so‘zni tanlang:", text: "Завтра мы ... на море.", options: ["ездили", "поедем", "ездят"], answer: 1,
+      full: "Завтра мы поедем на море.", pr: "Zaftra mi payedem na more.", uz: "Ertaga dengizga boramiz." },
+    { q: "To‘g‘ri so‘zni tanlang:", text: "Я живу в Москве ... три года.", options: ["скоро", "ещё", "уже"], answer: 2,
+      full: "Я живу в Москве уже три года.", pr: "Ya jivu v Maskve uje tri goda.", uz: "Moskvada uch yildan beri yashayman." },
+    { q: "To‘g‘ri shaklni tanlang:", text: "Мне нужно позвонить ... .", options: ["маме", "мама", "мамой"], answer: 0,
+      full: "Мне нужно позвонить маме.", pr: "Mne nujna pazvanit mame.", uz: "Onamga qo‘ng‘iroq qilishim kerak." },
+    { q: "To‘g‘ri shaklni tanlang:", text: "Я давно не видел ... брата.", options: ["свой", "своего", "своему"], answer: 1,
+      full: "Я давно не видел своего брата.", pr: "Ya davno ne videl svaivo brata.", uz: "Akamni ko‘pdan beri ko‘rmadim." },
+    { q: "To‘g‘ri so‘zni tanlang:", text: "Мы говорили ... работе.", options: ["на", "у", "о"], answer: 2,
+      full: "Мы говорили о работе.", pr: "Mi gavarili a rabote.", uz: "Biz ish haqida gaplashdik." },
+    { q: "To‘g‘ri so‘zni tanlang:", text: "Если будет хорошая погода, мы ... в парк.", options: ["пойдём", "пошли", "ходим"], answer: 0,
+      full: "Если будет хорошая погода, мы пойдём в парк.", pr: "Yesli budet xaroshaya pagoda, mi paydyom f park.", uz: "Ob-havo yaxshi bo‘lsa, parkka boramiz." },
+    { q: "To‘g‘ri shaklni tanlang:", text: "У меня нет ... времени.", options: ["свободное", "свободного", "свободным"], answer: 1,
+      full: "У меня нет свободного времени.", pr: "U minya net svabodnava vremini.", uz: "Bo‘sh vaqtim yo‘q." },
+    { q: "To‘g‘ri so‘zni tanlang:", text: "Я пришёл, ... хочу поговорить с вами.", options: ["поэтому", "но", "потому что"], answer: 2,
+      full: "Я пришёл, потому что хочу поговорить с вами.", pr: "Ya prishol, patamu shta xachu pagavarit s vami.", uz: "Siz bilan gaplashmoqchi bo‘lganim uchun keldim." },
+    { q: "To‘g‘ri shaklni tanlang:", text: "Мне ... этот фильм.", options: ["понравился", "понравилась", "понравились"], answer: 0,
+      full: "Мне понравился этот фильм.", pr: "Mne panravilsa etat film.", uz: "Bu film menga yoqdi." },
+    { q: "Vaziyatga mos javobni tanlang:", text: "— Спасибо за помощь! — ...", options: ["Будьте здоровы!", "Не за что!", "Приятного аппетита!"], answer: 1,
+      full: "— Спасибо за помощь! — Не за что!", pr: "— Spasiba za pomash! — Ne za shta!", uz: "— Yordamingiz uchun rahmat! — Arzimaydi!" },
+    { q: "To‘g‘ri so‘zni tanlang:", text: "Сын учится ... школе номер пять.", options: ["на", "в", "к"], answer: 1,
+      full: "Сын учится в школе номер пять.", pr: "Sin uchitsa f shkole nomir pyat.", uz: "O‘g‘lim 5-maktabda o‘qiydi." }
+  ]
+});
