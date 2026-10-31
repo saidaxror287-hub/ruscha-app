@@ -1,7 +1,7 @@
 /*
   Word list file format:
     groups: { theme, icon, words: [[Russian, pronunciation in Uzbek Latin, meaning in Uzbek Latin], ...] }
-  Part 4: the remaining words of the TORFL / ТРКИ A2 (basic) lexical minimum that are not in A1 or A2 parts 1–3:
+  Part 4: more words of the TORFL / ТРКИ A2 (basic) lexical minimum (not in A1 or A2 parts 1–3):
   perfective verbs, ordinal numbers, pronouns, comparatives and other core words, grouped by theme.
 */
 Ruscha.addWords({
@@ -68,9 +68,7 @@ Ruscha.addWords({
         ["умереть", "umiret", "vafot etmoq"],
         ["жениться", "jinitsa", "uylanmoq (erkak haqida)"],
         ["выйти замуж", "viyti zamuj", "turmushga chiqmoq (ayol haqida)"],
-        ["развестись", "razvistis", "ajrashmoq"],
         ["расти", "rasti", "o‘smoq"],
-        ["бриться", "britsa", "soqol olmoq"],
         ["кашлять", "kashlyat", "yo‘talmoq"],
         ["лечь", "lech", "yotmoq (bir marta)"],
         ["сесть", "sest", "o‘tirmoq (bir marta)"],
@@ -78,7 +76,6 @@ Ruscha.addWords({
         ["проснуться", "prasnutsa", "uyg‘onmoq"],
         ["заснуть", "zasnut", "uxlab qolmoq"],
         ["опоздать", "apazdat", "kechikmoq (bir marta)"],
-        ["ошибаться", "ashibatsa", "xato qilmoq, adashmoq"],
         ["случиться", "sluchitsa", "sodir bo‘lmoq"]
       ]
     },
@@ -95,11 +92,7 @@ Ruscha.addWords({
         ["двенадцатый", "dvinatsatiy", "o‘n ikkinchi"],
         ["двадцатый", "dvatsatiy", "yigirmanchi"],
         ["тридцатый", "tritsatiy", "o‘ttizinchi"],
-        ["сотый", "sotiy", "yuzinchi"],
         ["четверть", "chetvirt", "chorak"],
-        ["треть", "tret", "uchdan bir"],
-        ["десяток", "disyatak", "o‘ntalik, o‘nta"],
-        ["сотня", "sotnya", "yuztalik, yuzta"],
         ["дважды", "dvajdi", "ikki marta"],
         ["вдвоём", "vdvayom", "ikki kishi bo‘lib"],
         ["втроём", "ftrayom", "uch kishi bo‘lib"],
@@ -122,12 +115,8 @@ Ruscha.addWords({
         ["другой", "drugoy", "boshqa"],
         ["любой", "lyuboy", "istalgan, har qanday"],
         ["никакой", "nikakoy", "hech qanday"],
-        ["ничей", "nichey", "hech kimniki emas"],
         ["нечего", "nechiva", "(qiladigan) hech narsa yo‘q"],
-        ["некогда", "nekagda", "vaqt yo‘q"],
-        ["негде", "negdi", "(...gani) joy yo‘q"],
-        ["столько", "stolka", "shuncha"],
-        ["настолько", "nastolka", "shunchalik"]
+        ["столько", "stolka", "shuncha"]
       ]
     },
     {
@@ -146,11 +135,8 @@ Ruscha.addWords({
         ["проще", "proshe", "osonroq"],
         ["впервые", "fpirviye", "birinchi marta"],
         ["слишком", "slishkam", "haddan tashqari, juda"],
-        ["достаточно", "dastatachna", "yetarli"],
         ["обязательно", "abizatilna", "albatta, majburiy"],
         ["возможно", "vazmojna", "ehtimol"],
-        ["специально", "spitsialna", "atayin, maxsus"],
-        ["случайно", "sluchayna", "tasodifan"],
         ["вслух", "fslux", "ovoz chiqarib"]
       ]
     },
@@ -170,12 +156,7 @@ Ruscha.addWords({
         ["кружка", "krushka", "krujka"],
         ["салфетка", "salfetka", "salfetka"],
         ["бумага", "bumaga", "qog‘oz"],
-        ["ножницы", "nojnitsi", "qaychi"],
-        ["нитка", "nitka", "ip"],
-        ["иголка", "igolka", "igna"],
-        ["верёвка", "viryofka", "arqon"],
-        ["гвоздь", "gvost", "mix"],
-        ["мешок", "mishok", "qop"]
+        ["ножницы", "nojnitsi", "qaychi"]
       ]
     },
     {
@@ -183,17 +164,12 @@ Ruscha.addWords({
         ["довольный", "davolniy", "mamnun"],
         ["недовольный", "nidavolniy", "norozi"],
         ["уставший", "ustafshiy", "charchagan"],
-        ["сердитый", "sirditiy", "jahli chiqqan"],
-        ["удивлённый", "udivlyonniy", "hayron qolgan"],
-        ["расстроенный", "rasstroyenniy", "xafa, ko‘ngli cho‘kkan"],
-        ["нервный", "nervniy", "asabiy"],
         ["скучный", "skuchniy", "zerikarli"],
         ["смешной", "smishnoy", "kulgili"],
         ["страшный", "strashniy", "qo‘rqinchli"],
         ["приятный", "priyatniy", "yoqimli"],
         ["неприятный", "nipriyatniy", "yoqimsiz"],
         ["стыдно", "stidna", "uyat"],
-        ["обидно", "abidna", "alam qiladi"],
         ["страшно", "strashna", "qo‘rqinchli (menga qo‘rqinchli)"],
         ["скучно", "skuchna", "zerikarli (menga zerikarli)"],
         ["грустно", "grusna", "g‘amgin, ma’yus"],
