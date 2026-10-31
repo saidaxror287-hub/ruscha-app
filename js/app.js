@@ -565,14 +565,19 @@
     const clearBtn = btn("✕", "Tozalash", () => { input.value = ""; runSearch(); input.focus(); }, "small");
     clearBtn.hidden = true;
 
+    const topicTile = t => h("button", {
+      type: "button", class: "tile" + (t.soon ? " soon" : ""), onclick: () => go("#/topic/" + t.id)
+    },
+      h("span", { class: "tile-ic", "aria-hidden": "true" }, t.icon || "📁"),
+      h("span", { class: "tile-title" }, t.title),
+      h("span", { class: "tile-sub" }, t.soon ? "⏳ Tez orada" : seenIn(t.items) + " / " + t.items.length));
+    const jobs = R.topics.filter(t => t.section === "kasblar");
+
     add(main, [
       h("h2", null, "📂 Mavzular"),
-      h("div", { class: "tiles" }, R.topics.map(t => h("button", {
-        type: "button", class: "tile" + (t.soon ? " soon" : ""), onclick: () => go("#/topic/" + t.id)
-      },
-        h("span", { class: "tile-ic", "aria-hidden": "true" }, t.icon || "📁"),
-        h("span", { class: "tile-title" }, t.title),
-        h("span", { class: "tile-sub" }, t.soon ? "⏳ Tez orada" : seenIn(t.items) + " / " + t.items.length)))),
+      h("div", { class: "tiles" }, R.topics.filter(t => !t.section).map(topicTile)),
+      jobs.length ? h("h2", null, "👷 Kasblar") : null,
+      jobs.length ? h("div", { class: "tiles" }, jobs.map(topicTile)) : null,
       R.lists.length ? h("h2", null, "📚 So‘zlar") : null,
       R.lists.map(l => h("button", { type: "button", class: "tile wide", onclick: () => go("#/words/" + l.id) },
         h("span", { class: "tile-ic", "aria-hidden": "true" }, l.icon || "📚"),

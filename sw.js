@@ -4,7 +4,7 @@
   IMPORTANT: change VERSION every time you publish changes. That is how phones notice
   the update and show "Yangi versiya bor". Saved progress (localStorage) is never touched here.
 */
-const VERSION = "2026-10-31-2";
+const VERSION = "2026-10-31-3";
 const CACHE = "ruscha-" + VERSION;
 
 importScripts("data/index.js"); // defines RUSCHA_FILES: every topic and word list

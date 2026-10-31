@@ -2,6 +2,7 @@
   Every content file the app loads, in this order (topics appear on the home screen in this order).
 
   To add a new topic:     create data/topics/<name>.js (copy an existing topic file) and add one line below.
+  To add a new job pack:  create data/kasblar/<name>.js (copy quruvchi.js, keep section: "kasblar") and add one line below.
   To add a new word list: create data/words/<name>.js (copy a1-part1.js) and add one line below.
 
   A topic file with an empty "phrases" list is shown as "Tez orada".
@@ -23,6 +24,14 @@ var RUSCHA_FILES = [
   "data/topics/oila.js",
   "data/topics/ob-havo.js",
   "data/topics/favqulodda.js",
+
+  "data/kasblar/quruvchi.js",
+  "data/kasblar/kuryer.js",
+  "data/kasblar/taksi.js",
+  "data/kasblar/sotuvchi.js",
+  "data/kasblar/oshpaz.js",
+  "data/kasblar/farrosh.js",
+  "data/kasblar/omborchi.js",
 
   "data/words/a1-part1.js",
   "data/words/a1-part2.js",
