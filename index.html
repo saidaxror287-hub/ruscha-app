@@ -10,6 +10,11 @@
   <link rel="icon" type="image/png" href="icons/favicon.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-title" content="Rusbek">
+  <script>
+    /* Text size chosen in Yordam → Matn o‘lchami (applied before drawing, so the page doesn't jump). */
+    try { var z = localStorage.getItem("rusbek_text_size"); if (z && z !== "oddiy") document.documentElement.setAttribute("data-size", z); } catch (e) {}
+  </script>
+  <link rel="preload" href="fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>

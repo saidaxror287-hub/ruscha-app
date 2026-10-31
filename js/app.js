@@ -179,6 +179,12 @@
   function show() {
     app.textContent = "";
     add(app, Array.from(arguments));
+    // Entrance animation: the screen fades up, cards follow one after another (off for "reduce motion", see CSS).
+    app.classList.remove("enter");
+    void app.offsetWidth;
+    app.classList.add("enter");
+    app.querySelectorAll(".tile, .nav-btn, .item-row, .opt, .continue-btn, .stat")
+      .forEach((el, i) => el.style.setProperty("--i", Math.min(i, 10)));
   }
   function later(fn, ms) {
     const v = viewTok;
@@ -650,22 +656,31 @@
     const words = R.lists.reduce((n, l) => n + l.items.length, 0);
 
     show(
-      header("📘 Rusbek"),
-      h("p", { class: "subtitle" }, "Tinglang → Takrorlang → Gapiring → Takrorlab turing"),
+      h("section", { class: "hero" },
+        h("div", { class: "hero-bg", "aria-hidden": "true" },
+          h("span", { class: "blob b1" }), h("span", { class: "blob b2" }), h("span", { class: "blob b3" })),
+        h("span", { class: "hero-word", "aria-hidden": "true" }, "Русский"),
+        h("p", { class: "eyebrow" }, "Rus tili · o‘zbeklar uchun"),
+        h("h1", null, "Rusbek"),
+        h("p", { class: "hero-lead" }, "Tinglang → Takrorlang → Gapiring → Takrorlab turing"),
+        h("div", { class: "hero-stats" },
+          h("div", { class: "stat" }, h("b", null, String(learnedCount())), "📖 O‘rganilgan so‘zlar"),
+          h("div", { class: "stat" }, h("b", null, String(streakNow())), "🔥 Ketma-ket kunlar")),
+        h("button", { type: "button", class: "lesson-btn", onclick: () => go("#/lesson") },
+          h("span", { class: "play-ring", "aria-hidden": "true" }, "▶"),
+          h("span", { class: "lesson-text" },
+            h("span", { class: "lesson-title" }, "Bugungi dars"),
+            h("span", { class: "lesson-sub" }, sub)))),
       voiceNote,
-      h("div", { class: "stats" },
-        h("div", { class: "stat" }, h("b", null, String(learnedCount())), "📖 O‘rganilgan so‘zlar"),
-        h("div", { class: "stat" }, h("b", null, String(streakNow())), "🔥 Ketma-ket kunlar")),
-      h("button", { type: "button", class: "lesson-btn", onclick: () => go("#/lesson") },
-        h("span", { class: "lesson-title" }, "▶ Bugungi dars"),
-        h("span", { class: "lesson-sub" }, sub)),
       last ? h("button", { type: "button", class: "continue-btn", onclick: () => go("#/topic/" + last.id) },
         h("span", { class: "continue-ic", "aria-hidden": "true" }, last.icon || "📁"),
         h("span", { class: "continue-text" }, "Davom ettirish: " + last.title),
         h("span", { class: "continue-arrow", "aria-hidden": "true" }, "→")) : null,
-      navButton("📂", "Mavzular", topics.length + " ta mavzu: bozor, shifokor, hujjatlar…", "#/topics"),
-      jobs.length ? navButton("👷", "Kasblar", jobs.length + " ta kasb: quruvchi, kuryer, taksi…", "#/jobs") : null,
-      R.lists.length ? navButton("📚", "So‘zlar", words + " ta eng kerakli so‘z (A1)", "#/words") : null,
+      h("p", { class: "section-label" }, "Bo‘limlar"),
+      h("div", { class: "home-nav" },
+        navButton("📂", "Mavzular", topics.length + " ta mavzu: bozor, shifokor, hujjatlar…", "#/topics"),
+        jobs.length ? navButton("👷", "Kasblar", jobs.length + " ta kasb: quruvchi, kuryer, taksi…", "#/jobs") : null,
+        R.lists.length ? navButton("📚", "So‘zlar", words + " ta eng kerakli so‘z (A1)", "#/words") : null),
       R.loadErrors.length ? h("p", { class: "note" }, "⚠️ Ba’zi fayllar yuklanmadi: " + R.loadErrors.join(", ")) : null);
   }
 
@@ -1129,7 +1144,23 @@
       add(resetBox, btn("🗑", "Natijalarni o‘chirish", askReset));
     }
     showResetButton();
+
+    /* Text size: saved on this device (separate from progress); index.html applies it before the page draws. */
+    const SIZES = [["oddiy", "Oddiy", "1rem"], ["katta", "Katta", "1.25rem"], ["juda", "Juda katta", "1.5rem"]];
+    const current = document.documentElement.getAttribute("data-size") || "oddiy";
+    const sizeBtns = SIZES.map(([key, label, aa]) =>
+      h("button", { type: "button", class: "size-opt", "aria-pressed": String(key === current), onclick: () => setSize(key) },
+        h("span", { class: "aa", style: "font-size:" + aa, "aria-hidden": "true" }, "Aa"), label));
+    function setSize(key) {
+      if (key === "oddiy") document.documentElement.removeAttribute("data-size");
+      else document.documentElement.setAttribute("data-size", key);
+      try { localStorage.setItem("rusbek_text_size", key); } catch (e) { /* private mode: applies until reload */ }
+      sizeBtns.forEach((b, i) => b.setAttribute("aria-pressed", String(SIZES[i][0] === key)));
+    }
+
     show(header("❓ Yordam", "#/"),
+      h("h2", null, "Matn o‘lchami"),
+      h("div", { class: "size-picker", role: "group", "aria-label": "Matn o‘lchami" }, sizeBtns),
       h("h2", null, "Qanday o‘rganish kerak?"),
       h("ol", { class: "steps" },
         h("li", null, "Har kuni «Bugungi dars» tugmasini bosing. 10 daqiqa yetarli."),
