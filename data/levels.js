@@ -65,6 +65,11 @@ var RUSCHA_LEVELS = [
       "data/a2/topics/kafe-mehmon.js",
       "data/a2/topics/shahar-transport.js",
       "data/a2/topics/havo-fasllar.js",
+      "data/a2/topics/talim-kurslar.js",
+      "data/a2/topics/oila-bayramlar.js",
+      "data/a2/topics/sport-salomatlik.js",
+      "data/a2/topics/internet-xarid.js",
+      "data/a2/topics/muammo-shikoyat.js",
 
       "data/a2/words/a2-part1.js",
       "data/a2/words/a2-part2.js",
