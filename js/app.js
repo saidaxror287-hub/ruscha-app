@@ -11,7 +11,7 @@
     levels: window.RUSCHA_LEVELS || [], levelById: {},
     topics: [], topicById: {}, lists: [], listById: {}, listening: [], listeningById: {}, tests: {},
     speaking: [], speakingById: {},
-    items: {}, loadErrors: []
+    items: {}, lines: {}, loadErrors: []
   });
   R.levels.forEach(l => { R.levelById[l.id] = l; });
   let loadingLevel = ""; // level of the file being loaded right now
@@ -36,6 +36,17 @@
     return it;
   }
 
+  /* Lines of dialogues, listening texts, Jonli nutq and speaking tasks. They are not cards of a topic,
+     but they can be saved to ⭐ Saqlanganlar (id "d:" + text; the first place a line appears is its source).
+     The line object gets .sv = its saveable item. */
+  function addLine(l, src, where) {
+    const id = "d:" + sn(l.ru);
+    if (!R.lines[id]) R.lines[id] = { id, kind: "d", ru: l.ru, pr: l.pr || "", uz: l.uz || "", sit: "", src, level: src.level, where, who: l.who };
+    l.sv = R.lines[id];
+  }
+  /* Any card or line by its id (undefined if that content was removed). */
+  function itemOf(id) { return R.items[id] || R.lines[id]; }
+
   R.addTopic = function (t) {
     if (!t || !t.id || R.topicById[t.id]) return;
     t.kind = "t";
@@ -49,6 +60,7 @@
       lines: d.lines.map(l => (Array.isArray(l) ? { who: l[0], ru: l[1], pr: l[2], uz: l[3] } : l))
     }));
     t.items = t.phrases.map(p => addItem("p", p.ru, p.pr, p.uz, p.sit, t));
+    t.dialogues.forEach((d, n) => d.lines.forEach(l => addLine(l, t, { dialog: n, title: d.title })));
     t.soon = t.items.length === 0;
     R.topics.push(t);
     R.topicById[t.id] = t;
@@ -96,6 +108,7 @@
     l.items = [];
     l.groups = (l.groups || []).map(g => {
       const items = g.words.map(w => addItem("w", w[0], w[1], w[2], "", l));
+      items.forEach(it => { if (!it.theme) it.theme = g.theme; });
       l.items.push(...items);
       return { theme: g.theme, icon: g.icon || "", items };
     });
@@ -108,6 +121,7 @@
     if (!x || !x.id || R.listeningById[x.id]) return;
     x.level = loadingLevel;
     x.lines = (x.lines || []).map(l => ({ ru: l[0], pr: l[1], uz: l[2] }));
+    x.lines.forEach(l => addLine(l, x, { listen: true }));
     x.questions = x.questions || [];
     R.listening.push(x);
     R.listeningById[x.id] = x;
@@ -121,6 +135,7 @@
     x.level = loadingLevel;
     x.live = true;
     x.lines = (x.lines || []).map(l => (l.length > 3 ? { who: l[0], ru: l[1], pr: l[2], uz: l[3] } : { who: "a", ru: l[0], pr: l[1], uz: l[2] }));
+    x.lines.forEach(l => addLine(l, x, { listen: true }));
     x.questions = x.questions || [];
     R.live.push(x);
     R.listeningById[x.id] = x;
@@ -155,6 +170,7 @@
       x.level = loadingLevel;
       x.q = row(x.q);
       x.phrases = (x.phrases || []).map(row);
+      x.phrases.forEach(l => addLine(l, x, { speak: true }));
       x.sample = (x.sample || []).map(row);
       R.speaking.push(x);
       R.speakingById[x.id] = x;
@@ -192,7 +208,8 @@
      Progress (localStorage) and spaced repetition (SM-2 style)
      ===================================================================== */
   const KEY = "ruscha_progress_v1";
-  function blank() { return { cards: {}, streak: 0, lastDay: -1, lessonDay: -1 }; }
+  /* saved: ⭐ Saqlanganlar { itemId: time saved (ms) }; autoSave: Yordam → «Qiyin so‘zlarni avtomatik saqlash». */
+  function blank() { return { cards: {}, streak: 0, lastDay: -1, lessonDay: -1, saved: {}, autoSave: false }; }
   function loadState() {
     try {
       const j = JSON.parse(localStorage.getItem(KEY));
@@ -250,11 +267,32 @@
   function dueItems() {
     const t = today();
     return Object.keys(S.cards)
-      .filter(id => R.items[id] && S.cards[id].d <= t)
+      .filter(id => itemOf(id) && S.cards[id].d <= t)
       .sort((a, b) => S.cards[a].d - S.cards[b].d)
-      .map(id => R.items[id]);
+      .map(id => itemOf(id));
   }
-  function learnedCount() { return Object.keys(S.cards).filter(id => R.items[id]).length; }
+  function learnedCount() { return Object.keys(S.cards).filter(id => itemOf(id)).length; }
+
+  /* ⭐ Saqlanganlar. An id whose content was removed later is skipped quietly. */
+  function isSaved(it) { return !!(it && it.id && S.saved && S.saved[it.id]); }
+  function savedList() {
+    const m = S.saved || {};
+    return Object.keys(m).filter(id => itemOf(id)).sort((a, b) => m[b] - m[a]).map(itemOf);
+  }
+  function setSaved(it, on, at) {
+    if (!S.saved || typeof S.saved !== "object") S.saved = {};
+    // Each save gets a later time than every other, so "newest first" stays exact even for two quick taps.
+    if (on) S.saved[it.id] = at || Math.max(Date.now(), ...Object.values(S.saved).map(Number).filter(x => x > 0).map(x => x + 1), 0);
+    else delete S.saved[it.id];
+    save();
+    refreshSavedCount();
+  }
+  /* Auto-save (if turned on in Yordam) for «Bilmayman» in flashcards and wrong quiz answers. */
+  function autoSave(it) {
+    if (!S.autoSave || !it || !it.id || !itemOf(it.id) || isSaved(it)) return;
+    setSaved(it, true);
+    toast("⭐ Saqlanganlarga qo‘shildi");
+  }
   function seenIn(items) { return items.filter(i => S.cards[i.id]).length; }
 
   /* =====================================================================
@@ -358,12 +396,15 @@
     route();
   });
 
-  function toast(text) {
+  /* Short message above the bottom bar. action = { label, fn }: a button (e.g. «Bekor qilish»), shown for 5 seconds. */
+  function toast(text, action) {
     const old = document.querySelector(".toast");
     if (old) old.remove();
-    const t = h("div", { class: "toast", role: "status" }, text);
+    const t = h("div", { class: "toast" + (action ? " has-action" : ""), role: "status" },
+      h("span", null, text),
+      action ? h("button", { type: "button", class: "toast-btn", onclick: () => { t.remove(); action.fn(); } }, action.label) : null);
     document.body.appendChild(t);
-    setTimeout(() => t.remove(), 2500);
+    setTimeout(() => t.remove(), action ? 5000 : 2500);
   }
 
   /* Screen title with its path above it, e.g. "Mavzular › Xarid va ovqat ›" / "Bozor". */
@@ -421,7 +462,38 @@
         h("span", { class: "pr" }, ex.pr),
         h("span", { class: "uz" }, ex.uz)));
   }
+  /* ☆ / ⭐ button: saves the item to Saqlanganlar or removes it. labelled = wide button with text (cards). */
+  function starBtn(it, labelled) {
+    if (!it || !it.id || !itemOf(it.id)) return null;
+    const ic = h("span", { class: "star-ic", "aria-hidden": "true" });
+    const lb = labelled ? h("span", null) : null;
+    const b = h("button", { type: "button", class: labelled ? "btn star-btn" : "star" }, ic, lb);
+    function paint() {
+      const on = isSaved(it);
+      ic.textContent = on ? "⭐" : "☆";
+      if (lb) lb.textContent = on ? "Saqlangan" : "Saqlash";
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", String(on));
+      b.setAttribute("aria-label", on ? "Saqlangan (olib tashlash uchun bosing)" : "Saqlash");
+    }
+    b.addEventListener("click", e => {
+      e.stopPropagation();
+      const on = !isSaved(it);
+      setSaved(it, on);
+      paint();
+      toast(on ? "Saqlandi ⭐" : "Olib tashlandi");
+    });
+    b.addEventListener("keydown", e => e.stopPropagation()); // Enter/Space must not also play the line around it
+    paint();
+    return b;
+  }
+
   function itemRow(it, note) {
+    const star = starBtn(it);
+    const row = itemRowBtn(it, note);
+    return star ? h("div", { class: "item-wrap" }, row, star) : row;
+  }
+  function itemRowBtn(it, note) {
     return h("button", { type: "button", class: "item-row", onclick: () => Speech.speak(it.ru) },
       h("span", { class: "play", "aria-hidden": "true" }, "🔊"),
       h("span", { class: "item-text" },
@@ -436,10 +508,13 @@
       const L = R.levelById[id];
       return L && { kind: "l", id, level: id, title: L.name, items: levelItems(L), topics: levelTopics(L) };
     }
+    if (kind === "f") return { kind: "f", id, title: "Saqlanganlar", items: savedFiltered(id) };
     return kind === "w" ? R.listById[id] : kind === "q" ? R.shortcutById[id] : R.topicById[id];
   }
-  function backOf(s) { return s.kind === "l" ? "#/test" : s.kind === "w" ? "#/words/" + s.id : s.kind === "q" ? "#/short/" + s.id : "#/topic/" + s.id; }
-  function noun(s) { return s.kind === "w" ? "so‘z" : s.kind === "q" ? "qisqartma" : "ibora"; }
+  function backOf(s) {
+    return s.kind === "f" ? "#/saved" : s.kind === "l" ? "#/test" : s.kind === "w" ? "#/words/" + s.id : s.kind === "q" ? "#/short/" + s.id : "#/topic/" + s.id;
+  }
+  function noun(s) { return s.kind === "w" ? "so‘z" : s.kind === "q" ? "qisqartma" : s.kind === "f" ? "ibora va so‘z" : "ibora"; }
 
   /* =====================================================================
      Speaking check
@@ -519,8 +594,9 @@
     return out;
   }
   function distractors(it, keyFn) {
-    const own = shuffle(it.src.items.slice());
-    const all = shuffle(Object.values(R.items).filter(x => x.kind === it.kind && x.src !== it.src));
+    const own = shuffle((it.src.items || []).slice());
+    const kind = it.kind === "d" ? "p" : it.kind; // a saved dialogue/listening line is mixed with phrases
+    const all = shuffle(Object.values(R.items).filter(x => x.kind === kind && x.src !== it.src));
     return pickOthers(it, own.concat(all), keyFn, 3);
   }
 
@@ -529,8 +605,10 @@
     return {
       title: "🎧 Tinglang va ma’nosini tanlang",
       audio: it.ru,
+      role: it.who,
       options: shuffle(opts.map(x => ({ text: x.uz, ok: x === it }))),
-      reveal: it
+      reveal: it,
+      item: it
     };
   }
   function qSituation(it) {
@@ -539,7 +617,8 @@
       title: "🤔 Bu vaziyatda nima deysiz?",
       prompt: h("div", { class: "situation" }, "📍 ", it.sit),
       options: shuffle(opts.map(x => ({ text: x.ru, sub: x.pr, ok: x === it, ru: true }))),
-      reveal: it
+      reveal: it,
+      item: it
     };
   }
   function qTranslate(it) {
@@ -548,7 +627,8 @@
       title: "🔤 Ruscha qanday bo‘ladi?",
       prompt: h("div", { class: "ask-uz" }, "«" + it.uz + "»"),
       options: shuffle(opts.map(x => ({ text: x.ru, sub: x.pr, ok: x === it, ru: true }))),
-      reveal: it
+      reveal: it,
+      item: it
     };
   }
   function dialoguePairs(t) {
@@ -577,7 +657,8 @@
         h("div", { class: "pr" }, p.q.pr),
         h("div", { class: "uz" }, p.q.uz)),
       options: shuffle(opts.map(x => ({ text: x.ru, sub: x.pr, ok: x === p.a, ru: true }))),
-      reveal: p.a
+      reveal: p.a,
+      item: p.a.sv
     };
   }
 
@@ -617,12 +698,14 @@
       h("p", { class: "hint" }, "🔊 Tinglang, keyin ovoz chiqarib takrorlang."),
       phraseBox(it, true),
       soundRow(it.ru),
+      starBtn(it, true),
       // The recognizer writes spoken shortcuts in full (щас → сейчас), so a shortcut is checked against its written form.
       micWidget(it.full || it.ru)
     ];
   }
 
-  function cardView(it, onGrade) {
+  /* onLearned (optional): «O‘rgandim» for a saved item — removes it from Saqlanganlar. */
+  function cardView(it, onGrade, onLearned) {
     const wrap = h("div", { class: "cardview" });
     function front() {
       wrap.textContent = "";
@@ -640,11 +723,13 @@
       add(wrap, [
         phraseBox(it, true),
         soundRow(it.ru),
+        starBtn(it, true),
         h("p", { class: "hint" }, "Buni qanchalik yaxshi bilasiz?"),
         h("div", { class: "grades" },
           btn("✅", "Bilaman", () => onGrade(5), "ok big"),
           btn("🤔", "Qiyin", () => onGrade(3), "warn big"),
-          btn("❌", "Bilmayman", () => onGrade(1), "bad big"))
+          btn("❌", "Bilmayman", () => onGrade(1), "bad big"),
+          onLearned && isSaved(it) ? btn("✅", "O‘rgandim", onLearned, "learned big") : null)
       ]);
       Speech.speak(it.ru);
     }
@@ -700,7 +785,7 @@
 
   /* Runs a list of steps: { type: "learn" | "card" | "quiz", item, q }. */
   function runSession(cfg) {
-    const st = { i: 0, steps: cfg.steps, ok: 0, asked: 0, grades: { 5: 0, 3: 0, 1: 0 }, requeued: {} };
+    const st = { i: 0, steps: cfg.steps, ok: 0, asked: 0, grades: { 5: 0, 3: 0, 1: 0 }, requeued: {}, learned: 0 };
     function frame(body) {
       const pct = Math.round((st.i / st.steps.length) * 100);
       show(header(cfg.title, cfg.back, cfg.crumbs), progressBar(pct),
@@ -720,15 +805,25 @@
       } else if (s.type === "card") {
         frame(cardView(s.item, q => {
           if (!s.repeat) { st.grades[q]++; grade(s.item, q); }
+          if (q === 1) autoSave(s.item);
           const times = st.requeued[s.item.id] || 0;
           if (q === 1 && times < 2) {
             st.requeued[s.item.id] = times + 1;
             st.steps.splice(Math.min(st.i + 4, st.steps.length), 0, { type: "card", item: s.item, repeat: true });
           }
           next();
+        }, () => {
+          // ✅ O‘rgandim: counts as «Bilaman», leaves Saqlanganlar, and its later repeats in this session are dropped.
+          const it = s.item, at = S.saved[it.id];
+          if (!s.repeat) { st.grades[5]++; grade(it, 5); }
+          st.learned++;
+          setSaved(it, false);
+          for (let k = st.steps.length - 1; k > st.i; k--) if (st.steps[k].item === it) st.steps.splice(k, 1);
+          toast("✅ O‘rgandim! Saqlanganlardan olib tashlandi", { label: "Bekor qilish", fn: () => { setSaved(it, true, at); toast("⭐ Qaytarildi"); } });
+          next();
         }));
       } else {
-        frame(quizView(s.q, ok => { st.asked++; if (ok) st.ok++; markActive(); }, next));
+        frame(quizView(s.q, ok => { st.asked++; if (ok) st.ok++; else autoSave(s.q.item); markActive(); }, next));
       }
     }
     render();
@@ -814,6 +909,7 @@
   /* Path for screens inside a topic, word list or level practice (lessons, cards, test, dialogues). */
   function crumbsOf(s) {
     if (s.kind === "l") return [s.title + " · Test"];
+    if (s.kind === "f") return ["⭐ Saqlanganlar"];
     if (s.kind === "w") return [levelName(s.level) + " · So‘zlar", s.title];
     if (s.kind === "q") return [levelName(s.level) + " · Jonli nutq", s.title];
     return placeOf(s).crumbs.concat(topicLabel(s));
@@ -946,6 +1042,7 @@
           "#/topics", "O‘rganilgan: " + seenIn(topicItems) + " / " + topicItems.length) : null,
         lists.length ? navButton("📚", "So‘zlar", wordItems.length + " ta eng kerakli so‘z (" + L.name + ")",
           "#/words", "O‘rganilgan: " + seenIn(wordItems) + " / " + wordItems.length) : null,
+        savedNavButton(),
         texts.length || dialogs ? navButton("🎧", "Tinglash",
           [texts.length ? texts.length + " ta matn" : "", dialogs ? dialogs + " ta suhbat" : ""].filter(Boolean).join(" · "), "#/listen") : null,
         liveTexts.length || shorts.length ? navButton("🎧", "Jonli nutq",
@@ -1047,6 +1144,7 @@
       const uz = h("div", { class: "uz" }, l.uz);
       if (live) uz.hidden = true;
       const b = h("div", { class: "bubble " + (live ? l.who : "a"), role: "button", tabindex: "0" },
+        starBtn(l.sv),
         live && name(l.who) ? h("div", { class: "who" }, name(l.who)) : null,
         h("div", { class: "ru", lang: "ru" }, l.ru),
         h("div", { class: "pr" }, l.pr),
@@ -1077,7 +1175,7 @@
     const toggle = h("button", { type: "button", class: "btn", onclick: () => {
       text.hidden = !text.hidden;
       toggleLabel.textContent = text.hidden ? "Matnni ko‘rsatish" : "Matnni yashirish";
-      allUz.hidden = text.hidden;
+      if (allUz) allUz.hidden = text.hidden;
     } }, h("span", { class: "ic", "aria-hidden": "true" }, "👁"), toggleLabel);
     const allUz = live ? btn("🇺🇿", "Barcha tarjimalarni ochish", () => {
       rows.forEach(r => { r.querySelector(".uz").hidden = false; r.classList.add("opened"); });
@@ -1117,7 +1215,10 @@
       title: "✅ Savollar",
       back: (x.live ? "#/live/" : "#/listen/") + x.id,
       crumbs: [levelName(x.level) + (x.live ? " · Jonli nutq" : " · Tinglash"), x.title],
-      steps: x.questions.map(q => ({ type: "quiz", q: fileQuestion(q, x.lines[q.line] || x.lines[0]) })),
+      steps: x.questions.map(q => {
+        const line = x.lines[q.line] || x.lines[0];
+        return { type: "quiz", q: Object.assign(fileQuestion(q, line), { item: line && line.sv }) };
+      }),
       finish: st => {
         S.listen = S.listen || {};
         S.listen[x.id] = Math.max(S.listen[x.id] || 0, st.ok);
@@ -1173,6 +1274,7 @@
       h("h2", null, "📋 Barcha qisqartmalar (" + s.items.length + ")"),
       h("p", { class: "hint" }, "Qisqartmani bossangiz — o‘zini, misolni bossangiz — butun gapni eshitasiz."),
       s.items.map(it => h("div", { class: "short-row" + (it.warn ? " is-warn" : "") },
+        h("div", { class: "short-top" },
         h("button", { type: "button", class: "short-main", onclick: () => Speech.speak(it.ru) },
           h("span", { class: "play", "aria-hidden": "true" }, "🔊"),
           h("span", { class: "short-forms" },
@@ -1182,6 +1284,7 @@
           h("span", { class: "pr" }, it.pr),
           h("span", { class: "uz" }, it.uz),
           S.cards[it.id] ? h("span", { class: "tick", title: "O‘rganilgan", "aria-label": "O‘rganilgan" }, "✓") : null),
+          starBtn(it)),
         it.warn ? h("div", { class: "warn-note" }, "⚠ ", it.warn) : null,
         it.ex ? exampleRow(it.ex) : null)));
   }
@@ -1195,20 +1298,23 @@
         title: "🎧 Tinglang: bu so‘z qanday yoziladi?",
         audio: it.ru,
         options: shuffle([it].concat(others(it, x => sn(x.full))).map(x => ({ text: x.full, ok: x === it, ru: true }))),
-        reveal: it
+        reveal: it,
+        item: it
       }),
       it => ({
         title: "🗯 Ruslar jonli nutqda buni qanday aytadi?",
         prompt: h("div", { class: "ask-uz", lang: "ru" }, "«" + it.full + "»"),
         options: shuffle([it].concat(others(it, x => sn(x.ru))).map(x => ({ text: x.ru, sub: x.pr, ok: x === it, ru: true }))),
-        reveal: it
+        reveal: it,
+        item: it
       }),
       it => ({
         title: "🎧 Tinglang va ma’nosini tanlang",
         audio: it.ex ? it.ex.ru : it.ru,
         prompt: h("div", { class: "ask-uz", lang: "ru" }, "«" + it.ru + "»"),
         options: shuffle([it].concat(others(it, x => sn(x.uz))).map(x => ({ text: x.uz, ok: x === it }))),
-        reveal: it
+        reveal: it,
+        item: it
       }),
       it => ({
         title: "🏛 Rasmiy vaziyatda (idorada, ish suhbatida) shunday aytsa bo‘ladimi?",
@@ -1218,7 +1324,8 @@
           { text: "✅ Ha, bo‘ladi — bu odatiy so‘z", ok: !it.warn },
           { text: "⚠ Yo‘q, bu juda norasmiy", ok: !!it.warn }
         ]),
-        reveal: it
+        reveal: it,
+        item: it
       })
     ];
     return items.slice(0, n).map((it, k) => types[k % types.length](it));
@@ -1281,12 +1388,14 @@
     const phraseRows = x.phrases.map(it => {
       const micBox = h("div", { class: "sp-mic" });
       const row = h("div", { class: "sp-phrase" },
-        h("button", { type: "button", class: "item-row", onclick: () => say(it.ru) },
-          h("span", { class: "play", "aria-hidden": "true" }, "🔊"),
-          h("span", { class: "item-text" },
-            h("span", { class: "ru", lang: "ru" }, it.ru),
-            h("span", { class: "pr" }, it.pr),
-            h("span", { class: "uz" }, it.uz))),
+        h("div", { class: "item-wrap" },
+          h("button", { type: "button", class: "item-row", onclick: () => say(it.ru) },
+            h("span", { class: "play", "aria-hidden": "true" }, "🔊"),
+            h("span", { class: "item-text" },
+              h("span", { class: "ru", lang: "ru" }, it.ru),
+              h("span", { class: "pr" }, it.pr),
+              h("span", { class: "uz" }, it.uz))),
+          starBtn(it.sv)),
         h("div", { class: "row sp-tools" },
           btn("🐢", "Sekin", () => say(it.ru, { slow: true })),
           btn("🎤", "Takrorlash", () => {
@@ -1637,19 +1746,172 @@
     });
   }
 
+  /* =====================================================================
+     ⭐ Saqlanganlar: phrases, words, dialogue / listening lines and shortcuts the user saved with ☆.
+     Saved ids live in the progress (S.saved). Practice uses the "f" source: #/cards/f/<filter>, #/learn/f/…, #/quiz/f/….
+     ===================================================================== */
+  let savedFilter = "all"; // chip chosen on the Saqlanganlar screen (kept while the app is open)
+  function savedFilters() {
+    const f = [
+      { id: "all", label: "Hammasi" },
+      { id: "p", label: "Iboralar" },
+      { id: "w", label: "So‘zlar" }
+    ].concat(R.levels.filter(hasContent).map(L => ({ id: L.id, label: L.name, color: L.color })));
+    if (savedList().some(it => !it.level)) f.push({ id: "kasb", label: "👷 Kasblar" });
+    return f;
+  }
+  function savedTest(f) {
+    if (f === "p") return it => it.kind !== "w";
+    if (f === "w") return it => it.kind === "w";
+    if (f === "kasb") return it => !it.level;
+    if (R.levelById[f]) return it => it.level === f;
+    return () => true;
+  }
+  function savedFiltered(f) { return savedList().filter(savedTest(f)); }
+
+  /* Where a saved item came from: level pill, place ("Bozor", "Tinglash · Metro"…) and the screen to open. */
+  function savedSource(it) {
+    const s = it.src, w = it.where || {};
+    const L = R.levelById[s.level];
+    let place, hash;
+    if (w.dialog != null) { place = topicLabel(s) + " · 💬 " + w.title; hash = "#/dialog/" + s.id + "/" + w.dialog; }
+    else if (w.listen) { place = (s.live ? "Jonli nutq" : "Tinglash") + " · " + s.title; hash = (s.live ? "#/live/" : "#/listen/") + s.id; }
+    else if (w.speak) { place = "Fikr bildiring · " + s.title; hash = "#/speak/" + s.id; }
+    else if (s.kind === "w") { place = "So‘zlar" + (it.theme ? " · " + it.theme : ""); hash = "#/words/" + s.id; }
+    else if (s.kind === "q") { place = s.title; hash = "#/short/" + s.id; }
+    else { place = topicLabel(s); hash = "#/topic/" + s.id; }
+    return { lvl: L ? L.name : "Kasblar", color: L ? L.color : "#475569", place, hash };
+  }
+
+  function savedNavButton() {
+    const n = savedList().length;
+    return navButton("⭐", "Saqlanganlar",
+      n ? "Saqlagan ibora va so‘zlaringizni alohida takrorlang" : "☆ tugmasi bilan kerakli ibora va so‘zlarni saqlang",
+      "#/saved", "⭐ " + n);
+  }
+
+  function savedEmpty() {
+    return h("div", { class: "done saved-empty" },
+      h("div", { class: "big-ic", "aria-hidden": "true" }, "⭐"),
+      h("h2", null, "Hali hech narsa saqlanmagan"),
+      h("p", null, "Keyinroq takrorlamoqchi bo‘lgan ibora va so‘zlarni shu yerga saqlang."),
+      h("div", { class: "star-demo", "aria-hidden": "true" },
+        h("div", { class: "item-wrap" },
+          h("div", { class: "item-row" },
+            h("span", { class: "play" }, "🔊"),
+            h("span", { class: "item-text" },
+              h("span", { class: "ru", lang: "ru" }, "Спасибо!"),
+              h("span", { class: "pr" }, "Spasiba!"),
+              h("span", { class: "uz" }, "Rahmat!"))),
+          h("span", { class: "star demo-pulse" }, h("span", { class: "star-ic" }, "☆"))),
+        h("p", { class: "demo-arrow" }, "Shu ☆ tugmani bosing 👆")),
+      h("p", null, "Ibora, so‘z yoki suhbatdagi gap yonidagi ☆ tugmasini bosing. U ⭐ ga aylanadi va shu yerda paydo bo‘ladi."),
+      btn("📂", "Mavzularga o‘tish", () => go("#/topics"), "primary big"));
+  }
+
+  function savedScreen() {
+    const body = h("div");
+    show(header("⭐ Saqlan­ganlar", "#/"), body);
+    const v = viewTok;
+
+    function learned(it) {
+      const at = S.saved[it.id];
+      setSaved(it, false);
+      render();
+      toast("✅ O‘rgandim! Ro‘yxatdan olib tashlandi", { label: "Bekor qilish", fn: () => {
+        setSaved(it, true, at);
+        if (v === viewTok) render();
+        toast("⭐ Qaytarildi");
+      } });
+    }
+
+    function card(it) {
+      const src = savedSource(it);
+      const micBox = h("div");
+      const say = slow => Speech.speak(it.ru, { slow, role: it.who });
+      return h("div", { class: "saved-item" },
+        h("button", { type: "button", class: "saved-main", onclick: () => say(false) },
+          h("span", { class: "ru", lang: "ru" }, it.ru),
+          it.full ? h("span", { class: "saved-full" }, "✍️ ", h("span", { lang: "ru" }, it.full)) : null,
+          it.pr ? h("span", { class: "pr" }, it.pr) : null,
+          it.uz ? h("span", { class: "uz" }, it.uz) : null),
+        h("button", { type: "button", class: "saved-src", onclick: () => go(src.hash) },
+          h("span", { class: "lvl-pill", style: "--lvl:" + src.color }, src.lvl),
+          h("span", { class: "saved-place" }, src.place),
+          h("span", { class: "saved-go", "aria-hidden": "true" }, "›")),
+        h("div", { class: "saved-tools" },
+          btn("🔊", "Tinglash", () => say(false)),
+          btn("🐢", "Sekin", () => say(true)),
+          btn("🎤", "Takrorlash", () => {
+            if (micBox.firstChild) { micBox.textContent = ""; return; }
+            add(micBox, micWidget(sayable(it.full || it.ru)));
+          })),
+        micBox,
+        btn("✅", "O‘rgandim", () => learned(it), "ok big"));
+    }
+
+    function render() {
+      body.textContent = "";
+      if (!savedList().length) return add(body, savedEmpty());
+      const filters = savedFilters();
+      if (!filters.some(f => f.id === savedFilter)) savedFilter = "all";
+      const list = savedFiltered(savedFilter);
+      const testNote = h("div");
+      add(body, [
+        h("p", { class: "hint" }, "Siz saqlagan ibora va so‘zlar. Oxirgi saqlanganlar yuqorida. O‘rganib bo‘lgach, «✅ O‘rgandim»ni bosing."),
+        h("div", { class: "chips", role: "group", "aria-label": "Saralash" }, filters.map(f =>
+          h("button", {
+            type: "button", class: "chip" + (f.color ? " lvl-chip" : ""), "aria-pressed": String(f.id === savedFilter),
+            style: f.color ? "--lvl:" + f.color : null, onclick: () => { savedFilter = f.id; render(); }
+          },
+            h("span", null, f.label),
+            h("span", { class: "chip-n" }, String(savedFiltered(f.id).length))))),
+        list.length ? [
+          h("h2", null, "Mashq qilish (" + list.length + " ta)"),
+          btn("🃏", "Kartochkalar", () => go("#/cards/f/" + savedFilter), "primary big"),
+          h("div", { class: "grid2" },
+            btn("🎧", "Tinglash va takrorlash", () => go("#/learn/f/" + savedFilter)),
+            btn("✅", "Test", () => {
+              if (list.length >= 4) return go("#/quiz/f/" + savedFilter);
+              testNote.textContent = "";
+              add(testNote, h("p", { class: "note" },
+                "🙂 Test uchun kamida 4 ta saqlangan ibora yoki so‘z kerak. Hozir " + list.length + " ta bor — yana " + (4 - list.length) +
+                " ta saqlang (☆ tugmasi). Hozircha «🃏 Kartochkalar» bilan mashq qiling."));
+            })),
+          testNote,
+          h("h2", null, "📋 Ro‘yxat (" + list.length + ")"),
+          list.map(card)
+        ] : h("p", { class: "note" }, "Bu bo‘limda hali saqlangan narsa yo‘q. «Hammasi» tugmasini bosing.")
+      ]);
+    }
+    render();
+  }
+
+
   /* Fixed bottom bar, shown on every screen. */
+  /* Labels carry soft hyphens (\u00AD): on a narrow phone a long word breaks as "Saqlan-ganlar", never mid-letter. */
   const NAV = [
     ["home", "🏠", "Bosh sahifa", "#/"],
-    ["review", "🔁", "Takrorlash", "#/review"],
+    ["review", "🔁", "Takror\u00ADlash", "#/review"],
+    ["saved", "⭐", "Saqlan\u00ADganlar", "#/saved"],
     ["search", "🔍", "Qidirish", "#/search"],
     ["help", "❓", "Yordam", "#/help"]
   ];
   const navBtns = {};
-  let dueBadge = null;
+  let dueBadge = null, savedBadge = null;
+  /* ⭐ count on the bottom bar (called after every save / remove). */
+  function refreshSavedCount() {
+    if (!savedBadge) return;
+    const n = savedList().length;
+    savedBadge.hidden = !n;
+    savedBadge.textContent = n > 99 ? "99+" : String(n);
+    navBtns.saved.setAttribute("aria-label", "Saqlanganlar" + (n ? ": " + n + " ta" : ""));
+  }
   function buildBottomNav() {
     const nav = h("nav", { class: "bottom-nav", "aria-label": "Asosiy menyu" });
     NAV.forEach(([key, icon, label, hash]) => {
-      const badge = key === "review" ? (dueBadge = h("span", { class: "badge", hidden: true })) : null;
+      const badge = key === "review" ? (dueBadge = h("span", { class: "badge", hidden: true }))
+        : key === "saved" ? (savedBadge = h("span", { class: "badge star-badge", hidden: true })) : null;
       navBtns[key] = h("button", { type: "button", onclick: () => go(hash) },
         h("span", { class: "bn-ic", "aria-hidden": "true" }, icon), badge,
         h("span", { class: "bn-label" }, label));
@@ -1666,6 +1928,7 @@
     dueBadge.hidden = !n;
     dueBadge.textContent = n > 99 ? "99+" : String(n);
     navBtns.review.setAttribute("aria-label", "Takrorlash" + (n ? ": " + n + " ta kartochka" : ""));
+    refreshSavedCount();
   }
 
   function lessonRoute() {
@@ -1758,7 +2021,7 @@
     const s = srcOf(kind, id);
     if (!s || !s.items.length) return redirect("#/");
     const group = g != null && s.groups ? s.groups[+g] : null;
-    const items = group ? group.items : nextChunk(s.items, 10);
+    const items = group ? group.items : kind === "f" ? shuffle(s.items.slice()).slice(0, 10) : nextChunk(s.items, 10);
     runSession({
       title: "🎧 " + (group ? group.theme : "Tinglash va takrorlash"),
       back: backOf(s),
@@ -1769,7 +2032,7 @@
         "Endi kartochkalar bilan mustahkamlang."
       ], [
         btn("🃏", "Kartochkalar bilan takrorlash", () => go("#/cards/" + kind + "/" + id), "primary big"),
-        group ? null : btn("➜", "Yana 10 ta", () => route()),
+        group || (kind === "f" && s.items.length <= 10) ? null : btn("➜", kind === "f" ? "Yana takrorlash" : "Yana 10 ta", () => route()),
         btn("⬅", "Orqaga", () => goBack(backOf(s)))
       ])
     });
@@ -1790,8 +2053,9 @@
       steps: list.map(item => ({ type: "card", item })),
       finish: st => doneView("🎉", "Kartochkalar tugadi!", [
         "✅ Bilaman: " + st.grades[5] + " · 🤔 Qiyin: " + st.grades[3] + " · ❌ Bilmayman: " + st.grades[1],
+        st.learned ? "🎓 O‘rgandim: " + st.learned + " ta — Saqlanganlardan olib tashlandi." : "",
         "Qiyin so‘zlar ertaga yana chiqadi."
-      ], [
+      ].filter(Boolean), [
         btn("✅", "Test topshirish", () => go("#/quiz/" + kind + "/" + id), "primary big"),
         btn("⬅", "Orqaga", () => goBack(backOf(s)))
       ])
@@ -1800,6 +2064,7 @@
 
   function quizRoute(kind, id) {
     const s = srcOf(kind, id);
+    if (kind === "f" && s.items.length < 4) return redirect("#/saved");
     if (!s || !s.items.length) return redirect("#/");
     const qs = buildQuiz(s.items, kind === "t" ? [s] : kind === "l" ? s.topics : [], 10);
     runSession({
@@ -1838,6 +2103,7 @@
     const name = w => (w === "a" ? d.a : d.b);
     function bubble(l) {
       return h("div", { class: "bubble " + l.who },
+        starBtn(l.sv),
         h("div", { class: "who" }, name(l.who)),
         h("div", { class: "ru", lang: "ru" }, l.ru),
         h("div", { class: "pr" }, l.pr),
@@ -1992,9 +2258,24 @@
       sizeBtns.forEach((b, i) => b.setAttribute("aria-pressed", String(SIZES[i][0] === key)));
     }
 
+    /* ⭐ Auto-save setting (off by default), kept in the progress. */
+    const autoBtn = h("button", { type: "button", class: "switch-row", role: "switch", onclick: () => {
+      S.autoSave = !S.autoSave;
+      save();
+      autoBtn.setAttribute("aria-checked", String(!!S.autoSave));
+      toast(S.autoSave ? "⭐ Avtomatik saqlash yoqildi" : "Avtomatik saqlash o‘chirildi");
+    } },
+      h("span", { class: "switch-text" },
+        h("span", { class: "switch-title" }, "Qiyin so‘zlarni avtomatik saqlash"),
+        h("span", { class: "switch-sub" }, "Kartochkada «Bilmayman» desangiz yoki testda xato qilsangiz, o‘sha ibora ⭐ Saqlanganlarga o‘zi qo‘shiladi.")),
+      h("span", { class: "switch", "aria-hidden": "true" }, h("span", { class: "knob" })));
+    autoBtn.setAttribute("aria-checked", String(!!S.autoSave));
+
     show(header("❓ Yordam", "#/"),
       h("h2", null, "Matn o‘lchami"),
       h("div", { class: "size-picker", role: "group", "aria-label": "Matn o‘lchami" }, sizeBtns),
+      h("h2", null, "⭐ Saqlanganlar"),
+      autoBtn,
       h("h2", null, "Qanday o‘rganish kerak?"),
       h("ol", { class: "steps" },
         h("li", null, "Yuqoridagi A1, A2, B1… tugmalari bilan darajangizni tanlang. Hech narsa yopilmagan."),
@@ -2003,7 +2284,8 @@
         h("li", null, "🎤 «Gapiring» tugmasini bosib, ruscha ayting — dastur sizni tekshiradi."),
         h("li", null, "Kartochkalarda halol javob bering: «Bilaman», «Qiyin» yoki «Bilmayman». Qiyin iboralar tez-tez qaytadi."),
         h("li", null, "Mavzulardagi «Suhbatlar»da rol o‘ynab, haqiqiy vaziyatga tayyorlaning."),
-        h("li", null, "Pastdagi tugmalar har doim ko‘rinadi: 🏠 Bosh sahifa, 🔁 Takrorlash, 🔍 Qidirish, ❓ Yordam. «⬅ Orqaga» bir qadam orqaga qaytaradi.")),
+        h("li", null, "Qiyin ibora yoki so‘z yonidagi ☆ tugmasini bosing — u ⭐ «Saqlanganlar»ga tushadi. U yerda ularni alohida takrorlaysiz."),
+        h("li", null, "Pastdagi tugmalar har doim ko‘rinadi: 🏠 Bosh sahifa, 🔁 Takrorlash, ⭐ Saqlanganlar, 🔍 Qidirish, ❓ Yordam. «⬅ Orqaga» bir qadam orqaga qaytaradi.")),
       h("button", { type: "button", class: "tile wide", onclick: () => go("#/daraja") },
         h("span", { class: "tile-ic", "aria-hidden": "true" }, "🎯"),
         h("span", { class: "tile-title" }, "Darajani qayta aniqlash"),
@@ -2259,6 +2541,7 @@
       case "jobs": return jobsScreen();
       case "job": return jobRoute(p[1]);
       case "search": return searchScreen();
+      case "saved": return savedScreen();
       case "review": return reviewRoute();
       case "topic": return topicScreen(p[1]);
       case "learn": return learnRoute(p[1], p[2], p[3]);
