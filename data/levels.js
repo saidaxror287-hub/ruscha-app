@@ -81,6 +81,16 @@ var RUSCHA_LEVELS = [
       "data/a2/listening/shifokorda.js",
       "data/a2/listening/dam-olish.js",
       "data/a2/listening/qongiroq.js",
+      "data/a2/listening/vokzal.js",
+      "data/a2/listening/metro.js",
+      "data/a2/listening/supermarket.js",
+      "data/a2/listening/dost-xabari.js",
+      "data/a2/listening/ustaxona.js",
+      "data/a2/listening/dorixona.js",
+      "data/a2/listening/kuryer-kuni.js",
+      "data/a2/listening/maktabdan.js",
+      "data/a2/listening/kuryer-xabari.js",
+      "data/a2/listening/tugilgan-kun.js",
 
       "data/a2/test.js"
     ]
