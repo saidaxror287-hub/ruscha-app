@@ -25,7 +25,7 @@ var Speech = (function () {
     synth.onvoiceschanged = loadVoices;
   }
 
-  /* Speak Russian text. opts: { slow: bool, role: "a" | "b" }. Returns a Promise that resolves when done. */
+  /* Speak Russian text. opts: { slow: bool, natural: bool (real-life speed), role: "a" | "b" }. Returns a Promise that resolves when done. */
   function speak(text, opts) {
     opts = opts || {};
     return new Promise(resolve => {
@@ -41,7 +41,7 @@ var Speech = (function () {
       const second = opts.role === "b" && ruVoices.length > 1;
       const v = second ? ruVoices[1] : ruVoices[0];
       if (v) u.voice = v;
-      u.rate = opts.slow ? 0.55 : 0.9;
+      u.rate = opts.slow ? 0.55 : opts.natural ? 1.05 : 0.9;
       u.pitch = opts.role === "b" && !second ? 0.8 : 1;
 
       let done = false;

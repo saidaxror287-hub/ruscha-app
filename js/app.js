@@ -113,6 +113,40 @@
     R.listeningById[x.id] = x;
   };
 
+  /* 🎧 Jonli nutq — listening at natural speed: { id, title, icon, kind, about, a, b,
+     lines: [["a" | "b", ru, pr, uz]], questions }. "a" / "b" are the two speakers (names in a, b). */
+  R.live = [];
+  R.addLive = function (x) {
+    if (!x || !x.id || R.listeningById[x.id]) return;
+    x.level = loadingLevel;
+    x.live = true;
+    x.lines = (x.lines || []).map(l => (l.length > 3 ? { who: l[0], ru: l[1], pr: l[2], uz: l[3] } : { who: "a", ru: l[0], pr: l[1], uz: l[2] }));
+    x.questions = x.questions || [];
+    R.live.push(x);
+    R.listeningById[x.id] = x;
+  };
+
+  /* 🗯 Qisqartmalar — spoken shortcuts: { id, title, icon, items: [{ full, say, pr, uz, ex: [ru, pr, uz], warn? }] }.
+     "full" = how it is written, "say" = how Russians really say it (this is the card's Russian side),
+     "warn" = Uzbek note when it is too informal for official situations. */
+  R.shortcuts = [];
+  R.shortcutById = {};
+  R.addShortcuts = function (s) {
+    if (!s || !s.id || R.shortcutById[s.id]) return;
+    s.kind = "q";
+    s.level = loadingLevel;
+    s.items = (s.items || []).map(x => {
+      const it = addItem("s", x.say, x.pr, x.uz, "", s);
+      it.full = x.full;
+      it.warn = x.warn || "";
+      it.ex = x.ex ? { ru: x.ex[0], pr: x.ex[1], uz: x.ex[2] } : null;
+      it.search = sn(x.say + " " + x.full + " " + it.pr + " " + it.uz);
+      return it;
+    });
+    R.shortcuts.push(s);
+    R.shortcutById[s.id] = s;
+  };
+
   /* 🗣 Speaking tasks (one task or a list): { id, title, icon, q: [ru, pr, uz], phrases: [[ru, pr, uz]], sample: [[ru, pr, uz]] }. */
   R.addSpeaking = function (list) {
     [].concat(list || []).forEach(x => {
@@ -358,7 +392,19 @@
     return h("div", { class: "phrase" + (big ? " big" : "") },
       h("div", { class: "ru", lang: "ru" }, it.ru),
       it.pr ? h("div", { class: "pr" }, h("span", { class: "lbl" }, "Aytilishi: "), it.pr) : null,
-      it.uz ? h("div", { class: "uz" }, h("span", { class: "lbl" }, "Ma’nosi: "), it.uz) : null);
+      it.uz ? h("div", { class: "uz" }, h("span", { class: "lbl" }, "Ma’nosi: "), it.uz) : null,
+      it.full ? h("div", { class: "full" }, h("span", { class: "lbl" }, "✍️ Yozilishi: "), h("span", { lang: "ru" }, it.full)) : null,
+      it.warn ? h("div", { class: "warn-note" }, "⚠ ", it.warn) : null,
+      it.ex ? exampleRow(it.ex) : null);
+  }
+  /* Example sentence of a spoken shortcut: tap to hear it. */
+  function exampleRow(ex) {
+    return h("button", { type: "button", class: "example", onclick: e => { e.stopPropagation(); Speech.speak(ex.ru, { natural: true }); } },
+      h("span", { class: "play", "aria-hidden": "true" }, "🔊"),
+      h("span", { class: "item-text" },
+        h("span", { class: "ru", lang: "ru" }, ex.ru),
+        h("span", { class: "pr" }, ex.pr),
+        h("span", { class: "uz" }, ex.uz)));
   }
   function itemRow(it, note) {
     return h("button", { type: "button", class: "item-row", onclick: () => Speech.speak(it.ru) },
@@ -375,10 +421,10 @@
       const L = R.levelById[id];
       return L && { kind: "l", id, level: id, title: L.name, items: levelItems(L), topics: levelTopics(L) };
     }
-    return kind === "w" ? R.listById[id] : R.topicById[id];
+    return kind === "w" ? R.listById[id] : kind === "q" ? R.shortcutById[id] : R.topicById[id];
   }
-  function backOf(s) { return s.kind === "l" ? "#/test" : s.kind === "w" ? "#/words/" + s.id : "#/topic/" + s.id; }
-  function noun(s) { return s.kind === "w" ? "so‘z" : "ibora"; }
+  function backOf(s) { return s.kind === "l" ? "#/test" : s.kind === "w" ? "#/words/" + s.id : s.kind === "q" ? "#/short/" + s.id : "#/topic/" + s.id; }
+  function noun(s) { return s.kind === "w" ? "so‘z" : s.kind === "q" ? "qisqartma" : "ibora"; }
 
   /* =====================================================================
      Speaking check
@@ -556,7 +602,8 @@
       h("p", { class: "hint" }, "🔊 Tinglang, keyin ovoz chiqarib takrorlang."),
       phraseBox(it, true),
       soundRow(it.ru),
-      micWidget(it.ru)
+      // The recognizer writes spoken shortcuts in full (щас → сейчас), so a shortcut is checked against its written form.
+      micWidget(it.full || it.ru)
     ];
   }
 
@@ -685,7 +732,7 @@
   function ofLevel(L, list) { return list.filter(x => x.level === L.id); }
   function levelTopics(L) { return ofLevel(L, R.topics); }
   function levelItems(L) { return levelTopics(L).concat(ofLevel(L, R.lists)).flatMap(s => s.items); }
-  function hasContent(L) { return levelItems(L).length > 0 || ofLevel(L, R.listening).length > 0 || ofLevel(L, R.speaking).length > 0 || !!R.tests[L.id]; }
+  function hasContent(L) { return levelItems(L).length > 0 || ofLevel(L, R.listening).length > 0 || ofLevel(L, R.speaking).length > 0 || ofLevel(L, R.live).length > 0 || !!R.tests[L.id]; }
   function levelPct(L) {
     const items = levelItems(L);
     return items.length ? Math.round((seenIn(items) / items.length) * 100) : 0;
@@ -750,6 +797,7 @@
   function crumbsOf(s) {
     if (s.kind === "l") return [s.title + " · Test"];
     if (s.kind === "w") return [levelName(s.level) + " · So‘zlar", s.title];
+    if (s.kind === "q") return [levelName(s.level) + " · Jonli nutq", s.title];
     return placeOf(s).crumbs.concat(topicLabel(s));
   }
 
@@ -844,6 +892,8 @@
     const jobs = R.jobs;
     const test = R.tests[L.id];
     const speakTasks = ofLevel(L, R.speaking);
+    const liveTexts = ofLevel(L, R.live);
+    const shorts = ofLevel(L, R.shortcuts);
     const topicItems = topics.flatMap(t => t.items);
     const wordItems = lists.flatMap(l => l.items);
 
@@ -880,6 +930,9 @@
           "#/words", "O‘rganilgan: " + seenIn(wordItems) + " / " + wordItems.length) : null,
         texts.length || dialogs ? navButton("🎧", "Tinglash",
           [texts.length ? texts.length + " ta matn" : "", dialogs ? dialogs + " ta suhbat" : ""].filter(Boolean).join(" · "), "#/listen") : null,
+        liveTexts.length || shorts.length ? navButton("🎧", "Jonli nutq",
+          [liveTexts.length ? liveTexts.length + " ta tabiiy tezlikdagi matn" : "", shorts.length ? shorts.reduce((n, s) => n + s.items.length, 0) + " ta qisqartma (щас, чё, тыща…)" : ""].filter(Boolean).join(" · "),
+          "#/live", "Tinglangan: " + liveTexts.filter(x => S.listen && S.listen[x.id] != null).length + " / " + liveTexts.length) : null,
         speakTasks.length ? navButton("🗣", "Fikr bildiring", speakTasks.length + " ta mavzu: savolga ruscha javob bering va ovozingizni yozib oling",
           "#/speak", "Gapirilgan: " + speakTasks.filter(x => S.speak && S.speak[x.id]).length + " / " + speakTasks.length) : null,
         ready ? navButton("✅", "Test", testSummary(test), "#/test", testBest(L)) : null,
@@ -962,20 +1015,34 @@
       ] : null);
   }
 
+  /* A listening text. Jonli nutq texts (x.live) have two voices, play at natural speed,
+     and show the Uzbek meaning of a line only when it is tapped. */
   function listenText(id) {
     const x = R.listeningById[id];
-    if (!x) return redirect("#/listen");
+    if (!x) return redirect(location.hash.indexOf("#/live") === 0 ? "#/live" : "#/listen");
+    const live = !!x.live;
     const v = viewTok;
     let playTok = 0;
+    const who = l => (live ? l.who : null);
+    const name = w => (w === "b" ? x.b : x.a);
     const rows = x.lines.map(l => {
-      const b = h("div", { class: "bubble a", role: "button", tabindex: "0" },
+      const uz = h("div", { class: "uz" }, l.uz);
+      if (live) uz.hidden = true;
+      const b = h("div", { class: "bubble " + (live ? l.who : "a"), role: "button", tabindex: "0" },
+        live && name(l.who) ? h("div", { class: "who" }, name(l.who)) : null,
         h("div", { class: "ru", lang: "ru" }, l.ru),
         h("div", { class: "pr" }, l.pr),
-        h("div", { class: "uz" }, l.uz));
-      b.addEventListener("click", () => { playTok++; Speech.speak(l.ru); });
+        uz,
+        live ? h("div", { class: "tap-uz", "aria-hidden": "true" }, "👆 Ma’nosi uchun bosing") : null);
+      b.addEventListener("click", () => {
+        playTok++;
+        if (live) { uz.hidden = false; b.classList.add("opened"); }
+        Speech.speak(l.ru, { role: who(l), natural: live });
+      });
+      b.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); b.click(); } });
       return b;
     });
-    const text = h("div", { class: "chat", hidden: true }, rows);
+    const text = h("div", { class: "chat" + (live ? " live" : ""), hidden: true }, rows);
     async function playAll(slow) {
       const my = ++playTok;
       for (let k = 0; k < rows.length; k++) {
@@ -983,8 +1050,8 @@
         rows.forEach(e => e.classList.remove("active"));
         rows[k].classList.add("active");
         if (!text.hidden) rows[k].scrollIntoView({ block: "nearest", behavior: "smooth" });
-        await Speech.speak(x.lines[k].ru, { slow });
-        await wait(350);
+        await Speech.speak(x.lines[k].ru, { slow, natural: live && !slow, role: who(x.lines[k]) });
+        await wait(live && !slow ? 200 : 350);
       }
       if (my === playTok) rows.forEach(e => e.classList.remove("active"));
     }
@@ -992,14 +1059,24 @@
     const toggle = h("button", { type: "button", class: "btn", onclick: () => {
       text.hidden = !text.hidden;
       toggleLabel.textContent = text.hidden ? "Matnni ko‘rsatish" : "Matnni yashirish";
+      allUz.hidden = text.hidden;
     } }, h("span", { class: "ic", "aria-hidden": "true" }, "👁"), toggleLabel);
-    show(header((x.icon || "📻") + " " + x.title, "#/listen", [levelName(x.level) + " · Tinglash"]),
+    const allUz = live ? btn("🇺🇿", "Barcha tarjimalarni ochish", () => {
+      rows.forEach(r => { r.querySelector(".uz").hidden = false; r.classList.add("opened"); });
+    }, "small") : null;
+    if (allUz) allUz.hidden = true;
+    const back = live ? "#/live" : "#/listen";
+    show(header((x.icon || "📻") + " " + x.title, back, [levelName(x.level) + (live ? " · Jonli nutq" : " · Tinglash")]),
+      live && x.kind ? h("p", { class: "kind-tag" }, x.kind) : null,
       x.about ? h("p", { class: "hint" }, x.about) : null,
-      h("p", { class: "hint" }, "1. Matnni tinglang (bir necha marta bo‘lsa ham). 2. Savollarga javob bering. Qiyin bo‘lsa, matnni oching."),
-      btn("▶", "Matnni tinglash", () => playAll(false), "primary big"),
+      h("p", { class: "hint" }, live
+        ? "1. Avval tabiiy tezlikda tinglang — ruslar shunday gapiradi. 2. Tushunmasangiz, sekin tinglang. 3. Matnni oching: har bir gapni bossangiz, ovozi va o‘zbekcha ma’nosi chiqadi. 4. Savollarga javob bering."
+        : "1. Matnni tinglang (bir necha marta bo‘lsa ham). 2. Savollarga javob bering. Qiyin bo‘lsa, matnni oching."),
+      btn("▶", live ? "Tabiiy tezlikda tinglash" : "Matnni tinglash", () => playAll(false), "primary big"),
       h("div", { class: "grid2" },
         btn("🐢", "Sekin tinglash", () => playAll(true)),
         toggle),
+      allUz,
       text,
       x.questions.length ? btn("✅", "Savollarga javob berish (" + x.questions.length + " ta)", () => go("#/lq/" + x.id), "ok big") : null);
   }
@@ -1020,8 +1097,8 @@
     if (!x || !x.questions.length) return redirect("#/listen");
     runSession({
       title: "✅ Savollar",
-      back: "#/listen/" + x.id,
-      crumbs: [levelName(x.level) + " · Tinglash", x.title],
+      back: (x.live ? "#/live/" : "#/listen/") + x.id,
+      crumbs: [levelName(x.level) + (x.live ? " · Jonli nutq" : " · Tinglash"), x.title],
       steps: x.questions.map(q => ({ type: "quiz", q: fileQuestion(q, x.lines[q.line] || x.lines[0]) })),
       finish: st => {
         S.listen = S.listen || {};
@@ -1031,8 +1108,124 @@
           h("p", { class: "score" }, st.ok + " / " + st.asked),
           st.ok === st.asked ? "Hammasi to‘g‘ri! 🌟" : "Matnni yana bir marta tinglab, qaytadan urinib ko‘ring."
         ], [
-          btn("🎧", "Matnni qayta tinglash", () => goBack("#/listen/" + x.id), "primary big"),
-          btn("📻", "Boshqa matnlar", () => go("#/listen"))
+          btn("🎧", "Matnni qayta tinglash", () => goBack((x.live ? "#/live/" : "#/listen/") + x.id), "primary big"),
+          btn("📻", "Boshqa matnlar", () => go(x.live ? "#/live" : "#/listen"))
+        ]);
+      }
+    });
+  }
+
+  /* =====================================================================
+     🎧 Jonli nutq: listening at natural speed + 🗯 Qisqartmalar (spoken shortcuts)
+     ===================================================================== */
+  function liveScreen() {
+    const L = level();
+    const texts = ofLevel(L, R.live);
+    const shorts = ofLevel(L, R.shortcuts);
+    const head = header("🎧 Jonli nutq", "#/", [L.name]);
+    if (!texts.length && !shorts.length) return show(head, soonBox(L));
+    const done = S.listen || {};
+    show(head,
+      h("p", { class: "hint" }, "Ruslar kundalik hayotda tez gapiradi va so‘zlarni qisqartiradi. Bu yerda haqiqiy tezlikdagi suhbatlarni tinglaysiz va «щас», «чё», «тыща» kabi qisqartmalarni o‘rganasiz."),
+      shorts.map(s => navButton(s.icon || "🗯", s.title, s.items.length + " ta: yozilishi, aytilishi, ma’nosi va misol",
+        "#/short/" + s.id, "O‘rganilgan: " + seenIn(s.items) + " / " + s.items.length)),
+      texts.length ? [
+        h("h2", null, "📻 Tabiiy tezlikdagi matnlar (" + texts.length + ")"),
+        h("div", { class: "tiles" }, texts.map(x => h("button", { type: "button", class: "tile", onclick: () => go("#/live/" + x.id) },
+          h("span", { class: "tile-ic", "aria-hidden": "true" }, x.icon || "📻"),
+          h("span", { class: "tile-title" }, x.title),
+          h("span", { class: "tile-sub" }, (x.kind ? x.kind + " · " : "") +
+            (done[x.id] != null ? "✓ " + done[x.id] + " / " + x.questions.length : x.questions.length + " ta savol")))))
+      ] : null);
+  }
+
+  function shortScreen(id) {
+    const s = R.shortcutById[id] || ofLevel(level(), R.shortcuts)[0];
+    if (!s) return redirect("#/live");
+    const seen = seenIn(s.items);
+    const best = S.short && S.short[s.id] != null ? "  · ✅ Eng yaxshi test natijasi: " + S.short[s.id] + " / 10" : "";
+    show(header((s.icon || "🗯") + " " + s.title, "#/live", [levelName(s.level) + " · Jonli nutq"]),
+      h("p", { class: "hint" }, "Ruslar ko‘p so‘zni gapirganda qisqartiradi: «сейчас» o‘rniga «щас», «тысяча» o‘rniga «тыща» deydi. Yozganda esa to‘liq shaklini yozing. ⚠ belgisi — rasmiy joyda (idora, shifokor, ish suhbati, politsiya) aytmang."),
+      h("p", { class: "topic-progress" }, "O‘rganilgan: " + seen + " / " + s.items.length + best),
+      progressBar(Math.round((seen / s.items.length) * 100)),
+      btn("🎧", "Tinglash va takrorlash", () => go("#/learn/q/" + s.id), "primary big"),
+      h("div", { class: "grid2" },
+        btn("🃏", "Kartochkalar", () => go("#/cards/q/" + s.id)),
+        btn("✅", "Test", () => go("#/sq/" + s.id))),
+      h("h2", null, "📋 Barcha qisqartmalar (" + s.items.length + ")"),
+      h("p", { class: "hint" }, "Qisqartmani bossangiz — o‘zini, misolni bossangiz — butun gapni eshitasiz."),
+      s.items.map(it => h("div", { class: "short-row" + (it.warn ? " is-warn" : "") },
+        h("button", { type: "button", class: "short-main", onclick: () => Speech.speak(it.ru) },
+          h("span", { class: "play", "aria-hidden": "true" }, "🔊"),
+          h("span", { class: "short-forms" },
+            h("span", { class: "short-full", lang: "ru" }, it.full),
+            h("span", { class: "short-arrow", "aria-hidden": "true" }, " → "),
+            h("span", { class: "ru", lang: "ru" }, it.ru)),
+          h("span", { class: "pr" }, it.pr),
+          h("span", { class: "uz" }, it.uz),
+          S.cards[it.id] ? h("span", { class: "tick", title: "O‘rganilgan", "aria-label": "O‘rganilgan" }, "✓") : null),
+        it.warn ? h("div", { class: "warn-note" }, "⚠ ", it.warn) : null,
+        it.ex ? exampleRow(it.ex) : null)));
+  }
+
+  /* Short test: written ↔ spoken form, meaning, and "can I say this in an office?". */
+  function shortQuestions(s, n) {
+    const items = shuffle(s.items.slice());
+    const others = (it, key) => pickOthers(it, shuffle(s.items.slice()), key, 3);
+    const types = [
+      it => ({
+        title: "🎧 Tinglang: bu so‘z qanday yoziladi?",
+        audio: it.ru,
+        options: shuffle([it].concat(others(it, x => sn(x.full))).map(x => ({ text: x.full, ok: x === it, ru: true }))),
+        reveal: it
+      }),
+      it => ({
+        title: "🗯 Ruslar jonli nutqda buni qanday aytadi?",
+        prompt: h("div", { class: "ask-uz", lang: "ru" }, "«" + it.full + "»"),
+        options: shuffle([it].concat(others(it, x => sn(x.ru))).map(x => ({ text: x.ru, sub: x.pr, ok: x === it, ru: true }))),
+        reveal: it
+      }),
+      it => ({
+        title: "🎧 Tinglang va ma’nosini tanlang",
+        audio: it.ex ? it.ex.ru : it.ru,
+        prompt: h("div", { class: "ask-uz", lang: "ru" }, "«" + it.ru + "»"),
+        options: shuffle([it].concat(others(it, x => sn(x.uz))).map(x => ({ text: x.uz, ok: x === it }))),
+        reveal: it
+      }),
+      it => ({
+        title: "🏛 Rasmiy vaziyatda (idorada, ish suhbatida) shunday aytsa bo‘ladimi?",
+        audio: it.ru,
+        prompt: h("div", { class: "ask-uz", lang: "ru" }, "«" + it.ru + "» (= " + it.full + ")"),
+        options: shuffle([
+          { text: "✅ Ha, bo‘ladi — bu odatiy so‘z", ok: !it.warn },
+          { text: "⚠ Yo‘q, bu juda norasmiy", ok: !!it.warn }
+        ]),
+        reveal: it
+      })
+    ];
+    return items.slice(0, n).map((it, k) => types[k % types.length](it));
+  }
+
+  function shortQuiz(id) {
+    const s = R.shortcutById[id];
+    if (!s || s.items.length < 4) return redirect("#/live");
+    runSession({
+      title: "✅ Qisqartmalar testi",
+      back: "#/short/" + s.id,
+      crumbs: [levelName(s.level) + " · Jonli nutq", s.title],
+      steps: shortQuestions(s, 10).map(q => ({ type: "quiz", q })),
+      finish: st => {
+        S.short = S.short || {};
+        S.short[s.id] = Math.max(S.short[s.id] || 0, st.ok);
+        save();
+        const r = st.asked ? st.ok / st.asked : 0;
+        return doneView("🏁", "Test tugadi!", [
+          h("p", { class: "score" }, st.ok + " / " + st.asked),
+          r >= 0.8 ? "Ajoyib! Endi ruslarning tez nutqini yaxshiroq tushunasiz. 🌟" : "Kartochkalar bilan yana takrorlang va qaytadan urinib ko‘ring."
+        ], [
+          btn("🔁", "Yana test", () => route(), "primary big"),
+          btn("🃏", "Kartochkalar", () => go("#/cards/q/" + s.id)),
+          btn("⬅", "Orqaga", () => goBack("#/short/" + s.id))
         ]);
       }
     });
@@ -1833,6 +2026,9 @@
       case "words": return p[1] ? wordsScreen(p[1]) : wordListsScreen();
       case "listen": return p[1] ? listenText(p[1]) : listenScreen();
       case "lq": return listenQuiz(p[1]);
+      case "live": return p[1] ? listenText(p[1]) : liveScreen();
+      case "short": return shortScreen(p[1]);
+      case "sq": return shortQuiz(p[1]);
       case "speak": return p[1] ? speakTask(p[1]) : speakScreen();
       case "test": return testScreen();
       case "leveltest": return levelTestRoute(p[1], p[2]);
