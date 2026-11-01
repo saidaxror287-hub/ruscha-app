@@ -135,4 +135,70 @@ Ruscha.addJobTab("kasb-farrosh", "orta", {
 });
 
 /* ==================== Yuqori (B2+) ==================== */
-/* Tez orada: Ruscha.addJobTab("kasb-farrosh", "yuqori", { phrases: [...], dialogues: [...] }); */
+Ruscha.addJobTab("kasb-farrosh", "yuqori", {
+  phrases: [
+    { ru: "Площадь уборки увеличили, а оплата осталась той же.", pr: "Ploshat uborki uvilichili, a aplata astalas toy je.", uz: "Tozalash maydonini kengaytirishdi, haq esa o‘shandayligicha qoldi." },
+    { ru: "За генеральную уборку должны платить отдельно.", pr: "Za giniralnuyu uborku daljni platit atdelna.", uz: "Umumiy (general) tozalash uchun alohida to‘lashlari kerak." },
+    { ru: "Я работаю через клининговую компанию, а не напрямую с офисом.", pr: "Ya rabotayu chiriz kliningavuyu kampaniyu, a ne napryamuyu s ofisam.", uz: "Ofis bilan to‘g‘ridan-to‘g‘ri emas, klining kompaniyasi orqali ishlayman." },
+    { ru: "В договоре должен быть указан объём работы.", pr: "V dagavore dolzhen bit ukazan abyom raboti.", uz: "Shartnomada ish hajmi ko‘rsatilishi kerak." },
+    { ru: "Мне не выдали расчётный листок за прошлый месяц.", pr: "Mne ne vidali rashotniy listok za proshliy mesits.", uz: "O‘tgan oy uchun hisob varag‘imni berishmadi." },
+    { ru: "Химия, которую нам дают, вызывает аллергию.", pr: "Ximiya, katoruyu nam dayut, vizivayet alirgiyu.", uz: "Bizga berilayotgan kimyoviy vositalar allergiya qo‘zg‘ayapti.", sit: "Yangi tozalash vositasidan keyin qo‘llaringiz qizarib, qichiyapti." },
+    { ru: "Перчатки и маски должна выдавать компания.", pr: "Pirchatki i maski dalzhna vidavat kampaniya.", uz: "Qo‘lqop va niqoblarni kompaniya berishi kerak." },
+    { ru: "Сотрудник офиса обвинил меня в пропаже денег.", pr: "Satrudnik ofisa abvinil minya f prapaje deneg.", uz: "Ofis xodimi meni pul yo‘qolganlikda aybladi." },
+    { ru: "Я ничего не брал и готов, чтобы проверили камеры.", pr: "Ya nichivo ne bral i gatof, shtobi praverili kamiri.", uz: "Hech narsa olmaganman, kameralarni tekshirishlariga tayyorman. (ayol aytsa: «Я ничего не брала и готова, чтобы проверили камеры»)", sit: "Ofis xodimi stolidan pul yo‘qolganini aytib, sizga shubha bilan qarayapti." },
+    { ru: "Обыскивать меня при всех — это унизительно.", pr: "Abiskivat minya pri fsex — eta unizitilna.", uz: "Hammaning oldida meni tintuv qilish — bu kamsitish." },
+    { ru: "Я требую извинений.", pr: "Ya trebuyu izvineniy.", uz: "Kechirim so‘rashlarini talab qilaman." },
+    { ru: "Клиент недоволен, но в чек-листе этой работы нет.", pr: "Kliyent nidavolen, no f chek-liste etay raboti net.", uz: "Mijoz norozi, lekin nazorat varag‘ida bu ish yo‘q.", sit: "Ofis rahbari nega shkaflar ichi artilmagan deb shikoyat qildi." },
+    { ru: "Мыть окна снаружи на высоте — это не моя работа.", pr: "Mit okna snaruji na visate — eta ne maya rabota.", uz: "Balandlikda derazalarni tashqaridan yuvish — mening ishim emas." },
+    { ru: "Супервайзер даёт задания в последний момент, а потом ругает.", pr: "Supervayzer dayot zadaniya f paslredniy mamant, a potam rugayet.", uz: "Supervayzer topshiriqlarni oxirgi daqiqada beradi, keyin urishadi." },
+    { ru: "Я хочу, чтобы мои обязанности записали в договор.", pr: "Ya xachu, shtobi mai abyazannasti zapisali v dagavor.", uz: "Majburiyatlarim shartnomaga yozilishini xohlayman." },
+    { ru: "Я каждый день задерживаюсь на час, и это нигде не учитывается.", pr: "Ya kajdiy den zadirjivayus na chas, i eta nigde ne uchitivayetsa.", uz: "Har kuni bir soat kech qolaman, bu hech qayerda hisobga olinmaydi." },
+    { ru: "Меня ни разу не штрафовали за качество.", pr: "Minya ni razu ne shtrafavali za kachestva.", uz: "Sifat uchun hech qachon jarima olmaganman." },
+    { ru: "Я хотел бы стать бригадиром уборщиков на этом объекте.", pr: "Ya xatel bi stat brigadiram uborshikaf na etam abyekte.", uz: "Bu obyektda farroshlar brigadiri bo‘lmoqchi edim. (ayol aytsa: «Я хотела бы стать бригадиром уборщиков на этом объекте»)" },
+    { ru: "Я знаю, как организовать уборку быстрее и дешевле.", pr: "Ya znayu, kak arganizavat uborku bistreye i dishevle.", uz: "Tozalashni qanday qilib tezroq va arzonroq tashkil qilishni bilaman." },
+    { ru: "Если вопрос не решится, я напишу жалобу руководству компании.", pr: "Isli vapros ne rishitsa, ya napishu jalobu rukavotstvu kampanii.", uz: "Masala hal bo‘lmasa, kompaniya rahbariyatiga shikoyat yozaman." }
+  ],
+  dialogues: [
+    {
+      title: "Nohaq ayblov",
+      a: "Ofis xodimi",
+      b: "Gulnora",
+      lines: [
+        ["a", "Гульнора, у меня со стола пропали деньги. Вы сегодня убирали мой кабинет?", "Gulnora, u minya sa stala prapali dengi. Vi sivodnya ubirali moy kabinet?", "Gulnora, stolimdan pul yo‘qoldi. Bugun xonamni siz tozaladingizmi?"],
+        ["b", "Да, утром. Но я ничего не брала.", "Da, utram. No ya nichivo ne brala.", "Ha, ertalab. Lekin hech narsa olmadim."],
+        ["a", "Кроме вас, сюда никто не заходил.", "Kromi vas, syuda nikto ne zaxadil.", "Sizdan boshqa bu yerga hech kim kirmagan."],
+        ["b", "Вы меня обвиняете? Это очень серьёзное обвинение.", "Vi minya abvinyayete? Eta ochin siryoznaye abvineniye.", "Meni ayblayapsizmi? Bu juda jiddiy ayblov."],
+        ["a", "Я просто хочу понять. Покажите, пожалуйста, вашу тележку и сумку.", "Ya prosta xachu panyat. Pakajite, pajalusta, vashu tilejku i sumku.", "Shunchaki tushunmoqchiman. Iltimos, aravachangiz va sumkangizni ko‘rsating."],
+        ["b", "Обыскивать меня при всех — это унизительно. Давайте позовём охрану и проверим камеры.", "Abiskivat minya pri fsex — eta unizitilna. Davayte pazavyom axranu i praverim kamiri.", "Hammaning oldida meni tintuv qilish — kamsitish. Keling, qo‘riqchini chaqirib, kameralarni tekshiraylik."],
+        ["a", "Хорошо, давайте посмотрим камеры.", "Xarasho, davayte pasmotrim kamiri.", "Yaxshi, kameralarni ko‘raylik."],
+        ["b", "Вот запись: я протёрла стол, вынесла мусор и ушла. Денег я не трогала.", "Vot zapis: ya pratyorla stol, vinisla musar i ushla. Deneg ya ne trogala.", "Mana yozuv: stolni artdim, axlatni chiqardim va ketdim. Pulga tegmadim."],
+        ["a", "Ой... А вот я сам кладу конверт в портфель.", "Oy... A vot ya sam kladu kanvert f partfel.", "Voy... Mana, konvertni portfelimga o‘zim solyapman-ku."],
+        ["b", "Значит, вопрос решён. Но я жду извинений.", "Znachit, vapros rishon. No ya zhdu izvineniy.", "Demak, masala hal bo‘ldi. Lekin kechirim kutaman."],
+        ["a", "Простите меня, пожалуйста. Я был неправ.", "Prastite minya, pajalusta. Ya bil niprav.", "Iltimos, meni kechiring. Men nohaq edim."],
+        ["b", "Извинения принимаю. Но в следующий раз, пожалуйста, сначала проверьте свои вещи.", "Izvineniya prinimayu. No f sleduyushiy ras, pajalusta, snachala praverte svai veshi.", "Kechirimingizni qabul qilaman. Lekin keyingi safar, iltimos, avval o‘z narsalaringizni tekshiring."],
+        ["a", "Обязательно. И я скажу вашему руководству, что вы работаете честно.", "Abizatilna. I ya skaju vashimu rukavotstvu, shto vi rabotayete chesna.", "Albatta. Rahbariyatingizga ham halol ishlayotganingizni aytaman."]
+      ]
+    },
+    {
+      title: "Yuklama va brigadirlik",
+      a: "Gulnora",
+      b: "Supervayzer",
+      lines: [
+        ["a", "Можно обсудить мою нагрузку и зарплату?", "Mojna absudit mayu nagruzku i zarplatu?", "Ish yuklamam va maoshimni muhokama qilsak bo‘ladimi?"],
+        ["b", "Давай. Что тебя не устраивает?", "Davay. Shto tibya ne ustraivayet?", "Qani. Nima seni qoniqtirmayapti?"],
+        ["a", "С сентября мне добавили второй этаж, а оплата осталась той же.", "S sintyabrya mne dabavili ftaroy etash, a aplata astalas toy je.", "Sentabrdan menga ikkinchi qavatni qo‘shishdi, haq esa o‘shandayligicha qoldi."],
+        ["b", "Ну, второй этаж небольшой.", "Nu, ftaroy etash nibalshoy.", "Ikkinchi qavat unchalik katta emas-ku."],
+        ["a", "Это двести квадратных метров. Я каждый день задерживаюсь на час.", "Eta dvesti kvadratnix metraf. Ya kajdiy den zadirjivayus na chas.", "Bu ikki yuz kvadrat metr. Har kuni bir soat kech qolaman."],
+        ["b", "Я не знала, что ты задерживаешься.", "Ya ne znala, shto ti zadirjivayeshsa.", "Kech qolishingni bilmagan ekanman."],
+        ["a", "Охрана может подтвердить: я ухожу в восемь, а не в семь.", "Axrana mojet padtverdit: ya uxaju v vosim, a ne f sem.", "Qo‘riqchilar tasdiqlay oladi: yettida emas, sakkizda ketaman."],
+        ["b", "Хорошо. Я внесу эти часы в табель как сверхурочные.", "Xarasho. Ya vnisu eti chasi f tabel kak sverxurochniye.", "Yaxshi. Bu soatlarni tabelga qo‘shimcha soat sifatida kiritaman."],
+        ["a", "И ещё. Наш бригадир уходит в декабре. Я хотела бы занять её место.", "I yisho. Nash brigadir uxodit v dikabre. Ya xatela bi zanyat yeyo mesta.", "Yana bir gap. Brigadirimiz dekabrda ketyapti. Uning o‘rnini egallamoqchi edim."],
+        ["b", "Почему ты думаешь, что справишься?", "Pachimu ti dumayesh, shto spravishsa?", "Nega uddalayman deb o‘ylaysan?"],
+        ["a", "Я работаю здесь четыре года, и меня ни разу не штрафовали за качество.", "Ya rabotayu zdes chitiri goda, i minya ni razu ne shtrafavali za kachestva.", "Bu yerda to‘rt yildan beri ishlayman, sifat uchun hech qachon jarima olmaganman."],
+        ["b", "Это правда. А как ты будешь работать с людьми?", "Eta pravda. A kak ti budish rabotat s lyudmi?", "To‘g‘ri. Odamlar bilan qanday ishlaysan?"],
+        ["a", "Я знаю, как организовать уборку быстрее: разделить этажи и закупать химию оптом.", "Ya znayu, kak arganizavat uborku bistreye: razdilit etaji i zakupat ximiyu optam.", "Tozalashni qanday tezlashtirishni bilaman: qavatlarni bo‘lib berish va kimyoviy vositalarni ulgurji olish."],
+        ["b", "Интересно. Напиши мне это предложение, и я покажу руководству.", "Intiresna. Napishi mne eta pridlajeniye, i ya pakaju rukavotstvu.", "Qiziq. Shu taklifni yozib ber, rahbariyatga ko‘rsataman."]
+      ]
+    }
+  ]
+});

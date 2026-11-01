@@ -135,4 +135,70 @@ Ruscha.addJobTab("kasb-oshpaz", "orta", {
 });
 
 /* ==================== Yuqori (B2+) ==================== */
-/* Tez orada: Ruscha.addJobTab("kasb-oshpaz", "yuqori", { phrases: [...], dialogues: [...] }); */
+Ruscha.addJobTab("kasb-oshpaz", "yuqori", {
+  phrases: [
+    { ru: "Повара у нас работают по четырнадцать часов, а платят за восемь.", pr: "Pavara u nas rabotayut pa chitirnatsat chisof, a platyat za vosim.", uz: "Oshpazlarimiz o‘n to‘rt soatdan ishlaydi, lekin sakkiz soatga haq to‘lashadi." },
+    { ru: "Банкеты в выходные — это сверхурочная работа.", pr: "Banketi v vixadniye — eta sverxurochnaya rabota.", uz: "Dam olish kunlaridagi banketlar — bu qo‘shimcha ish." },
+    { ru: "Зарплату платят «в конверте», а я хочу работать официально.", pr: "Zarplatu platyat «f kanverte», a ya xachu rabotat afitsialna.", uz: "Maoshni «konvertda» (rasmiy hujjatsiz) berishadi, men esa rasmiy ishlamoqchiman." },
+    { ru: "В договоре моя должность должна быть «повар», а не «подсобный рабочий».", pr: "V dagavore maya doljnast dalzhna bit «povar», a ne «padsobniy rabochiy».", uz: "Shartnomada lavozimim «yordamchi ishchi» emas, «oshpaz» deb yozilishi kerak." },
+    { ru: "Санитарную книжку я оформлял за свой счёт.", pr: "Sanitarnuyu knishku ya afarmlyal za svoy shot.", uz: "Sanitariya daftarchasini o‘z hisobimdan rasmiylashtirganman. (ayol aytsa: «Санитарную книжку я оформляла за свой счёт»)" },
+    { ru: "Гость утверждает, что в блюде был волос.", pr: "Gost utverjdayet, shto v blyude bil volas.", uz: "Mehmon taomda soch bo‘lgan deb da’vo qilyapti.", sit: "Ofitsiant qaytarilgan likopchani oshxonaga olib keldi." },
+    { ru: "Мы работаем в шапочках, но блюдо, конечно, переделаем.", pr: "Mi rabotayem f shapachkax, no blyuda, kanechna, piridelayem.", uz: "Biz qalpoqchada ishlaymiz, lekin taomni, albatta, qaytadan tayyorlaymiz." },
+    { ru: "Гость отправил стейк обратно уже второй раз.", pr: "Gost atpravil steyk abratna uje ftaroy ras.", uz: "Mehmon steykni ikkinchi marta qaytarib yubordi." },
+    { ru: "Я готовлю по технологической карте, претензий быть не должно.", pr: "Ya gatovlyu pa texnalagichiskay karte, pritenziy bit ne dolzhna.", uz: "Men texnologik karta bo‘yicha tayyorlayman, e’tiroz bo‘lmasligi kerak." },
+    { ru: "Шеф кричит на поваров при официантах.", pr: "Shef krichit na pavaraf pri afitsiantax.", uz: "Shef ofitsiantlar oldida oshpazlarga baqiradi." },
+    { ru: "Я готов выслушать критику, но без оскорблений.", pr: "Ya gatof vislushat kritiku, no biz askarbleniy.", uz: "Tanqidni eshitishga tayyorman, lekin haqoratsiz. (ayol aytsa: «Я готова выслушать критику, но без оскорблений»)", sit: "Shef hammaning oldida sizni so‘kib, «qo‘lingdan hech narsa kelmaydi» dedi." },
+    { ru: "Меня наказали за чужую ошибку на раздаче.", pr: "Minya nakazali za chujuyu ashipku na razdache.", uz: "Tarqatish joyidagi birovning xatosi uchun meni jazolashdi." },
+    { ru: "Продукты привезли несвежие, и я отказываюсь из них готовить.", pr: "Pradukti privizli nisvejiye, i ya atkazivayus iz nix gatovit.", uz: "Mahsulotlar yangi emas, ulardan ovqat tayyorlashdan bosh tortaman.", sit: "Go‘shtdan yoqimsiz hid kelyapti, lekin boshqaruvchi «baribir pishiraver» deyapti." },
+    { ru: "Если гость отравится, отвечать буду я.", pr: "Isli gost atravitsa, atvichat budu ya.", uz: "Agar mehmon zaharlansa, men javob beraman." },
+    { ru: "Я хочу, чтобы этот случай записали в журнал.", pr: "Ya xachu, shtobi etat sluchay zapisali v zhurnal.", uz: "Bu holat jurnalga yozilishini xohlayman." },
+    { ru: "Я уже два года работаю на горячем цехе.", pr: "Ya uje dva goda rabotayu na garyachem tsexe.", uz: "Ikki yildan beri issiq sexda ishlayapman." },
+    { ru: "Я бы хотел попробовать себя в роли су-шефа.", pr: "Ya bi xatel paprobavat sibya v roli su-shefa.", uz: "O‘zimni su-shef rolida sinab ko‘rmoqchi edim. (ayol aytsa: «Я бы хотела попробовать себя в роли су-шефа»)" },
+    { ru: "Я могу предложить несколько новых блюд для сезонного меню.", pr: "Ya magu pridlajit neskolka novix blyut dlya sizonnava minyu.", uz: "Mavsumiy menyu uchun bir nechta yangi taom taklif qila olaman." },
+    { ru: "За такую нагрузку прошу пересмотреть мою ставку.", pr: "Za takuyu nagruzku prashu pirismatret mayu stafku.", uz: "Bunday yuklama uchun stavkamni qayta ko‘rib chiqishingizni so‘rayman." },
+    { ru: "В соседнем ресторане мне предлагают больше.", pr: "F sasednem ristarane mne pridlagayut bolshe.", uz: "Qo‘shni restoranda menga ko‘proq taklif qilishyapti." }
+  ],
+  dialogues: [
+    {
+      title: "Norozi mehmon",
+      a: "Mehmon",
+      b: "Oshpaz",
+      lines: [
+        ["b", "Добрый вечер. Я повар. Мне сказали, вам не понравился плов?", "Dobriy vecher. Ya povar. Mne skazali, vam ne panravilsa plof?", "Xayrli kech. Men oshpazman. Aytishlaricha, osh sizga yoqmabdi?"],
+        ["a", "Рис сырой! Я двадцать лет ем плов и знаю, каким он должен быть.", "Ris siroy! Ya dvatsat let yem plof i znayu, kakim on dolzhen bit.", "Guruch xom! Yigirma yildan beri osh yeyman, qanday bo‘lishini bilaman."],
+        ["b", "Понимаю. Можно я посмотрю вашу тарелку?", "Panimayu. Mojna ya pasmotryu vashu tarelku?", "Tushunaman. Likopchangizni ko‘rsam maylimi?"],
+        ["a", "Смотрите. Вот, твёрдый же!", "Smatrite. Vot, tvyordiy je!", "Ko‘ring. Mana, qattiq-ku!"],
+        ["b", "Это сорт девзира, он всегда немного плотный. Но я вас услышал.", "Eta sort devzira, on fsigda nimnoga plotniy. No ya vas uslishal.", "Bu devzira navi, u doim biroz qattiqroq bo‘ladi. Lekin gapingizni tushundim."],
+        ["a", "Мне не нужны объяснения. Я не буду за это платить.", "Mne ne nujni abyasneniya. Ya ne budu za eta platit.", "Menga tushuntirish kerak emas. Buning uchun pul to‘lamayman."],
+        ["b", "Давайте так: я приготовлю вам другое блюдо за счёт заведения.", "Davayte tak: ya prigatovlyu vam drugoye blyuda za shot zavideniya.", "Keling, bunday qilamiz: sizga muassasa hisobidan boshqa taom tayyorlab beraman."],
+        ["a", "А плов уберите из счёта.", "A plof uberite is shota.", "Oshni esa hisobdan olib tashlang."],
+        ["b", "Это решает администратор, но я её попрошу.", "Eta rishayet administratar, no ya yeyo paprashu.", "Buni administrator hal qiladi, lekin undan iltimos qilaman."],
+        ["a", "И передайте шефу, что повар у вас неопытный.", "I piridayte shefu, shto povar u vas niopitniy.", "Shefga ham aytib qo‘ying, oshpazingiz tajribasiz."],
+        ["b", "Обязательно передам. Ваш отзыв для нас важен.", "Abizatilna piridam. Vash otzif dlya nas vajen.", "Albatta yetkazaman. Fikringiz biz uchun muhim."],
+        ["a", "Ладно. Принесите тогда шашлык из баранины.", "Ladna. Prinisite tagda shashlik iz baranini.", "Mayli. Unda qo‘y go‘shtidan shashlik olib keling."],
+        ["b", "Через пятнадцать минут будет готов. Приятного вечера.", "Chiris pitnatsat minut budit gatof. Priyatnava vechira.", "O‘n besh daqiqada tayyor bo‘ladi. Kechangiz yoqimli o‘tsin."]
+      ]
+    },
+    {
+      title: "Su-shef bo‘lish",
+      a: "Oshpaz",
+      b: "Shef",
+      lines: [
+        ["a", "Шеф, у вас есть пять минут? Хочу поговорить о своей работе.", "Shef, u vas yest pyat minut? Xachu pagavarit a svayey rabote.", "Shef, besh daqiqangiz bormi? Ishim haqida gaplashmoqchiman."],
+        ["b", "Давай, только быстро, скоро банкет.", "Davay, tolka bistra, skora banket.", "Qani, faqat tezroq, hademay banket."],
+        ["a", "Как раз про банкеты. За последний месяц я отработал четыре банкета в выходные.", "Kak ras pra banketi. Za paslredniy mesits ya atrabotal chitiri banketa v vixadniye.", "Aynan banketlar haqida. Oxirgi oyda dam olish kunlari to‘rtta banketda ishladim."],
+        ["b", "Ну да, ты же у нас самый быстрый.", "Nu da, ti je u nas samiy bistriy.", "Ha-da, sen bizdagi eng tezkor oshpazsan."],
+        ["a", "Спасибо. Но в зарплате эти часы не учтены.", "Spasiba. No v zarplate eti chasi ne uchteni.", "Rahmat. Lekin maoshda bu soatlar hisobga olinmagan."],
+        ["b", "Банкеты входят в обычную работу кухни.", "Banketi fxodyat v abichnuyu rabotu kuxni.", "Banketlar oshxonaning oddiy ishiga kiradi."],
+        ["a", "В будни — да. Но в выходные это сверхурочная работа, так написано в договоре.", "V budni — da. No v vixadniye eta sverxurochnaya rabota, tak napisana v dagavore.", "Ish kunlari — ha. Lekin dam olish kunlari bu qo‘shimcha ish, shartnomada shunday yozilgan."],
+        ["b", "Хорошо, я поговорю с управляющим. Это всё?", "Xarasho, ya pagavaryu s upravlyayushim. Eta fsyo?", "Yaxshi, boshqaruvchi bilan gaplashaman. Shumi?"],
+        ["a", "Нет. Я два года на горячем цехе и хотел бы попробовать себя в роли су-шефа.", "Net. Ya dva goda na garyachem tsexe i xatel bi paprobavat sibya v roli su-shefa.", "Yo‘q. Ikki yildan beri issiq sexdaman, o‘zimni su-shef rolida sinab ko‘rmoqchi edim."],
+        ["b", "Су-шеф — это не только готовка. Это заказ продуктов, графики, ответственность за людей.", "Su-shef — eta ne tolka gatofka. Eta zakas praduktaf, grafiki, atvetstvinnast za lyudey.", "Su-shef — bu faqat ovqat pishirish emas. Bu mahsulot buyurtmasi, jadvallar, odamlar uchun javobgarlik."],
+        ["a", "Я понимаю. Когда вы были в отпуске, заказы составлял я.", "Ya panimayu. Kagda vi bili v otpuske, zakazi sastavlyal ya.", "Tushunaman. Siz ta’tilda bo‘lganingizda buyurtmalarni men tuzganman."],
+        ["b", "Это правда, и без ошибок. Ладно, дам тебе месяц на пробу.", "Eta pravda, i biz ashibak. Ladna, dam tibe mesits na probu.", "To‘g‘ri, xatosiz ham. Mayli, senga bir oy sinov beraman."],
+        ["a", "А зарплата в этот месяц будет как у су-шефа?", "A zarplata v etat mesits budit kak u su-shefa?", "Bu oy maosh su-shefnikidek bo‘ladimi?"],
+        ["b", "Половина разницы сразу, полная ставка — после испытания.", "Palavina raznitsi srazu, polnaya stafka — posle ispitaniya.", "Farqning yarmi darhol, to‘liq stavka — sinovdan keyin."]
+      ]
+    }
+  ]
+});

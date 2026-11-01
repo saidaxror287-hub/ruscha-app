@@ -137,4 +137,70 @@ Ruscha.addJobTab("kasb-taksi", "orta", {
 });
 
 /* ==================== Yuqori (B2+) ==================== */
-/* Tez orada: Ruscha.addJobTab("kasb-taksi", "yuqori", { phrases: [...], dialogues: [...] }); */
+Ruscha.addJobTab("kasb-taksi", "yuqori", {
+  phrases: [
+    { ru: "Комиссия парка выросла, а тарифы остались прежними.", pr: "Kamissiya parka virasla, a tarifi astalis prejnimi.", uz: "Parkning komissiyasi oshdi, tariflar esa o‘sha-o‘shaligicha qoldi." },
+    { ru: "За работу в праздники должны платить по двойному тарифу.", pr: "Za rabotu f prazniki daljni platit pa dvaynomu tarifu.", uz: "Bayram kunlari ishlaganga ikki baravar tarif bilan to‘lashlari kerak." },
+    { ru: "Мне не доплатили за переработку.", pr: "Mne ne daplatili za pirirabotku.", uz: "Ortiqcha ishlagan soatlarim uchun to‘liq to‘lashmadi.", sit: "Oylik keldi, lekin bayramda ishlagan ortiqcha soatlaringiz hisoblanmagan." },
+    { ru: "Прошу показать, из чего складывается сумма удержаний.", pr: "Prashu pakazat, iz chivo skladivayetsa summa udirjaniy.", uz: "Ushlab qolingan summa nimalardan iboratligini ko‘rsatishingizni so‘rayman." },
+    { ru: "В договоре аренды не сказано, кто платит за мелкий ремонт.", pr: "V dagavore arendi ne skazana, kto platit za melkiy rimont.", uz: "Ijara shartnomasida mayda ta’mirga kim to‘lashi yozilmagan." },
+    { ru: "Я не подпишу договор, пока не прочитаю его полностью.", pr: "Ya ne padpishu dagavor, paka ne prachitayu yivo polnastyu.", uz: "Shartnomani to‘liq o‘qib chiqmagunimcha imzolamayman." },
+    { ru: "Штраф за опоздание к клиенту несправедлив, я стоял в пробке.", pr: "Shtraf za apazdaniye k kliyentu nisprividlif, ya stayal f probke.", uz: "Mijozga kechikkanim uchun jarima adolatsiz, men tirbandlikda turgandim. (ayol aytsa: «Штраф за опоздание к клиенту несправедлив, я стояла в пробке»)" },
+    { ru: "Пассажир написал на меня жалобу, но всё было не так.", pr: "Passajir napisal na minya jalobu, no fsyo bila ne tak.", uz: "Yo‘lovchi ustimdan shikoyat yozdi, lekin aslida bunday bo‘lmagan." },
+    { ru: "У меня есть запись с видеорегистратора.", pr: "U minya yest zapis s videaregistratara.", uz: "Videoregistrator yozuvi menda bor.", sit: "Yo‘lovchi sizni qo‘pol haydadi deb shikoyat qildi, lekin bu yolg‘on." },
+    { ru: "Давайте не будем повышать голос и спокойно разберёмся.", pr: "Davayte ne budim pavishat golas i spakoyna razbiryomsa.", uz: "Keling, ovozimizni ko‘tarmaylik va xotirjam hal qilaylik.", sit: "Yo‘lovchi yo‘l haqi qimmat deb baqira boshladi." },
+    { ru: "Если вы будете меня оскорблять, я прерву поездку.", pr: "Isli vi budite minya askarblyat, ya prirvu payestku.", uz: "Agar meni haqoratlasangiz, safarni to‘xtataman." },
+    { ru: "Я хочу обжаловать блокировку аккаунта.", pr: "Ya xachu abjalavat blakirofku akaunta.", uz: "Akkauntim bloklanganiga e’tiroz bildirmoqchiman.", sit: "Ilova akkauntingizni to‘satdan bloklab qo‘ydi." },
+    { ru: "Меня заблокировали без объяснения причин.", pr: "Minya zablakiravali biz abyasneniya prichin.", uz: "Meni hech qanday sabab aytmay bloklab qo‘yishdi." },
+    { ru: "Сколько можно заработать, если выходить на линию в выходные?", pr: "Skolka mojna zarabatat, isli vixadit na liniyu v vixadniye?", uz: "Dam olish kunlari liniyaga chiqsam, qancha ishlab topish mumkin?" },
+    { ru: "Я работаю у вас три года без единого замечания.", pr: "Ya rabotayu u vas tri goda biz idinava zamichaniya.", uz: "Sizlarda uch yildan beri birorta tanbehsiz ishlayapman." },
+    { ru: "Я бы хотел перейти в бизнес-класс.", pr: "Ya bi xatel pirayti v biznes-klas.", uz: "Biznes-klassga o‘tmoqchi edim. (ayol aytsa: «Я бы хотела перейти в бизнес-класс»)", sit: "Park boshlig‘i bilan ishingiz haqida suhbatlashyapsiz." },
+    { ru: "Готов взять на себя обучение новых водителей.", pr: "Gatof vzyat na sibya abucheniye novix vaditiley.", uz: "Yangi haydovchilarni o‘qitishni o‘z zimmamga olishga tayyorman. (ayol aytsa: «Готова взять на себя обучение новых водителей»)" },
+    { ru: "Я требую вернуть незаконно списанные деньги.", pr: "Ya trebuyu virnut nizakona spisanniye dengi.", uz: "Noqonuniy yechib olingan pulni qaytarishni talab qilaman." },
+    { ru: "Иначе я буду вынужден обратиться в трудовую инспекцию.", pr: "Inache ya budu vinujden abratitsa f trudavuyu inspektsiyu.", uz: "Aks holda mehnat inspeksiyasiga murojaat qilishga majbur bo‘laman. (ayol aytsa: «Иначе я буду вынуждена обратиться в трудовую инспекцию»)" },
+    { ru: "Пассажир испачкал салон, химчистку должен оплатить он.", pr: "Passajir ispachkal salon, ximchistku dolzhen aplatit on.", uz: "Yo‘lovchi salonni iflos qildi, kimyoviy tozalash pulini u to‘lashi kerak." }
+  ],
+  dialogues: [
+    {
+      title: "Ushlab qolingan pul",
+      a: "Haydovchi",
+      b: "Park boshlig‘i",
+      lines: [
+        ["a", "Добрый день. Я хотел бы обсудить мою зарплату за октябрь.", "Dobriy den. Ya xatel bi absudit mayu zarplatu za aktyabr.", "Xayrli kun. Oktabr oyligim haqida gaplashmoqchi edim."],
+        ["b", "Слушаю. Что-то не так?", "Slushayu. Shto-ta ne tak?", "Eshitaman. Biror narsa noto‘g‘rimi?"],
+        ["a", "С меня удержали пять тысяч, и я не понимаю за что.", "S minya udirjali pyat tisich, i ya ne panimayu za shto.", "Mendan besh ming ushlab qolishdi, nima uchunligini tushunmayapman."],
+        ["b", "Это штраф за жалобу пассажира и за опоздания к клиентам.", "Eta shtraf za jalobu passajira i za apazdaniya k kliyentam.", "Bu yo‘lovchining shikoyati va mijozlarga kechikkaningiz uchun jarima."],
+        ["a", "Жалоба несправедливая. У меня есть запись с видеорегистратора.", "Jaloba nisprividlivaya. U minya yest zapis s videaregistratara.", "Shikoyat adolatsiz. Videoregistrator yozuvi menda bor."],
+        ["b", "Хорошо, пришлите запись, мы её посмотрим.", "Xarasho, prishlite zapis, mi yeyo pasmotrim.", "Yaxshi, yozuvni yuboring, ko‘rib chiqamiz."],
+        ["a", "А опоздания были из-за аварии на мосту. Это видно по треку поездки.", "A apazdaniya bili iz-za avarii na mastu. Eta vidna pa treku payestki.", "Kechikishlar esa ko‘prikdagi avariya tufayli bo‘lgan. Bu safar marshrutida ko‘rinib turibdi."],
+        ["b", "Если это подтвердится, штраф отменим.", "Isli eta padtverditsa, shtraf atmenim.", "Agar bu tasdiqlansa, jarimani bekor qilamiz."],
+        ["a", "И ещё: в праздники я работал по двенадцать часов, а доплаты нет.", "I yisho: f prazniki ya rabotal pa dvinatsat chisof, a daplati net.", "Yana bir gap: bayramda o‘n ikki soatdan ishladim, lekin qo‘shimcha haq yo‘q."],
+        ["b", "По договору за праздничные смены вам положена доплата пятьдесят процентов.", "Pa dagavoru za prazdnichniye smeni vam palojena daplata pidisyat protsentaf.", "Shartnoma bo‘yicha bayram smenalari uchun sizga ellik foiz qo‘shimcha haq tegishli."],
+        ["a", "Значит, бухгалтерия ошиблась?", "Znachit, buxgaltiriya ashiblas?", "Demak, buxgalteriya xato qilibdi-da?"],
+        ["b", "Похоже на то. Я сам проверю расчёт и всё пересчитаю.", "Poxaje na ta. Ya sam praveryu rashot i fsyo pirishitayu.", "Shunga o‘xshaydi. Hisob-kitobni o‘zim tekshirib, hammasini qayta hisoblayman."],
+        ["a", "Спасибо. Когда я получу ответ?", "Spasiba. Kagda ya paluchu atvet?", "Rahmat. Javobni qachon olaman?"],
+        ["b", "До конца недели. Деньги вернём со следующей выплатой.", "Da kantsa nideli. Dengi virnyom sa sleduyushey viplatay.", "Hafta oxirigacha. Pulni keyingi to‘lov bilan qaytaramiz."]
+      ]
+    },
+    {
+      title: "Biznes-klassga o‘tish",
+      a: "Haydovchi",
+      b: "Park boshlig‘i",
+      lines: [
+        ["a", "Можно с вами поговорить насчёт моей работы?", "Mojna s vami pagavarit nashot mayey raboti?", "Ishim yuzasidan siz bilan gaplashsam bo‘ladimi?"],
+        ["b", "Конечно, садитесь.", "Kanechna, sadites.", "Albatta, o‘tiring."],
+        ["a", "Я работаю в парке уже три года, и у меня рейтинг четыре и девять.", "Ya rabotayu f parke uje tri goda, i u minya reyting chitiri i devit.", "Parkda uch yildan beri ishlayapman, reytingim 4,9."],
+        ["b", "Да, я знаю. Нареканий на вас почти нет.", "Da, ya znayu. Narikaniy na vas pachti net.", "Ha, bilaman. Sizdan deyarli shikoyat yo‘q."],
+        ["a", "Я бы хотел перейти в бизнес-класс. Там другие заказы и другой заработок.", "Ya bi xatel pirayti v biznes-klas. Tam drugiye zakazi i drugoy zarabatak.", "Biznes-klassga o‘tmoqchi edim. U yerda buyurtmalar ham, daromad ham boshqacha."],
+        ["b", "Для бизнес-класса нужен стаж пять лет и хороший русский.", "Dlya biznes-klasa nujen stash pyat let i xaroshiy ruskiy.", "Biznes-klass uchun besh yillik staj va yaxshi rus tili kerak."],
+        ["a", "Стаж вождения у меня десять лет, а русский я подтянул на курсах.", "Stash vajdeniya u minya desit let, a ruskiy ya padtyanul na kursax.", "Haydovchilik stajim o‘n yil, rus tilimni esa kurslarda yaxshilab oldim."],
+        ["b", "Это заметно. Но машину для бизнес-класса придётся арендовать дороже.", "Eta zametna. No mashinu dlya biznes-klasa pridyotsa arindavat daroje.", "Bu sezilib turibdi. Lekin biznes-klass mashinasini qimmatroqqa ijaraga olishga to‘g‘ri keladi."],
+        ["a", "Насколько дороже? И какая будет комиссия?", "Naskolka daroje? I kakaya budit kamissiya?", "Qanchaga qimmat? Komissiya qancha bo‘ladi?"],
+        ["b", "Аренда на треть дороже, зато комиссия меньше — пятнадцать процентов.", "Arenda na tret daroje, zato kamissiya menshe — pitnatsat protsentaf.", "Ijara uchdan bir qism qimmatroq, buning evaziga komissiya kamroq — o‘n besh foiz."],
+        ["a", "Тогда это выгодно. И ещё: я готов обучать новичков.", "Tagda eta vigadna. I yisho: ya gatof abuchat navichkof.", "Unda bu foydali. Yana: yangi kelganlarni o‘qitishga tayyorman."],
+        ["b", "Наставникам мы доплачиваем. Напишите заявление, я передам директору.", "Nastavnikam mi daplachivayem. Napishite zayavleniye, ya piridam direktaru.", "Ustozlarga qo‘shimcha haq to‘laymiz. Ariza yozing, direktorga yetkazaman."],
+        ["a", "Спасибо. Принесу заявление завтра утром.", "Spasiba. Prinesu zayavleniye zaftra utram.", "Rahmat. Arizani ertaga ertalab olib kelaman."]
+      ]
+    }
+  ]
+});

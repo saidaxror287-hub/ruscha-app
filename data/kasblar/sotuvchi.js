@@ -136,4 +136,71 @@ Ruscha.addJobTab("kasb-sotuvchi", "orta", {
 });
 
 /* ==================== Yuqori (B2+) ==================== */
-/* Tez orada: Ruscha.addJobTab("kasb-sotuvchi", "yuqori", { phrases: [...], dialogues: [...] }); */
+Ruscha.addJobTab("kasb-sotuvchi", "yuqori", {
+  phrases: [
+    { ru: "Мне платят процент с продаж, но план постоянно повышают.", pr: "Mne platyat protsent s pradash, no plan pastayanna pavishayut.", uz: "Menga sotuvdan foiz to‘lashadi, lekin rejani doim oshirishadi." },
+    { ru: "Премию сняли из-за одной жалобы покупателя.", pr: "Premiyu snyali iz-za adnoy jaloby pakupatilya.", uz: "Bitta xaridor shikoyati tufayli mukofot pulini olib qo‘yishdi." },
+    { ru: "Недостачу в кассе делят на всех продавцов — это незаконно.", pr: "Nidastachu f kase delyat na fsex pradavtsof — eta nizakona.", uz: "Kassadagi kamomadni hamma sotuvchilarga bo‘lishadi — bu noqonuniy." },
+    { ru: "После закрытия мы ещё час бесплатно делаем выкладку.", pr: "Posle zakritiya mi yisho chas bisplatna delayem vikladku.", uz: "Yopilgandan keyin yana bir soat bepul tovar teramiz." },
+    { ru: "По договору у меня пятидневка, а ставят шесть смен.", pr: "Pa dagavoru u minya pitidnefka, a stavyat shest smen.", uz: "Shartnoma bo‘yicha besh kunlik ish haftasi, lekin olti smena qo‘yishadi." },
+    { ru: "Покупатель требует вернуть деньги за товар без чека.", pr: "Pakupatil trebuyet virnut dengi za tavar bis cheka.", uz: "Xaridor cheksiz tovar uchun pulni qaytarishni talab qilyapti.", sit: "Xaridor bir hafta oldin olgan kurtkasini qaytarmoqchi, lekin cheki yo‘q." },
+    { ru: "Без чека возврат возможен, если есть другое доказательство покупки.", pr: "Bis cheka vazvrat vazmojen, isli yest drugoye dakazatilstva pakupki.", uz: "Agar xaridni tasdiqlovchi boshqa dalil bo‘lsa, cheksiz ham qaytarish mumkin." },
+    { ru: "Этот товар обмену и возврату не подлежит.", pr: "Etat tavar abmenu i vazvratu ne padlijit.", uz: "Bu tovarni almashtirish va qaytarib olish mumkin emas." },
+    { ru: "Вы можете оставить отзыв в книге жалоб и предложений.", pr: "Vi mojete astavit otzif f knige jalop i pridlajeniy.", uz: "Shikoyat va takliflar kitobiga fikringizni yozib qoldirishingiz mumkin.", sit: "Xaridor juda norozi va «shikoyat qilaman» deb turib oldi." },
+    { ru: "Пожалуйста, не снимайте меня на телефон без разрешения.", pr: "Pajalusta, ne snimayte minya na tilifon biz razrisheniya.", uz: "Iltimos, ruxsatsiz meni telefonga olmang." },
+    { ru: "Я понимаю ваше недовольство, давайте найдём решение.", pr: "Ya panimayu vashe nidavolstva, davayte naydyom risheniye.", uz: "Noroziligingizni tushunaman, keling, yechim topaylik." },
+    { ru: "Покупатель меня оскорбил, а замечание сделали мне.", pr: "Pakupatil minya askarbil, a zamichaniye zdelali mne.", uz: "Xaridor meni haqorat qildi, tanbehni esa menga berishdi." },
+    { ru: "Я не обязан работать в свой выходной.", pr: "Ya ne abyazan rabotat f svoy vixadnoy.", uz: "Dam olish kunimda ishlashga majbur emasman. (ayol aytsa: «Я не обязана работать в свой выходной»)", sit: "Mudir kechqurun qo‘ng‘iroq qilib, ertaga dam olish kuningizda ishga chiqishni buyurdi." },
+    { ru: "Тайный покупатель поставил нам низкую оценку несправедливо.", pr: "Tayniy pakupatil pastavil nam niskuyu atsenku nisprividliva.", uz: "Yashirin xaridor bizga adolatsiz past baho qo‘ydi." },
+    { ru: "На записи с камеры видно, что я поздоровался с покупателем.", pr: "Na zapisi s kamiri vidna, shto ya pazdaravalsa s pakupatilim.", uz: "Kamera yozuvida xaridor bilan salomlashganim ko‘rinib turibdi. (ayol aytsa: «На записи с камеры видно, что я поздоровалась с покупателем»)" },
+    { ru: "Я перевыполняю план уже полгода.", pr: "Ya pirivipalnyayu plan uje polgada.", uz: "Yarim yildan beri rejani oshirib bajaryapman." },
+    { ru: "Я хотел бы занять должность старшего продавца.", pr: "Ya xatel bi zanyat doljnast starshiva pradavtsa.", uz: "Katta sotuvchi lavozimini egallamoqchi edim. (ayol aytsa: «Я хотела бы занять должность старшего продавца»)" },
+    { ru: "Я могу открывать и закрывать смену, у меня есть опыт.", pr: "Ya magu atkrivat i zakrivat smenu, u minya yest opit.", uz: "Smenani ochib-yopa olaman, tajribam bor." },
+    { ru: "Какая зарплата у администратора магазина?", pr: "Kakaya zarplata u administratara magazina?", uz: "Do‘kon administratorining maoshi qancha?" },
+    { ru: "Прошу ответить на мою жалобу в письменном виде.", pr: "Prashu atvetit na mayu jalobu f pismennam vide.", uz: "Shikoyatimga yozma javob berishingizni so‘rayman." }
+  ],
+  dialogues: [
+    {
+      title: "Cheksiz qaytarish",
+      a: "Xaridor",
+      b: "Sotuvchi",
+      lines: [
+        ["a", "Я хочу вернуть эту куртку. Она порвалась через неделю.", "Ya xachu virnut etu kurtku. Ana parvalas chiriz nidelyu.", "Bu kurtkani qaytarmoqchiman. Bir haftada yirtilib ketdi."],
+        ["b", "Давайте посмотрим. У вас сохранился чек?", "Davayte pasmotrim. U vas saxranilsa chek?", "Ko‘raylik. Chekingiz saqlanganmi?"],
+        ["a", "Нет, я его выбросил. Но я покупал её здесь, честное слово.", "Net, ya yivo vibrasil. No ya pakupal yeyo zdes, chesnaye slova.", "Yo‘q, tashlab yuborganman. Lekin shu yerdan sotib olganman, chin so‘zim."],
+        ["b", "Без чека возврат возможен, если есть другое доказательство покупки.", "Bis cheka vazvrat vazmojen, isli yest drugoye dakazatilstva pakupki.", "Agar xaridni tasdiqlovchi boshqa dalil bo‘lsa, cheksiz ham qaytarish mumkin."],
+        ["a", "Какое ещё доказательство? Вы что, мне не верите?", "Kakoye yisho dakazatilstva? Vi shto, mne ne verite?", "Yana qanaqa dalil? Nima, menga ishonmayapsizmi?"],
+        ["b", "Верю. Вы платили картой? Тогда покупку видно в банковской выписке.", "Veryu. Vi platili kartay? Tagda pakupku vidna v bankafskay vipiske.", "Ishonaman. Karta bilan to‘laganmisiz? Unda xarid bank ko‘chirmasida ko‘rinadi."],
+        ["a", "Да, картой. Сейчас найду в приложении... Вот.", "Da, kartay. Sichas naydu v prilajenii... Vot.", "Ha, karta bilan. Hozir ilovadan topaman... Mana."],
+        ["b", "Отлично. Но шов, похоже, порван механически. Нужна проверка качества.", "Atlichna. No shof, poxaje, porvan mixanichiski. Nujna praverka kachestva.", "Ajoyib. Lekin chok mexanik ravishda yirtilganga o‘xshaydi. Sifat tekshiruvi kerak."],
+        ["a", "Я ничего не рвал! Позовите администратора.", "Ya nichivo ne rval! Pazavite administratara.", "Men hech narsani yirtmadim! Administratorni chaqiring."],
+        ["b", "Конечно, позову. Но я вас не обвиняю, просто так положено по закону.", "Kanechna, pazavu. No ya vas ne abvinyayu, prosta tak palojena pa zakonu.", "Albatta, chaqiraman. Lekin sizni ayblamayapman, qonun bo‘yicha shunday qilinadi."],
+        ["a", "И сколько ждать эту проверку?", "I skolka zhdat etu praverku?", "Bu tekshiruvni qancha kutish kerak?"],
+        ["b", "До двадцати дней. Если брак заводской, вернём деньги полностью.", "Da dvatsati dney. Isli brak zavodskoy, virnyom dengi polnastyu.", "Yigirma kungacha. Agar zavod nuqsoni bo‘lsa, pulni to‘liq qaytaramiz."],
+        ["a", "Ладно, оформляйте. Но я оставлю отзыв в книге жалоб.", "Ladna, afarmlyayte. No ya astavlyu otzif f knige jalop.", "Mayli, rasmiylashtiring. Lekin shikoyat kitobiga fikr yozib qoldiraman."],
+        ["b", "Это ваше право. Вот бланк заявления.", "Eta vashe prava. Vot blank zayavleniya.", "Bu sizning haqqingiz. Mana ariza blankasi."]
+      ]
+    },
+    {
+      title: "Katta sotuvchi",
+      a: "Nilufar",
+      b: "Mudir",
+      lines: [
+        ["a", "Ирина Петровна, можно с вами поговорить после смены?", "Irina Petrovna, mojna s vami pagavarit posle smeni?", "Irina Petrovna, smenadan keyin siz bilan gaplashsam maylimi?"],
+        ["b", "Да, Нилуфар, заходи. Что случилось?", "Da, Nilufar, zaxadi. Shto sluchilas?", "Ha, Nilufar, kir. Nima bo‘ldi?"],
+        ["a", "Во-первых, мне сняли премию из-за жалобы тайного покупателя.", "Va-pervix, mne snyali premiyu iz-za jaloby taynava pakupatilya.", "Birinchidan, yashirin xaridorning shikoyati tufayli mukofotimni olib qo‘yishdi."],
+        ["b", "Он написал, что ты с ним не поздоровалась.", "On napisal, shto ti s nim ne pazdaravalas.", "U, sen u bilan salomlashmading, deb yozibdi."],
+        ["a", "Это неправда. На записи с камеры видно, что я поздоровалась и предложила помощь.", "Eta niprafda. Na zapisi s kamiri vidna, shto ya pazdaravalas i pridlajila pomash.", "Bu noto‘g‘ri. Kamera yozuvida salomlashganim va yordam taklif qilganim ko‘rinib turibdi."],
+        ["b", "Хорошо, я посмотрю запись. Если ты права, премию вернём.", "Xarasho, ya pasmotryu zapis. Isli ti prava, premiyu virnyom.", "Yaxshi, yozuvni ko‘raman. Agar haq bo‘lsang, mukofotni qaytaramiz."],
+        ["a", "Спасибо. Во-вторых, в этом месяце мне поставили шесть смен в неделю.", "Spasiba. Va-ftarix, v etam mesitse mne pastavili shest smen v nidelyu.", "Rahmat. Ikkinchidan, bu oy menga haftasiga olti smena qo‘yishdi."],
+        ["b", "Людей не хватает, ты же знаешь.", "Lyudey ne xvatayet, ti je znayesh.", "Odam yetishmayapti, o‘zing bilasan-ku."],
+        ["a", "Знаю. Но по договору у меня пять дней, и шестой должен оплачиваться вдвойне.", "Znayu. No pa dagavoru u minya pyat dney, i shestoy dolzhen aplachivatsa vdvayne.", "Bilaman. Lekin shartnoma bo‘yicha menda besh kun, oltinchisi ikki baravar to‘lanishi kerak."],
+        ["b", "Справедливо. Я скажу бухгалтеру.", "Spravidliva. Ya skaju buxgaltiru.", "Adolatli. Buxgalterga aytaman."],
+        ["a", "И последнее. Я полгода перевыполняю план и хотела бы стать старшим продавцом.", "I paslredneye. Ya polgada pirivipalnyayu plan i xatela bi stat starshim pradavtsom.", "Va oxirgisi. Yarim yildan beri rejani oshirib bajaryapman, katta sotuvchi bo‘lmoqchi edim."],
+        ["b", "Я как раз думала об этом. Ты сможешь открывать и закрывать смену?", "Ya kak ras dumala ab etam. Ti smojesh atkrivat i zakrivat smenu?", "Aynan shu haqda o‘ylayotgandim. Smenani ochib-yopa olasanmi?"],
+        ["a", "Да, я уже делала это, когда Олег был в отпуске.", "Da, ya uje delala eta, kagda Alek bil v otpuske.", "Ha, Oleg ta’tilda bo‘lganida buni qilganman."],
+        ["b", "Тогда со следующего месяца ты старший продавец, и оклад на пятнадцать процентов выше.", "Tagda sa sleduyushiva mesitsa ti starshiy pradavets, i aklat na pitnatsat protsentaf visshe.", "Unda keyingi oydan katta sotuvchisan, maoshing o‘n besh foiz yuqori bo‘ladi."]
+      ]
+    }
+  ]
+});

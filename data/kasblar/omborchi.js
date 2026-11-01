@@ -136,4 +136,70 @@ Ruscha.addJobTab("kasb-omborchi", "orta", {
 });
 
 /* ==================== Yuqori (B2+) ==================== */
-/* Tez orada: Ruscha.addJobTab("kasb-omborchi", "yuqori", { phrases: [...], dialogues: [...] }); */
+Ruscha.addJobTab("kasb-omborchi", "yuqori", {
+  phrases: [
+    { ru: "Сверхурочные у нас оплачиваются в полуторном размере?", pr: "Sverxurochniye u nas aplachivayutsa f palutornam razmere?", uz: "Bizda qo‘shimcha soatlar bir yarim baravar to‘lanadimi?" },
+    { ru: "По закону ночные часы оплачиваются выше.", pr: "Pa zakonu nachniye chasi aplachivayutsa visshe.", uz: "Qonun bo‘yicha tungi soatlar yuqoriroq to‘lanadi." },
+    { ru: "В расчётном листке не указаны ночные смены.", pr: "F rashotnam listke ne ukazani nachniye smeni.", uz: "Hisob varag‘ida tungi smenalar ko‘rsatilmagan.", sit: "Oylik hisob varag‘ini oldingiz, lekin summa kutganingizdan ancha kam." },
+    { ru: "Меня оформили через агентство, а не напрямую.", pr: "Minya afarmili chiriz agentstva, a ne napryamuyu.", uz: "Meni to‘g‘ridan-to‘g‘ri emas, agentlik orqali rasmiylashtirishdi." },
+    { ru: "Когда закончится мой испытательный срок?", pr: "Kagda zakonchitsa moy ispitatilniy srok?", uz: "Sinov muddatim qachon tugaydi?" },
+    { ru: "Я не согласен с недостачей, пересчёт делали без меня.", pr: "Ya ne saglasen s nidastachey, pirishot delali biz minya.", uz: "Kamomadga rozi emasman, qayta sanashni mensiz o‘tkazishdi. (ayol aytsa: «Я не согласна с недостачей, пересчёт делали без меня»)", sit: "Inventarizatsiyadan keyin sizdan kamomad pulini to‘lashni talab qilishyapti." },
+    { ru: "Недостачу нельзя просто вычесть из зарплаты.", pr: "Nidastachu nilzya prosta vichest iz zarplati.", uz: "Kamomadni shunchaki maoshdan ushlab qolib bo‘lmaydi." },
+    { ru: "Разве я подписывал договор о материальной ответственности?", pr: "Razvi ya padpisival dagavor a matirialnay atvetstvinnasti?", uz: "Men moddiy javobgarlik shartnomasini imzolaganmidim? (ayol aytsa: «Разве я подписывала договор о материальной ответственности?»)" },
+    { ru: "Норму подняли, а зарплату оставили прежней.", pr: "Normu padnyali, a zarplatu astavili prejney.", uz: "Normani oshirishdi, maoshni esa o‘sha-o‘shaligicha qoldirishdi." },
+    { ru: "Выполнить такую норму без нарушений невозможно.", pr: "Vipolnit takuyu normu biz narusheniy nivazmojna.", uz: "Bunday normani qoidalarni buzmasdan bajarib bo‘lmaydi." },
+    { ru: "Начальник смены разговаривает с нами на повышенных тонах.", pr: "Nachalnik smeni razgavarivayet s nami na pavishennix tonax.", uz: "Smena boshlig‘i biz bilan baland ovozda gaplashadi." },
+    { ru: "Я хочу подать жалобу на начальника смены.", pr: "Ya xachu padat jalobu na nachalnika smeni.", uz: "Smena boshlig‘i ustidan shikoyat bermoqchiman." },
+    { ru: "Погрузчик неисправен, и работать на нём я не буду.", pr: "Pagruschik niisprafen, i rabotat na nyom ya ne budu.", uz: "Yuklagich nosoz, men unda ishlamayman.", sit: "Smena boshlig‘i tormozi yomon yuklagichda ishlashga majburlayapti." },
+    { ru: "Я сообщал о неисправности ещё на прошлой неделе.", pr: "Ya saapshal a niispravnasti yisho na proshlay nidele.", uz: "Nosozlik haqida o‘tgan haftadayoq xabar berganman. (ayol aytsa: «Я сообщала о неисправности ещё на прошлой неделе»)" },
+    { ru: "Мы работаем в холоде, а тёплую спецодежду так и не выдали.", pr: "Mi rabotayem f xolade, a tyopluyu spetsodejdu tak i ne vidali.", uz: "Sovuqda ishlaymiz, lekin issiq maxsus kiyimni hali ham berishmadi." },
+    { ru: "Магазин жалуется, что мы путаем заказы.", pr: "Magazin jaluyetsa, shto mi putayem zakazi.", uz: "Do‘kon buyurtmalarni adashtiryapsizlar deb shikoyat qilyapti." },
+    { ru: "Ошибка не наша: в накладной был указан другой артикул.", pr: "Ashipka ne nasha: v nakladnoy bil ukazan drugoy artikul.", uz: "Xato bizniki emas: yuk xatida boshqa artikul ko‘rsatilgan edi." },
+    { ru: "Я бы хотел пройти обучение на кладовщика.", pr: "Ya bi xatel prayti abucheniye na kladafshika.", uz: "Kladovshik (ombor hisobchisi) bo‘lish uchun o‘qishni o‘tmoqchi edim. (ayol aytsa: «Я бы хотела пройти обучение на кладовщика»)" },
+    { ru: "Я давно выполняю обязанности бригадира, но получаю как комплектовщик.", pr: "Ya davno vipalnyayu abyazannasti brigadira, no paluchayu kak kamplektofshik.", uz: "Ancha vaqtdan beri brigadir vazifasini bajaryapman, lekin buyurtma yig‘uvchi kabi maosh olaman." },
+    { ru: "Давайте зафиксируем договорённость письменно.", pr: "Davayte zafiksiruyem dagavaryonnast pismenna.", uz: "Kelishuvni yozma ravishda qayd etaylik." }
+  ],
+  dialogues: [
+    {
+      title: "Kamomad",
+      a: "Jasur",
+      b: "Ombor mudiri",
+      lines: [
+        ["b", "Жасур, по итогам инвентаризации у тебя недостача на сорок тысяч.", "Jasur, pa itogam inventarizatsii u tibya nidastacha na sorak tisich.", "Jasur, inventarizatsiya natijasiga ko‘ra sende qirq ming kamomad bor."],
+        ["a", "Как это? Я не согласен с недостачей, пересчёт делали без меня.", "Kak eta? Ya ne saglasen s nidastachey, pirishot delali biz minya.", "Qanday qilib? Kamomadga rozi emasman, qayta sanashni mensiz o‘tkazishgan."],
+        ["b", "Ты был на больничном, ждать мы не могли.", "Ti bil na balnichnam, zhdat mi ne magli.", "Sen kasallik varaqasida eding, kutib turolmasdik."],
+        ["a", "Тогда как вы можете требовать с меня? Ключи от склада были не только у меня.", "Tagda kak vi mojete trebavat s minya? Klyuchi at sklada bili ne tolka u minya.", "Unda qanday qilib mendan talab qila olasiz? Ombor kalitlari faqat menda emas edi."],
+        ["b", "Но договор о материальной ответственности подписывал ты.", "No dagavor a matirialnay atvetstvinnasti padpisival ti.", "Lekin moddiy javobgarlik shartnomasini sen imzolagansan."],
+        ["a", "Договор — да. Но недостачу нельзя просто вычесть из зарплаты.", "Dagavor — da. No nidastachu nilzya prosta vichest iz zarplati.", "Shartnoma — ha. Lekin kamomadni shunchaki maoshdan ushlab bo‘lmaydi."],
+        ["b", "А что ты предлагаешь?", "A shto ti pridlagayesh?", "Sen nima taklif qilasan?"],
+        ["a", "Давайте сделаем повторную инвентаризацию при мне.", "Davayte zdelayem paftornuyu inventarizatsiyu pri mne.", "Keling, mening ishtirokimda qayta inventarizatsiya qilaylik."],
+        ["b", "Это займёт целый день.", "Eta zaymyot tseliy den.", "Bu butun bir kunni oladi."],
+        ["a", "Я готов остаться после смены. И нужно проверить, что отгружали, пока я болел.", "Ya gatof astatsa posle smeni. I nujna praverit, shto atgrujali, paka ya balel.", "Smenadan keyin qolishga tayyorman. Kasal bo‘lganimda nima jo‘natilganini ham tekshirish kerak."],
+        ["b", "Хорошо, в субботу пересчитаем вместе.", "Xarasho, f subotu pirishitayem vmeste.", "Yaxshi, shanba kuni birga qayta sanaymiz."],
+        ["a", "И если недостачи не будет, прошу убрать это из моего личного дела.", "I isli nidastachi ne budit, prashu ubrat eta iz mayevo lichnava dela.", "Agar kamomad chiqmasa, buni shaxsiy ishimdan olib tashlashingizni so‘rayman."],
+        ["b", "Договорились. Всё зафиксируем в акте.", "Dagavarilis. Fsyo zafiksiruyem v akte.", "Kelishdik. Hammasini dalolatnomada qayd etamiz."]
+      ]
+    },
+    {
+      title: "Brigadir maoshi",
+      a: "Omborchi",
+      b: "Ombor mudiri",
+      lines: [
+        ["a", "Можно вас на минуту? Я хотел обсудить свою зарплату.", "Mojna vas na minutu? Ya xatel absudit svayu zarplatu.", "Bir daqiqaga mumkinmi? Maoshim haqida gaplashmoqchi edim."],
+        ["b", "Слушаю.", "Slushayu.", "Eshitaman."],
+        ["a", "Уже три месяца я фактически работаю бригадиром: распределяю заказы, обучаю новичков.", "Uje tri mesitsa ya faktichiski rabotayu brigadiram: raspridilyayu zakazi, abuchayu navichkof.", "Uch oydan beri amalda brigadir bo‘lib ishlayapman: buyurtmalarni taqsimlayman, yangilarni o‘rgataman."],
+        ["b", "Да, я вижу, смена стала работать лучше.", "Da, ya vizhu, smena stala rabotat luchshe.", "Ha, ko‘ryapman, smena yaxshiroq ishlay boshladi."],
+        ["a", "Но получаю я по-прежнему как комплектовщик.", "No paluchayu ya pa-prejnimu kak kamplektofshik.", "Lekin maoshni hamon buyurtma yig‘uvchi sifatida olaman."],
+        ["b", "Ставку бригадира должна утвердить дирекция.", "Stafku brigadira dalzhna utverdit direktsiya.", "Brigadir stavkasini direksiya tasdiqlashi kerak."],
+        ["a", "Тогда прошу передать им моё заявление. Вот, я его уже написал.", "Tagda prashu piridat im mayo zayavleniye. Vot, ya yivo uje napisal.", "Unda arizamni ularga topshirishingizni so‘rayman. Mana, yozib qo‘ydim."],
+        ["b", "Хорошо, передам. Что-то ещё?", "Xarasho, piridam. Shto-ta yisho?", "Yaxshi, yetkazaman. Yana nimadir bormi?"],
+        ["a", "Да. В прошлом месяце нам не оплатили сверхурочные в полуторном размере.", "Da. F proshlam mesitse nam ne aplatili sverxurochniye f palutornam razmere.", "Ha. O‘tgan oy qo‘shimcha soatlarni bir yarim baravar to‘lashmadi."],
+        ["b", "Вы уверены? Все часы есть в табеле.", "Vi uvereni? Fse chasi yest f tabele.", "Ishonchingiz komilmi? Hamma soatlar tabelda bor."],
+        ["a", "Часы есть, но оплачены по обычной ставке. Вот мой расчётный листок.", "Chasi yest, no aplacheni pa abichnay stafke. Vot moy rashotniy listok.", "Soatlar bor, lekin oddiy stavkada to‘langan. Mana hisob varag‘im."],
+        ["b", "Действительно, ошибка. Сегодня же напишу в бухгалтерию.", "Deystvitelna, ashipka. Sivodnya je napishu v buxgaltiriyu.", "Haqiqatan ham xato. Bugunoq buxgalteriyaga yozaman."],
+        ["a", "Спасибо. Когда ждать ответа по должности?", "Spasiba. Kagda zhdat atveta pa doljnasti?", "Rahmat. Lavozim bo‘yicha javobni qachon kutay?"],
+        ["b", "Дирекция собирается в конце месяца. Думаю, шансы хорошие.", "Direktsiya sabirayetsa f kantse mesitsa. Dumayu, shansi xaroshiye.", "Direksiya oy oxirida yig‘iladi. Menimcha, imkoniyat yaxshi."]
+      ]
+    }
+  ]
+});

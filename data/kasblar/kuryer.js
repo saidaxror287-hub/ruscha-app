@@ -136,4 +136,70 @@ Ruscha.addJobTab("kasb-kuryer", "orta", {
 });
 
 /* ==================== Yuqori (B2+) ==================== */
-/* Tez orada: Ruscha.addJobTab("kasb-kuryer", "yuqori", { phrases: [...], dialogues: [...] }); */
+Ruscha.addJobTab("kasb-kuryer", "yuqori", {
+  phrases: [
+    { ru: "За доставку в дождь и снег должна быть надбавка.", pr: "Za dastafku v dosht i snek dalzhna bit nadbafka.", uz: "Yomg‘ir va qorda yetkazib berganga ustama haq bo‘lishi kerak." },
+    { ru: "Мне начислили меньше, чем показывает приложение.", pr: "Mne nachislili menshe, chem pakazivayet prilajeniye.", uz: "Ilova ko‘rsatganidan kamroq hisoblab berishdi.", sit: "Haftalik to‘lov keldi, lekin summa ilovadagidan kam." },
+    { ru: "Я работаю как самозанятый или по трудовому договору?", pr: "Ya rabotayu kak samazanyatiy ili pa trudavomu dagavoru?", uz: "O‘zini o‘zi band qilgan sifatida ishlaymanmi yoki mehnat shartnomasi bo‘yichami? (ayol aytsa: «Я работаю как самозанятая или по трудовому договору?»)" },
+    { ru: "Кто отвечает, если заказ повредится в дороге?", pr: "Kto atvichayet, isli zakas pavriditsa v daroge?", uz: "Buyurtma yo‘lda shikastlansa, kim javob beradi?" },
+    { ru: "В договоре нет ни слова о страховке.", pr: "V dagavore net ni slova a strafofke.", uz: "Shartnomada sug‘urta haqida bir og‘iz ham gap yo‘q." },
+    { ru: "Клиент обвиняет меня в том, чего я не делал.", pr: "Kliyent abvinyayet minya f tom, chivo ya ne delal.", uz: "Mijoz meni qilmagan ishimda ayblayapti. (ayol aytsa: «Клиент обвиняет меня в том, чего я не делала»)" },
+    { ru: "Пакет был запечатан, я его не открывал.", pr: "Paket bil zapichatan, ya yivo ne atkrival.", uz: "Paket muhrlangan edi, men uni ochmaganman. (ayol aytsa: «Пакет был запечатан, я его не открывала»)", sit: "Mijoz paketdan bir narsa yo‘qolgan deb sizni ayblayapti." },
+    { ru: "Вы не имеете права требовать с меня деньги за чужую ошибку.", pr: "Vi ne imeyete prava trebavat s minya dengi za chujuyu ashipku.", uz: "Boshqaning xatosi uchun mendan pul talab qilishga haqqingiz yo‘q." },
+    { ru: "Ресторан задержал заказ на сорок минут, а штраф получил я.", pr: "Ristaran zadirjal zakas na sorak minut, a shtraf paluchil ya.", uz: "Restoran buyurtmani qirq daqiqa kechiktirdi, jarimani esa men oldim. (ayol aytsa: «Ресторан задержал заказ на сорок минут, а штраф получила я»)" },
+    { ru: "Прошу снять штраф, вот скриншоты с временем.", pr: "Prashu snyat shtraf, vot skrinshati s vremenim.", uz: "Jarimani olib tashlashingizni so‘rayman, mana vaqti ko‘rsatilgan skrinshotlar." },
+    { ru: "Служба поддержки не отвечает уже третий день.", pr: "Sluzhba padderzhki ne atvichayet uje tretiy den.", uz: "Qo‘llab-quvvatlash xizmati uchinchi kundan beri javob bermayapti." },
+    { ru: "Я хочу написать официальную претензию.", pr: "Ya xachu napisat afitsialnuyu pritenziyu.", uz: "Rasmiy da’vo xati yozmoqchiman." },
+    { ru: "Сколько платят за час, если заказов нет?", pr: "Skolka platyat za chas, isli zakazaf net?", uz: "Buyurtma bo‘lmasa, soatiga qancha to‘lashadi?" },
+    { ru: "Гарантированный минимум мне так и не выплатили.", pr: "Garantiravanniy minimum mne tak i ne viplatili.", uz: "Kafolatlangan eng kam haqni menga baribir to‘lashmadi." },
+    { ru: "Велосипед компании сломался не по моей вине.", pr: "Vilasiped kampanii slamalsa ne pa mayey vine.", uz: "Kompaniya velosipedi mening aybim bilan buzilgani yo‘q.", sit: "Menejer buzilgan velosiped ta’miri pulini maoshingizdan ushlamoqchi." },
+    { ru: "Почему меня всё время ставят на самые дальние районы?", pr: "Pachimu minya fsyo vremya stavyat na samiye dalniye rayoni?", uz: "Nega meni doim eng uzoq tumanlarga qo‘yishadi?" },
+    { ru: "Я хотел бы стать старшим курьером.", pr: "Ya xatel bi stat starshim kuryeram.", uz: "Katta kuryer bo‘lishni xohlardim. (ayol aytsa: «Я хотела бы стать старшим курьером»)" },
+    { ru: "За полгода у меня ни одного опоздания.", pr: "Za polgada u minya ni adnavo apazdaniya.", uz: "Yarim yil davomida birorta ham kechikishim yo‘q." },
+    { ru: "Я знаю все районы и могу помогать новичкам.", pr: "Ya znayu fse rayoni i magu pamagat navichkam.", uz: "Barcha tumanlarni bilaman, yangi kelganlarga yordam bera olaman." },
+    { ru: "Если условия не изменятся, мне придётся искать другую работу.", pr: "Isli uslaviya ne izmenyatsa, mne pridyotsa iskat druguyu rabotu.", uz: "Agar sharoit o‘zgarmasa, boshqa ish qidirishga majbur bo‘laman." }
+  ],
+  dialogues: [
+    {
+      title: "Singan piyola",
+      a: "Mijoz",
+      b: "Kuryer",
+      lines: [
+        ["a", "Подождите! Коробка помята, а внутри разбитая чашка.", "Padajdite! Karopka pamyata, a vnutri razbitaya chashka.", "To‘xtang! Quti majaqlangan, ichida esa singan piyola."],
+        ["b", "Мне очень жаль. Но коробку мне выдали уже такой.", "Mne ochin jal. No karopku mne vidali uje takoy.", "Juda afsusdaman. Lekin qutini menga shu holda berishgan."],
+        ["a", "Не надо врать! Вы её уронили, а теперь оправдываетесь.", "Ne nada vrat! Vi yeyo uranili, a tipere apravdivayetis.", "Yolg‘on gapirmang! Uni tushirib yubordingiz, endi bahona qilyapsiz."],
+        ["b", "Пожалуйста, не повышайте голос. Давайте разберёмся спокойно.", "Pajalusta, ne pavishayte golas. Davayte razbiryomsa spakoyna.", "Iltimos, ovozingizni ko‘tarmang. Keling, xotirjam hal qilaylik."],
+        ["a", "Что тут разбираться? Верните мне деньги за чашку.", "Shto tut razbiratsa? Virnite mne dengi za chashku.", "Bu yerda nimani hal qilish kerak? Piyolaning pulini qaytaring."],
+        ["b", "Я не могу вернуть деньги сам. Это делает служба поддержки.", "Ya ne magu virnut dengi sam. Eta delayet sluzhba padderzhki.", "Pulni o‘zim qaytara olmayman. Buni qo‘llab-quvvatlash xizmati qiladi."],
+        ["a", "И что мне теперь делать?", "I shto mne tipere delat?", "Endi nima qilay?"],
+        ["b", "Сфотографируйте коробку и чашку, пока я здесь.", "Sfatagrafiruyte karopku i chashku, paka ya zdes.", "Men shu yerdaligimda qutini va piyolani suratga oling."],
+        ["a", "Хорошо. А вы подтвердите, что коробка была мятая?", "Xarasho. A vi padtverdite, shto karopka bila myataya?", "Yaxshi. Quti majaqlangan bo‘lganini tasdiqlaysizmi?"],
+        ["b", "Да, я отмечу это в приложении и напишу комментарий.", "Da, ya atmechu eta v prilajenii i napishu kamentariy.", "Ha, buni ilovada belgilab, izoh yozaman."],
+        ["a", "А если они откажут?", "A isli ani atkajut?", "Agar ular rad etsa-chi?"],
+        ["b", "Тогда можно подать претензию магазину: упаковка была плохая.", "Tagda mojna padat pritenziyu magazinu: upakofka bila ploxaya.", "Unda do‘konga da’vo yuborish mumkin: qadoq yomon bo‘lgan."],
+        ["a", "Ладно. Извините за грубость.", "Ladna. Izvinite za grubast.", "Mayli. Qo‘polligim uchun kechirasiz."]
+      ]
+    },
+    {
+      title: "Katta kuryer",
+      a: "Kuryer",
+      b: "Menejer",
+      lines: [
+        ["a", "Здравствуйте. У меня два вопроса: про оплату и про мою должность.", "Zdrastvuyte. U minya dva vaprosa: pra aplatu i pra mayu doljnast.", "Assalomu alaykum. Ikki savolim bor: to‘lov va lavozimim haqida."],
+        ["b", "Давайте начнём с оплаты.", "Davayte nachnyom s aplati.", "To‘lovdan boshlaylik."],
+        ["a", "На прошлой неделе я работал шестьдесят часов, а гарантированный минимум мне не выплатили.", "Na proshlay nidele ya rabotal shizdisyat chisof, a garantiravanniy minimum mne ne viplatili.", "O‘tgan hafta oltmish soat ishladim, lekin kafolatlangan minimumni to‘lashmadi."],
+        ["b", "Минимум платят, только если вы не отказывались от заказов.", "Minimum platyat, tolka isli vi ne atkazivalis at zakazaf.", "Minimum faqat buyurtmalardan voz kechmagan bo‘lsangiz to‘lanadi."],
+        ["a", "Я отказался от двух, потому что меня отправляли за двадцать километров на велосипеде.", "Ya atkazalsa at dvux, patamushta minya atpravlyali za dvatsat kilametraf na vilasipede.", "Ikkitasidan voz kechdim, chunki meni velosipedda yigirma kilometr uzoqqa jo‘natishgan edi."],
+        ["b", "Это действительно слишком далеко. Я попрошу бухгалтерию всё пересчитать.", "Eta deystvitelna slishkam dalyoko. Ya paprashu buxgaltiriyu fsyo pirishitat.", "Bu haqiqatan ham juda uzoq. Buxgalteriyadan hammasini qayta hisoblashni so‘rayman."],
+        ["a", "Спасибо. Теперь про должность: я хотел бы стать старшим курьером.", "Spasiba. Tipere pra doljnast: ya xatel bi stat starshim kuryeram.", "Rahmat. Endi lavozim haqida: katta kuryer bo‘lishni xohlardim."],
+        ["b", "А почему вы считаете, что готовы?", "A pachimu vi shitayete, shto gatovi?", "Nega o‘zingizni tayyor deb hisoblaysiz?"],
+        ["a", "За полгода у меня ни одного опоздания, и я знаю все районы.", "Za polgada u minya ni adnavo apazdaniya, i ya znayu fse rayoni.", "Yarim yilda birorta kechikishim yo‘q, barcha tumanlarni bilaman."],
+        ["b", "Старший курьер ещё отвечает за смену и решает конфликты с клиентами.", "Starshiy kuryer yisho atvichayet za smenu i rishayet kanflikti s kliyentami.", "Katta kuryer yana smenaga javob beradi va mijozlar bilan nizolarni hal qiladi."],
+        ["a", "Я с этим справлюсь. Новички и так часто звонят мне за советом.", "Ya s etim spravlyus. Navichki i tak chasta zvanyat mne za savetam.", "Uddalayman. Yangilar shundoq ham ko‘pincha mendan maslahat so‘rab qo‘ng‘iroq qilishadi."],
+        ["b", "Хорошо. Месяц испытательного срока, потом поговорим о зарплате.", "Xarasho. Mesits ispitatilnava sroka, potam pagavarim a zarplate.", "Yaxshi. Bir oy sinov muddati, keyin maosh haqida gaplashamiz."],
+        ["a", "А на испытательном сроке будет доплата?", "A na ispitatilnam sroke budit daplata?", "Sinov muddatida qo‘shimcha haq bo‘ladimi?"],
+        ["b", "Будет, десять процентов. Начинаем с понедельника.", "Budit, desit protsentaf. Nachinayem s panidelnika.", "Bo‘ladi, o‘n foiz. Dushanbadan boshlaymiz."]
+      ]
+    }
+  ]
+});
