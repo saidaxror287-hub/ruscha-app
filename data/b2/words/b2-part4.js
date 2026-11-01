@@ -16,7 +16,7 @@ Ruscha.addWords({
         ["потрясающий", "patrisayushiy", "ajoyib, hayratlanarli"],
         ["замечательный", "zamichatilniy", "ajoyib, juda yaxshi"],
         ["великолепный", "vilikalepniy", "zo‘r, a’lo darajadagi"],
-        ["восхитительный", "vasxititilniy", "maftunkor, mazali (juda)"],
+        ["восхитительный", "vasxititilniy", "maftunkor, ajoyib; juda mazali"],
         ["превосходный", "privasxodniy", "a’lo, benuqson"],
         ["удивительный", "udivitilniy", "ajablanarli"],
         ["поразительный", "parazitilniy", "hayratomuz"],
@@ -187,7 +187,7 @@ Ruscha.addWords({
         ["край", "kray", "chet, qirg‘oq; o‘lka"],
         ["множество", "mnojistva", "ko‘plab, son-sanoqsiz"],
         ["остаток", "astatak", "qoldiq"],
-        ["нехватка", "nixvatka", "yetishmovchilik, kamchil"],
+        ["нехватка", "nixvatka", "yetishmovchilik, kamlik"],
         ["избыток", "izbitak", "ortiqcha miqdor"],
         ["запас", "zapas", "zaxira"]
       ]
