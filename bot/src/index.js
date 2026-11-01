@@ -24,8 +24,6 @@ Rusbek — rus tilini bepul va grammatikasiz o‘rganing:
 👷 Kasblar uchun iboralar: quruvchi, kuryer, haydovchi va boshqalar
 🎤 Talaffuz va gapirish mashqlari, darajalar bo‘yicha testlar
 
-🔊 Ovozli mashqlar uchun «Brauzerda ochish» tugmasini bosing (Chrome yoki Edge).
-
 Boshlash uchun «📚 Telegramda ochish» tugmasini bosing. Ovozli mashqlar uchun — «🔊 Brauzerda ochish».`;
 
 const APP_TEXT = "Rusbek ilovasini ochish uchun pastdagi tugmani bosing 👇";
