@@ -26,7 +26,7 @@ Rusbek — rus tilini bepul va grammatikasiz o‘rganing:
 
 🔊 Ovozli mashqlar uchun «Brauzerda ochish» tugmasini bosing (Chrome yoki Edge).
 
-Boshlash uchun «Ilovani ochish» tugmasini bosing.`;
+Boshlash uchun «📚 Telegramda ochish» tugmasini bosing. Ovozli mashqlar uchun — «🔊 Brauzerda ochish».`;
 
 const APP_TEXT = "Rusbek ilovasini ochish uchun pastdagi tugmani bosing 👇";
 

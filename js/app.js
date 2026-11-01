@@ -677,9 +677,10 @@
   if (inTg && tgApp) { try { tgApp.ready(); } catch (e) { /* ignore */ } }
   const TG_NO_SOUND = "🔊 Telegram ichida ovoz ishlamaydi. Ovoz va gapirish mashqlari uchun ilovani brauzerda oching.";
   const TG_NO_MIC = "🎤 Telegram ichida gapirish mashqlari ishlamaydi. Talaffuzni tekshirish uchun ilovani brauzerda oching.";
-  function browserUrl() { return location.origin + location.pathname.replace(/index\.html$/, "") + "?from=telegram"; }
-  function openInBrowser() {
-    const url = browserUrl();
+  function browserUrl(restore) { return location.origin + location.pathname.replace(/index\.html$/, "") + "?from=telegram" + (restore ? "&restore=1" : ""); }
+  /* restore = true: Chrome shows the «Progressni tiklash» banner (see moveToChrome). */
+  function openInBrowser(restore) {
+    const url = browserUrl(restore === true);
     if (tgApp) {
       try { tgApp.openLink(url, { try_browser: "chrome" }); return; } catch (e) { /* older Telegram */ }
       try { tgApp.openLink(url); return; } catch (e) { /* fall through */ }
@@ -689,8 +690,12 @@
   function browserCard(text) {
     return h("div", { class: "tg-card", role: "note" },
       h("p", { class: "tg-card-text" }, text || TG_NO_SOUND),
-      btn("🌐", "Chrome’da ochish", openInBrowser, "primary big"),
-      h("p", { class: "tg-card-hint" }, h("strong", null, "Ochilmadimi? "), "Ochilgan sahifada ⋮ → «Chrome’da ochish» ni bosing."));
+      btn("🌐", "Chrome’da ochish", () => openInBrowser(), "primary big"),
+      hasProgress() ? moveBtn() : null,
+      h("p", { class: "tg-card-hint" }, h("strong", null, "Ochilmadimi? "), "Ochilgan sahifada ⋮ → «Chrome’da ochish» ni bosing."),
+      hasProgress() ? h("p", { class: "tg-card-hint" }, "Chrome’da natijalar alohida saqlanadi. «Progressni Chrome’ga ko‘chirish» ularni o‘zingiz bilan olib o‘tadi.") : null);
+  }
+  function hasProgress() { return Object.keys(S.cards).length > 0 || Object.keys(S.saved || {}).length > 0;
   }
   /* No usable Russian voice. final = voices had time to load (an empty list then means none). */
   function tgNoVoice(final) {
@@ -1228,6 +1233,7 @@
             h("span", { class: "lesson-title" }, "Bugungi dars"),
             h("span", { class: "lesson-sub" }, sub))) :
           h("p", { class: "hero-soon" }, "⏳ " + L.name + " darajasi tez orada. Hozircha boshqa darajani tanlang.")),
+      backupBanner(),
       voiceNote,
       suggest,
       last && (!last.level || last.level === L.id) ? h("button", { type: "button", class: "continue-btn", onclick: () => go("#/topic/" + last.id) },
@@ -2479,6 +2485,12 @@
       h("div", { class: "size-picker", role: "group", "aria-label": "Matn o‘lchami" }, sizeBtns),
       h("h2", null, "⭐ Saqlanganlar"),
       autoBtn,
+      h("h2", { id: "progress-backup" }, "💾 Progressni saqlash"),
+      h("button", { type: "button", class: "tile wide", onclick: () => go("#/backup") },
+        h("span", { class: "tile-ic", "aria-hidden": "true" }, "💾"),
+        h("span", { class: "tile-title" }, "Progressni saqlash va tiklash"),
+        h("span", { class: "tile-sub" }, S.backupAt ? "Oxirgi saqlash: " + niceDate(S.backupAt) : "Natijalaringizni faylga yoki kodga saqlang — boshqa telefonda yoki brauzerda qaytarib olasiz.")),
+      inTg && hasProgress() ? moveBtn() : null,
       h("h2", null, "Qanday o‘rganish kerak?"),
       h("ol", { class: "steps" },
         h("li", null, "Yuqoridagi A1, A2, B1… tugmalari bilan darajangizni tanlang. Hech narsa yopilmagan."),
@@ -2506,7 +2518,9 @@
       inTg && (tgNoVoice(true) || !st.listen) ? browserCard(tgNoVoice(true) ? TG_NO_SOUND : TG_NO_MIC) : null,
       h("h2", null, "Natijalaringiz"),
       h("p", null, "Natijalaringiz faqat shu qurilmada, shu brauzerda saqlanadi. Ro‘yxatdan o‘tish shart emas. Dastur bepul."),
-      inTg ? h("p", { class: "note" }, "📱 Telegram ichida va Chrome’da natijalar alohida saqlanadi: Telegramda o‘rganganlaringiz Chrome’da ko‘rinmaydi (va aksincha). Qulay bo‘lsa, doim bitta joyda o‘rganing.") : null,
+      h("p", { class: "note" }, inTg ? "📱 Telegram ichida va Chrome’da natijalar alohida saqlanadi: Telegramda o‘rganganlaringiz Chrome’da ko‘rinmaydi (va aksincha). Ularni ko‘chirish uchun " : "📱 Boshqa telefon yoki brauzerga o‘tsangiz, natijalaringizni ko‘chirish uchun ",
+        h("a", { href: "#/backup", class: "inline-link", onclick: e => { e.preventDefault(); go("#/backup"); } }, "«💾 Progressni saqlash»"),
+        " dan foydalaning."),
       resetBox);
   }
 
@@ -2586,7 +2600,8 @@
       choice("🙂", "Ozgina bilaman", "Qisqa tekshiruv A1 dan boshlanadi", () => go("#/daraja/test/a1")),
       choice("💪", "Yaxshi bilaman", "Qisqa tekshiruv A2 dan boshlanadi", () => go("#/daraja/test/a2")),
       placementPending
-        ? h("button", { type: "button", class: "link-btn", onclick: () => finishPlacement("a1", "skip") }, "O‘tkazib yuborish")
+        ? [h("button", { type: "button", class: "link-btn", onclick: () => go("#/backup/restore") }, "📥 Oldin o‘rganganmisiz? Progressni tiklash"),
+          h("button", { type: "button", class: "link-btn", onclick: () => finishPlacement("a1", "skip") }, "O‘tkazib yuborish")]
         : h("p", { class: "hint" }, "Natijalaringiz o‘chmaydi — tekshiruv faqat darajani tavsiya qiladi."));
   }
 
@@ -2729,6 +2744,442 @@
   }
 
   /* =====================================================================
+     💾 Progressni saqlash — backup and restore (Yordam → «💾 Progressni saqlash», #/backup).
+     A backup holds the whole progress (KEY: cards, streak, tests, ⭐ Saqlanganlar, level check…)
+     plus the settings kept under their own keys (LEVEL_KEY, "rusbek_text_size").
+     The localStorage keys never change: restoring only writes new values into them.
+     Format: { app: "rusbek", v: 1, date, sum, data: { progress, settings } }, sum = FNV-1a of v + date + JSON(data).
+     As a file it is that JSON; as a code it is "RUSBEK1:" + base64url(deflate(JSON)) + "." ("RUSBEK0:" = not compressed;
+     the final "." marks the end, so words pasted after the code are ignored).
+     The time of the last backup is kept inside the progress (S.backupAt), for the reminder on home.
+     ===================================================================== */
+  const BACKUP_V = 1;
+  const TEXT_SIZE_KEY = "rusbek_text_size";
+  const DAY_MS = 86400000;
+  let pendingBackup = null; // a checked backup waiting on the preview / confirm screens
+
+  /* Telegram → Chrome: «Progressni Chrome’ga ko‘chirish» opens Chrome with ?restore=1, which shows the
+     «Progressni tiklash» banner until the user restores or closes it (remembered for this tab only). */
+  let restoreAsk = (() => {
+    try {
+      const q = new URLSearchParams(location.search);
+      if (q.get("restore") === "1") {
+        sessionStorage.setItem("rusbek_restore", "1");
+        q.delete("restore");
+        const qs = q.toString();
+        history.replaceState(history.state, "", location.pathname + (qs ? "?" + qs : "") + location.hash);
+      }
+      return sessionStorage.getItem("rusbek_restore") === "1";
+    } catch (e) { return false; }
+  })();
+  function dropRestoreAsk() {
+    restoreAsk = false;
+    try { sessionStorage.removeItem("rusbek_restore"); } catch (e) { /* ignore */ }
+  }
+  if (restoreAsk) placementPending = false; // they came to restore, not to start over
+
+  function fnv(str) {
+    let x = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) { x ^= str.charCodeAt(i); x = Math.imul(x, 0x01000193); }
+    return (x >>> 0).toString(16).padStart(8, "0");
+  }
+  function sumOf(v, date, data) { return fnv(v + "|" + date + "|" + JSON.stringify(data)); }
+
+  function readSetting(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function makeBackup() {
+    const date = new Date().toISOString();
+    const data = {
+      progress: JSON.parse(JSON.stringify(S)),
+      settings: { level: readSetting(LEVEL_KEY), textSize: readSetting(TEXT_SIZE_KEY) }
+    };
+    return { app: "rusbek", v: BACKUP_V, date, sum: sumOf(BACKUP_V, date, data), data };
+  }
+  /* Called after every successful save (share, file, code). */
+  function markBackedUp() { S.backupAt = Date.now(); delete S.backupSnooze; save(); }
+
+  /* base64url <-> bytes */
+  function toB64(bytes) {
+    let s = "";
+    for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function fromB64(s) {
+    s = s.replace(/-/g, "+").replace(/_/g, "/");
+    while (s.length % 4) s += "=";
+    const bin = atob(s);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+  async function streamBytes(bytes, stream) {
+    const res = new Response(new Blob([bytes]).stream().pipeThrough(stream));
+    return new Uint8Array(await res.arrayBuffer());
+  }
+  async function backupCode(b) {
+    const raw = new TextEncoder().encode(JSON.stringify(b));
+    if (typeof CompressionStream === "function") {
+      try { return "RUSBEK1:" + toB64(await streamBytes(raw, new CompressionStream("deflate"))) + "."; } catch (e) { /* fall back */ }
+    }
+    return "RUSBEK0:" + toB64(raw) + ".";
+  }
+
+  /* Any text (a code, possibly with spaces/line breaks or words around it, or the file's JSON) → backup.
+     Throws an Error with a simple Uzbek message. */
+  const BAD_CODE = "Kod noto‘g‘ri yoki to‘liq emas. Uni boshidan oxirigacha to‘liq nusxalang.";
+  async function parseBackup(text) {
+    text = String(text || "").trim();
+    if (!text) throw new Error("Avval kodni qo‘ying yoki faylni tanlang.");
+    let obj;
+    if (text[0] === "{") {
+      try { obj = JSON.parse(text); } catch (e) { throw new Error("Fayl buzilgan yoki to‘liq emas."); }
+    } else {
+      const m = text.replace(/\s+/g, "").match(/RUSBEK([01]):([A-Za-z0-9_-]+)/);
+      if (!m) throw new Error(BAD_CODE);
+      let bytes;
+      try { bytes = fromB64(m[2]); } catch (e) { throw new Error(BAD_CODE); }
+      if (m[1] === "1") {
+        if (typeof DecompressionStream !== "function") throw new Error("Bu brauzer kodni o‘qiy olmaydi. Fayl orqali tiklang yoki Google Chrome’da oching.");
+        try { bytes = await streamBytes(bytes, new DecompressionStream("deflate")); } catch (e) { throw new Error(BAD_CODE); }
+      }
+      try { obj = JSON.parse(new TextDecoder().decode(bytes)); } catch (e) { throw new Error(BAD_CODE); }
+    }
+    if (!obj || obj.app !== "rusbek" || !obj.data || typeof obj.data !== "object") throw new Error("Bu Rusbek progressi emas.");
+    if (typeof obj.v !== "number" || obj.v > BACKUP_V) throw new Error("Bu kod ilovaning yangiroq versiyasida saqlangan. Avval ilovani yangilang.");
+    if (sumOf(obj.v, obj.date, obj.data) !== obj.sum) throw new Error("Kod buzilgan (tekshiruv mos kelmadi). Uni qaytadan to‘liq nusxalang.");
+    const p = obj.data.progress;
+    if (!p || typeof p !== "object" || !p.cards || typeof p.cards !== "object" || Array.isArray(p.cards)) throw new Error("Bu Rusbek progressi emas.");
+    return obj;
+  }
+
+  /* ---- merge helpers ---- */
+  const MAPS = ["saved", "tests", "listen", "short", "speak"]; // id → number; merge keeps the bigger one
+  const num = x => (typeof x === "number" && isFinite(x) ? x : null);
+  function cleanCard(c) {
+    if (!c || typeof c !== "object") return null;
+    const e = num(c.e), i = num(c.i), r = num(c.r), d = num(c.d);
+    if (e == null || i == null || r == null || d == null) return null;
+    return { e, i, r, d };
+  }
+  /* "Better" card = more correct repeats in a row, then a longer interval, then due later. */
+  function betterCard(a, b) {
+    if (!a) return b;
+    if (!b) return a;
+    if (a.r !== b.r) return a.r > b.r ? a : b;
+    if (a.i !== b.i) return a.i > b.i ? a : b;
+    return a.d >= b.d ? a : b;
+  }
+  function cleanProgress(p) {
+    const out = Object.assign(blank(), p);
+    out.cards = {};
+    for (const id in p.cards) { const c = cleanCard(p.cards[id]); if (c) out.cards[id] = c; }
+    MAPS.forEach(k => {
+      const m = p[k] && typeof p[k] === "object" && !Array.isArray(p[k]) ? p[k] : {};
+      out[k] = {};
+      for (const id in m) if (num(m[id]) != null) out[k][id] = m[id];
+    });
+    out.streak = num(p.streak) || 0;
+    out.lastDay = num(p.lastDay) != null ? p.lastDay : -1;
+    out.lessonDay = num(p.lessonDay) != null ? p.lessonDay : -1;
+    out.autoSave = !!p.autoSave;
+    return out;
+  }
+  function streakOf(p) { const t = today(); return p.lastDay === t || p.lastDay === t - 1 ? p.streak : 0; }
+  function maxMap(a, b) {
+    const out = Object.assign({}, a || {});
+    for (const id in b || {}) out[id] = Math.max(out[id] || 0, b[id]);
+    return out;
+  }
+  function mergeProgress(mine, theirs) {
+    const out = Object.assign({}, theirs, mine); // fields only one side has are kept
+    out.cards = Object.assign({}, mine.cards);
+    for (const id in theirs.cards) out.cards[id] = betterCard(out.cards[id], theirs.cards[id]);
+    MAPS.forEach(k => { out[k] = maxMap(mine[k], theirs[k]); });
+    // Longest streak (as it stands today); a tie → the more recent day.
+    const sm = streakOf(mine), st = streakOf(theirs);
+    const win = st > sm || (st === sm && theirs.lastDay > mine.lastDay) ? theirs : mine;
+    out.streak = win.streak;
+    out.lastDay = win.lastDay;
+    out.lessonDay = Math.max(mine.lessonDay, theirs.lessonDay);
+    out.lastTopic = mine.lastTopic || theirs.lastTopic;
+    // Level check: the more recent result.
+    if (mine.placement && theirs.placement) out.placement = String(theirs.placement.date || "") > String(mine.placement.date || "") ? theirs.placement : mine.placement;
+    else out.placement = mine.placement || theirs.placement;
+    if (!out.placement) delete out.placement;
+    out.autoSave = !!(mine.autoSave || theirs.autoSave);
+    return out;
+  }
+  function applySettings(st, replace) {
+    if (!st) return;
+    if (st.level && R.levelById[st.level] && (replace || !readSetting(LEVEL_KEY))) setLevel(st.level);
+    if (st.textSize && ["oddiy", "katta", "juda"].includes(st.textSize) && (replace || !readSetting(TEXT_SIZE_KEY))) {
+      try { localStorage.setItem(TEXT_SIZE_KEY, st.textSize); } catch (e) { /* ignore */ }
+      if (st.textSize === "oddiy") document.documentElement.removeAttribute("data-size");
+      else document.documentElement.setAttribute("data-size", st.textSize);
+    }
+  }
+  function restoreBackup(b, how) {
+    const theirs = cleanProgress(b.data.progress);
+    const mineAt = num(S.backupAt) || 0;
+    S = how === "replace" ? theirs : mergeProgress(cleanProgress(S), theirs);
+    // The data now sits in a backup, so the reminder can wait 30 days from that backup.
+    const at = Math.max(mineAt, num(theirs.backupAt) || 0, Date.parse(b.date) || 0);
+    if (at) S.backupAt = at;
+    delete S.backupSnooze;
+    save();
+    applySettings(b.data.settings, how === "replace");
+    placementPending = false;
+    dropRestoreAsk();
+    refreshSavedCount();
+  }
+
+  /* ---- numbers for the preview ---- */
+  function statsOf(p) {
+    const ids = Object.keys(p.cards || {}).filter(id => itemOf(id));
+    const per = {};
+    ids.forEach(id => { const L = itemOf(id).level; if (L) per[L] = (per[L] || 0) + 1; });
+    return { words: ids.length, streak: streakOf(p), per, saved: Object.keys(p.saved || {}).filter(id => itemOf(id)).length };
+  }
+  function perLevelText(per) {
+    const parts = R.levels.filter(L => per[L.id]).map(L => L.name + ": " + per[L.id]);
+    return parts.length ? parts.join(" · ") : "—";
+  }
+  function niceDate(t) {
+    const d = new Date(t);
+    if (isNaN(d)) return "—";
+    const months = ["yanvar", "fevral", "mart", "aprel", "may", "iyun", "iyul", "avgust", "sentabr", "oktabr", "noyabr", "dekabr"];
+    return d.getDate() + "-" + months[d.getMonth()] + " " + d.getFullYear() + ", " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  }
+  function fileName() { return "rusbek-progress-" + localDate() + ".txt"; }
+
+  /* Copy text: Clipboard API, else the old select + copy way. Resolves true/false. */
+  async function copyText(text) {
+    try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return true; } } catch (e) { /* fall back */ }
+    const ta = h("textarea", { readonly: true, style: "position:fixed;top:0;left:0;opacity:0" });
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    ta.remove();
+    return ok;
+  }
+  function codeBox(code) {
+    const ta = h("textarea", { class: "code-box", readonly: true, rows: "4", "aria-label": "Progress kodi", onfocus: () => ta.select() });
+    ta.value = code;
+    return ta;
+  }
+  const backHeader = (title, back) => header(title, back, ["Yordam", "Progressni saqlash"]);
+
+  /* Telegram: copy the code, then open Chrome (which shows the «Progressni tiklash» banner). */
+  async function moveToChrome() {
+    const code = await backupCode(makeBackup());
+    if (!(await copyText(code))) { go("#/backup/save"); toast("Kodni qo‘lda nusxalang, keyin Chrome’ni oching"); return; }
+    markBackedUp();
+    toast("📋 Kod nusxalandi. Chrome ochilmoqda…");
+    setTimeout(() => openInBrowser(true), 600);
+  }
+  function moveBtn() { return btn("📲", "Progressni Chrome’ga ko‘chirish", moveToChrome, "big"); }
+
+  /* #/backup — one choice: save or restore. */
+  function backupScreen() {
+    const s = statsOf(S);
+    const at = num(S.backupAt);
+    show(header("💾 Progressni saqlash", "#/help", ["Yordam"]),
+      h("p", null, "Natijalaringizni saqlab qo‘ying: telefon almashsa yoki Telegramdan Chrome’ga o‘tsangiz, ularni qaytarib olasiz."),
+      h("ul", { class: "status-list" },
+        h("li", null, "📖 O‘rganilgan: " + s.words),
+        h("li", null, "🔥 Ketma-ket kunlar: " + s.streak),
+        h("li", null, at ? "💾 Oxirgi saqlash: " + niceDate(at) : "💾 Hali saqlanmagan")),
+      btn("📤", "Progressni saqlash", () => go("#/backup/save"), "primary big"),
+      btn("📥", "Progressni tiklash", () => go("#/backup/restore"), "big"),
+      inTg ? h("div", { class: "tg-card", role: "note" },
+        h("p", { class: "tg-card-text" }, "Chrome’da o‘rganmoqchimisiz? Natijalaringizni o‘zingiz bilan olib o‘ting."),
+        moveBtn(),
+        h("p", { class: "tg-card-hint" }, "Kod nusxalanadi va Chrome ochiladi. U yerda «Kodni qo‘yish» ni bosing.")) : null);
+  }
+
+  /* #/backup/save — share / file / code. */
+  function backupSave() {
+    const b = makeBackup();
+    const text = JSON.stringify(b);
+    const file = (() => { try { return new File([text], fileName(), { type: "text/plain" }); } catch (e) { return null; } })();
+    const canShare = !!(file && navigator.share && navigator.canShare && (() => { try { return navigator.canShare({ files: [file] }); } catch (e) { return false; } })());
+    const out = h("div", { "aria-live": "polite" });
+    function result(nodes) { out.textContent = ""; add(out, nodes); out.scrollIntoView({ behavior: "smooth", block: "nearest" }); }
+
+    async function share() {
+      try {
+        await navigator.share({ files: [file], title: "Rusbek progress" });
+        markBackedUp();
+        result(h("p", { class: "feedback good" }, "✅ Yuborildi. Bu faylni o‘chirmang — tiklashda kerak bo‘ladi."));
+      } catch (e) {
+        if (e && e.name === "AbortError") return; // closed the share window
+        toast("Ulashib bo‘lmadi. «Fayl sifatida saqlash» ni sinang.");
+      }
+    }
+    function download() {
+      try {
+        const url = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+        const a = h("a", { href: url, download: fileName(), style: "display:none" });
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+        markBackedUp();
+        result(h("p", { class: "feedback good" }, "✅ «" + fileName() + "» fayli saqlandi (odatda «Yuklanmalar» papkasida)."));
+      } catch (e) { toast("Faylni saqlab bo‘lmadi. «Kodni nusxalash» ni sinang."); }
+    }
+    async function copy() {
+      const code = await backupCode(b);
+      const ok = await copyText(code);
+      if (ok) markBackedUp();
+      result([
+        h("p", { class: ok ? "feedback good" : "feedback warn" }, ok ? "✅ Kod nusxalandi." : "Avtomatik nusxalanmadi. Pastdagi kodni bosib turing va «Nusxalash» ni tanlang."),
+        h("p", { class: "note" }, "📨 Bu kodni o‘zingizga Telegramda yuboring («Saqlangan xabarlar» ga). Tiklashda shu kodni qo‘yasiz."),
+        code.length > 4000 ? h("p", { class: "hint" }, "Kod uzun (" + code.length + " belgi). Telegram uni bir necha xabarga bo‘lishi mumkin — fayl sifatida yuborish qulayroq.") : null,
+        codeBox(code)
+      ]);
+    }
+
+    show(backHeader("📤 Saqlash", "#/backup"),
+      h("p", null, "Qanday saqlaysiz? Bittasini tanlang."),
+      canShare ? btn("📤", "Telegramga yuborish / Ulashish", share, "primary big") : null,
+      btn("📄", "Fayl sifatida saqlash", download, canShare ? "big" : "primary big"),
+      btn("📋", "Kodni nusxalash", copy, "big"),
+      inTg ? h("p", { class: "hint" }, "Telegram ichida fayl saqlanmasa, «Kodni nusxalash» ni bosing.") : null,
+      out);
+  }
+
+  /* #/backup/restore — choose a file or paste the code, then check it. */
+  function backupRestore() {
+    const err = h("div", { "aria-live": "polite" });
+    const ta = h("textarea", { class: "code-box", rows: "4", placeholder: "Kodni shu yerga qo‘ying (RUSBEK1:…)", "aria-label": "Progress kodi",
+      autocomplete: "off", autocapitalize: "off", spellcheck: "false" });
+    const fileIn = h("input", { type: "file", accept: ".txt,.json,text/plain,application/json", hidden: true, onchange: async () => {
+      const f = fileIn.files && fileIn.files[0];
+      fileIn.value = "";
+      if (!f) return;
+      if (f.size > 5e6) return fail("Bu fayl juda katta. Rusbek progress faylini tanlang.");
+      check(await f.text());
+    } });
+    function fail(msg) { err.textContent = ""; add(err, h("p", { class: "feedback warn" }, "⚠️ " + msg)); }
+    async function check(text) {
+      try {
+        pendingBackup = await parseBackup(text);
+        go("#/backup/preview");
+      } catch (e) { fail(e.message || BAD_CODE); }
+    }
+    async function paste() {
+      try {
+        const t = await navigator.clipboard.readText();
+        if (t) { ta.value = t; return check(t); }
+      } catch (e) { /* no permission */ }
+      ta.focus();
+      fail("Maydonni bosib turing va «Qo‘yish» ni tanlang.");
+    }
+    const canRead = !!(navigator.clipboard && navigator.clipboard.readText && window.isSecureContext);
+    show(backHeader("📥 Tiklash", "#/backup"),
+      restoreAsk ? h("p", { class: "note" }, "📲 Telegramda nusxalangan kodni qo‘ying.") : null,
+      canRead ? btn("📋", "Nusxalangan kodni qo‘yish", paste, "primary big") : null,
+      ta,
+      btn("✅", "Tekshirish", () => check(ta.value), canRead ? "big" : "primary big"),
+      h("p", { class: "section-label" }, "yoki"),
+      btn("📄", "Faylni tanlash", () => fileIn.click(), "big"),
+      fileIn,
+      err);
+  }
+
+  /* #/backup/preview — what is in the backup, then merge or replace. */
+  function backupPreview() {
+    const b = pendingBackup;
+    if (!b) return redirect("#/backup/restore");
+    const s = statsOf(cleanProgress(b.data.progress));
+    const now = statsOf(S);
+    show(backHeader("🔎 Tekshirildi", "#/backup/restore"),
+      h("p", { class: "feedback good" }, "✅ Kod to‘g‘ri. Unda quyidagilar bor:"),
+      h("ul", { class: "status-list" },
+        h("li", null, "📅 Saqlangan: " + niceDate(b.date)),
+        h("li", null, "📖 O‘rganilgan: " + s.words),
+        h("li", null, "🔥 Ketma-ket kunlar: " + s.streak),
+        h("li", null, "📊 Darajalar: " + perLevelText(s.per)),
+        s.saved ? h("li", null, "⭐ Saqlanganlar: " + s.saved) : null),
+      now.words || now.saved ? h("p", { class: "hint" }, "Hozir bu qurilmada: " + now.words + " ta o‘rganilgan, " + now.streak + " kun ketma-ket.") : null,
+      h("p", null, "Qanday tiklaymiz?"),
+      h("button", { type: "button", class: "tile wide", onclick: () => go("#/backup/confirm/merge") },
+        h("span", { class: "tile-ic", "aria-hidden": "true" }, "🔀"),
+        h("span", { class: "tile-title" }, "Birlashtirish (tavsiya etiladi)"),
+        h("span", { class: "tile-sub" }, "Ikkalasidan eng yaxshisi qoladi: har bir so‘zning yaxshiroq natijasi, eng uzun ketma-ketlik, eng yuqori ballar.")),
+      h("button", { type: "button", class: "tile wide", onclick: () => go("#/backup/confirm/replace") },
+        h("span", { class: "tile-ic", "aria-hidden": "true" }, "♻️"),
+        h("span", { class: "tile-title" }, "Almashtirish"),
+        h("span", { class: "tile-sub" }, "Bu qurilmadagi natijalar o‘chadi, o‘rniga koddagi natijalar yoziladi.")));
+  }
+
+  /* #/backup/confirm/merge|replace — one last "are you sure", then restore. */
+  function backupConfirm(how) {
+    const b = pendingBackup;
+    if (!b) return redirect("#/backup/restore");
+    const replace = how === "replace";
+    const now = statsOf(S);
+    show(backHeader(replace ? "♻️ Almashtirish" : "🔀 Birlashtirish", "#/backup/preview"),
+      replace
+        ? h("p", { class: "note" }, "Rostdan ham almashtirasizmi? Bu qurilmadagi natijalar (" + now.words + " ta o‘rganilgan) o‘chadi. Buni qaytarib bo‘lmaydi.")
+        : h("p", null, "Koddagi natijalar shu qurilmadagi natijalar bilan birlashtiriladi. Hech narsa yo‘qolmaydi."),
+      btn("✅", replace ? "Ha, almashtirish" : "Ha, birlashtirish", () => {
+        restoreBackup(b, how);
+        pendingBackup = null;
+        redirect("#/backup/done");
+      }, replace ? "bad big" : "primary big"),
+      btn("✋", "Yo‘q, orqaga", () => goBack("#/backup/preview"), "big"));
+  }
+
+  function backupDone() {
+    const s = statsOf(S);
+    show(header("✅ Tayyor", null),
+      h("div", { class: "done" },
+        h("div", { class: "big-ic", "aria-hidden": "true" }, "🎉"),
+        h("h2", null, "Progress tiklandi!")),
+      h("ul", { class: "status-list" },
+        h("li", null, "📖 O‘rganilgan: " + s.words),
+        h("li", null, "🔥 Ketma-ket kunlar: " + s.streak),
+        h("li", null, "📊 Darajalar: " + perLevelText(s.per))),
+      btn("🏠", "Bosh sahifa", () => redirect("#/"), "primary big"));
+  }
+
+  function backupRoute(p) {
+    switch (p[1]) {
+      case "save": return backupSave();
+      case "restore": return backupRestore();
+      case "preview": return backupPreview();
+      case "confirm": return backupConfirm(p[2] === "replace" ? "replace" : "merge");
+      case "done": return backupDone();
+      default: return backupScreen();
+    }
+  }
+
+  /* Home: the «Progressni tiklash» banner (came from Telegram), or a gentle reminder
+     (50+ learned, no backup for 30 days; «Keyinroq» hides it for 7 days). */
+  function backupBanner() {
+    if (restoreAsk) {
+      const box = h("div", { class: "suggest", style: "--lvl:var(--primary)" },
+        h("p", { class: "suggest-title" }, "📲 Progressni tiklash"),
+        h("p", null, "Telegramdagi natijalaringizni shu yerga ko‘chiramizmi? Telegramda nusxalangan kodni qo‘ying."),
+        btn("📋", "Kodni qo‘yish", () => go("#/backup/restore"), "primary"),
+        h("button", { type: "button", class: "link-btn", onclick: () => { dropRestoreAsk(); box.remove(); } }, "Kerak emas"));
+      return box;
+    }
+    const n = learnedCount();
+    const at = num(S.backupAt) || 0, snooze = num(S.backupSnooze) || 0;
+    if (n < 50 || Date.now() - at < 30 * DAY_MS || Date.now() < snooze) return null;
+    const box = h("div", { class: "suggest", style: "--lvl:var(--primary)" },
+      h("p", { class: "suggest-title" }, "💾 Progressingizni saqlab qo‘ying"),
+      h("p", null, "Siz " + n + " ta ibora va so‘z o‘rgandingiz. " + (at ? "Oxirgi marta 30 kundan oldin saqlangan." : "Ular hali saqlanmagan.") + " Telefon almashsa ham yo‘qolmasin."),
+      btn("💾", "Saqlash", () => go("#/backup/save"), "primary"),
+      h("button", { type: "button", class: "link-btn", onclick: () => { S.backupSnooze = Date.now() + 7 * DAY_MS; save(); box.remove(); } }, "Keyinroq"));
+    return box;
+  }
+
+  /* =====================================================================
      Router
      ===================================================================== */
   let ready = false;
@@ -2740,7 +3191,7 @@
     const one = id => (bundleById[id] ? [bundleById[id]] : []);
     const base = one("shared").concat(one(level().id));
     const src = ["learn", "cards", "quiz"].includes(p[0]);
-    if (["search", "saved", "review"].includes(p[0]) || (p[0] === "daraja" && p[1] === "test") || (src && p[1] === "f")) return BUNDLES;
+    if (["search", "saved", "review", "backup"].includes(p[0]) || (p[0] === "daraja" && p[1] === "test") || (src && p[1] === "f")) return BUNDLES;
     if (["daraja", "help", "ai"].includes(p[0])) return [];
     if (p[0] === "leveltest") return one(p[1]);
     if (src && p[1] === "l") return one(p[2]);
@@ -2807,6 +3258,7 @@
       case "lesson": return lessonRoute();
       case "ai": return aiScreen();
       case "help": return helpScreen();
+      case "backup": return backupRoute(p);
       default: return placementPending ? redirect("#/daraja") : home();
     }
   }

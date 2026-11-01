@@ -779,3 +779,15 @@ body.placing .bottom-nav { display: none; }
 .tg-card-text { margin: 0 0 12px; font-weight: 700; }
 .tg-card .btn { width: 100%; margin: 0; }
 .tg-card-hint { margin: 10px 0 0; font-size: 0.9rem; color: var(--muted); }
+
+/* 💾 Progressni saqlash (js/app.js → backup screens) */
+.code-box {
+  display: block; width: 100%; min-height: 6.5rem; margin: 10px 0; padding: 12px 14px;
+  border: 1px solid var(--line-strong); border-radius: var(--r-md);
+  background: var(--surface); color: var(--text);
+  font: 0.85rem/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  word-break: break-all; resize: vertical;
+}
+.code-box:focus { outline: 2px solid var(--primary); outline-offset: 1px; }
+.inline-link { color: var(--primary); font-weight: 700; }
+.suggest .link-btn { margin-top: 4px; }
