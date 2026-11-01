@@ -10,6 +10,7 @@
   const R = (window.Ruscha = {
     levels: window.RUSCHA_LEVELS || [], levelById: {},
     topics: [], topicById: {}, lists: [], listById: {}, listening: [], listeningById: {}, tests: {},
+    speaking: [], speakingById: {},
     items: {}, loadErrors: []
   });
   R.levels.forEach(l => { R.levelById[l.id] = l; });
@@ -75,6 +76,20 @@
     x.questions = x.questions || [];
     R.listening.push(x);
     R.listeningById[x.id] = x;
+  };
+
+  /* 🗣 Speaking tasks (one task or a list): { id, title, icon, q: [ru, pr, uz], phrases: [[ru, pr, uz]], sample: [[ru, pr, uz]] }. */
+  R.addSpeaking = function (list) {
+    [].concat(list || []).forEach(x => {
+      if (!x || !x.id || !x.q || R.speakingById[x.id]) return;
+      const row = l => ({ ru: l[0], pr: l[1], uz: l[2] });
+      x.level = loadingLevel;
+      x.q = row(x.q);
+      x.phrases = (x.phrases || []).map(row);
+      x.sample = (x.sample || []).map(row);
+      R.speaking.push(x);
+      R.speakingById[x.id] = x;
+    });
   };
 
   /* Level test: questions [{ q, audio?, text?, options, answer, full?, pr, uz }]. */
@@ -208,7 +223,14 @@
   const app = document.getElementById("app");
   let viewTok = 0;
   /* Call at the start of every new screen: stops sound and invalidates old timers. */
-  function newView() { viewTok++; Speech.stopAll(); }
+  const leaveFns = [];
+  /* fn runs once when the user leaves the current screen (stops recordings, timers…). */
+  function onLeave(fn) { leaveFns.push(fn); }
+  function newView() {
+    viewTok++;
+    Speech.stopAll();
+    leaveFns.splice(0).forEach(fn => { try { fn(); } catch (e) { /* ignore */ } });
+  }
   function show() {
     app.textContent = "";
     add(app, Array.from(arguments));
@@ -628,7 +650,7 @@
   function ofLevel(L, list) { return list.filter(x => x.level === L.id); }
   function levelTopics(L) { return ofLevel(L, R.topics); }
   function levelItems(L) { return levelTopics(L).concat(ofLevel(L, R.lists)).flatMap(s => s.items); }
-  function hasContent(L) { return levelItems(L).length > 0 || ofLevel(L, R.listening).length > 0 || !!R.tests[L.id]; }
+  function hasContent(L) { return levelItems(L).length > 0 || ofLevel(L, R.listening).length > 0 || ofLevel(L, R.speaking).length > 0 || !!R.tests[L.id]; }
   function levelPct(L) {
     const items = levelItems(L);
     return items.length ? Math.round((seenIn(items) / items.length) * 100) : 0;
@@ -748,6 +770,7 @@
     const dialogs = topics.reduce((n, t) => n + t.dialogues.length, 0);
     const jobs = R.topics.filter(t => t.section === "kasblar");
     const test = R.tests[L.id];
+    const speakTasks = ofLevel(L, R.speaking);
     const topicItems = topics.flatMap(t => t.items);
     const wordItems = lists.flatMap(l => l.items);
 
@@ -784,6 +807,8 @@
           "#/words", "O‘rganilgan: " + seenIn(wordItems) + " / " + wordItems.length) : null,
         texts.length || dialogs ? navButton("🎧", "Tinglash",
           [texts.length ? texts.length + " ta matn" : "", dialogs ? dialogs + " ta suhbat" : ""].filter(Boolean).join(" · "), "#/listen") : null,
+        speakTasks.length ? navButton("🗣", "Fikr bildiring", speakTasks.length + " ta mavzu: savolga ruscha javob bering va ovozingizni yozib oling",
+          "#/speak", "Gapirilgan: " + speakTasks.filter(x => S.speak && S.speak[x.id]).length + " / " + speakTasks.length) : null,
         ready ? navButton("✅", "Test", testSummary(test), "#/test", testBest(L)) : null,
         jobs.length ? navButton("👷", "Kasblar", jobs.length + " ta kasb: quruvchi, kuryer, taksi… (barcha darajalar uchun)", "#/jobs") : null),
       R.loadErrors.length ? h("p", { class: "note" }, "⚠️ Ba’zi fayllar yuklanmadi: " + R.loadErrors.join(", ")) : null);
@@ -934,6 +959,213 @@
         ]);
       }
     });
+  }
+
+  /* =====================================================================
+     🗣 Fikr bildiring: speaking tasks with helpful phrases, a sample answer and a voice recorder
+     ===================================================================== */
+  function speakScreen() {
+    const L = level();
+    const tasks = ofLevel(L, R.speaking);
+    const head = header("🗣 Fikr bildiring", "#/", [L.name]);
+    if (!tasks.length) return show(head, soonBox(L));
+    const done = S.speak || {};
+    show(head,
+      h("p", { class: "hint" }, "Savolni tinglang → foydali iboralarni takrorlang → namuna javobni eshiting → o‘zingiz 30–60 soniya gapirib, ovozingizni yozib oling."),
+      h("div", { class: "tiles" }, tasks.map(x => h("button", { type: "button", class: "tile", onclick: () => go("#/speak/" + x.id) },
+        h("span", { class: "tile-ic", "aria-hidden": "true" }, x.icon || "🗣"),
+        h("span", { class: "tile-title" }, x.title),
+        h("span", { class: "tile-sub" }, done[x.id] ? "✓ Gapirildi: " + done[x.id] + " soniya" : x.phrases.length + " ta ibora · namuna javob")))));
+  }
+
+  /* Text to check with speech recognition: without "..." and "(…)" hints. */
+  function sayable(ru) { return ru.replace(/\.\.\.|…/g, " ").replace(/\([^)]*\)/g, " ").replace(/\s+/g, " ").trim(); }
+
+  function speakTask(id) {
+    const x = R.speakingById[id];
+    if (!x) return redirect("#/speak");
+    const v = viewTok;
+    let playTok = 0;
+    const stopSample = () => { playTok++; sampleRows.forEach(r => r.classList.remove("playing")); };
+    const say = (ru, opts) => { stopSample(); Speech.speak(ru, opts); };
+
+    /* 2. Helpful phrases: tap to listen, 🎤 to repeat and check. */
+    const phraseRows = x.phrases.map(it => {
+      const micBox = h("div", { class: "sp-mic" });
+      const row = h("div", { class: "sp-phrase" },
+        h("button", { type: "button", class: "item-row", onclick: () => say(it.ru) },
+          h("span", { class: "play", "aria-hidden": "true" }, "🔊"),
+          h("span", { class: "item-text" },
+            h("span", { class: "ru", lang: "ru" }, it.ru),
+            h("span", { class: "pr" }, it.pr),
+            h("span", { class: "uz" }, it.uz))),
+        h("div", { class: "row sp-tools" },
+          btn("🐢", "Sekin", () => say(it.ru, { slow: true })),
+          btn("🎤", "Takrorlash", () => {
+            if (micBox.firstChild) { micBox.textContent = ""; return; }
+            stopSample();
+            add(micBox, micWidget(sayable(it.ru)));
+          })),
+        micBox);
+      return row;
+    });
+
+    /* 3. Sample answer, read sentence by sentence. */
+    const sampleRows = x.sample.map(it => h("button", { type: "button", class: "item-row", onclick: () => say(it.ru) },
+      h("span", { class: "play", "aria-hidden": "true" }, "🔊"),
+      h("span", { class: "item-text" },
+        h("span", { class: "ru", lang: "ru" }, it.ru),
+        h("span", { class: "uz" }, it.uz))));
+    async function playSample(slow) {
+      stopSample();
+      Speech.stopAll();
+      const tok = ++playTok;
+      for (let i = 0; i < x.sample.length; i++) {
+        if (tok !== playTok || v !== viewTok) return;
+        sampleRows.forEach((r, k) => r.classList.toggle("playing", k === i));
+        sampleRows[i].scrollIntoView && sampleRows[i].scrollIntoView({ block: "nearest", behavior: "smooth" });
+        await Speech.speak(x.sample[i].ru, { slow, role: "b" });
+      }
+      if (tok === playTok) sampleRows.forEach(r => r.classList.remove("playing"));
+    }
+
+    later(() => Speech.speak(x.q.ru), 350);
+    show(header((x.icon || "🗣") + " " + x.title, "#/speak", [levelName(x.level) + " · Fikr bildiring"]),
+      h("h2", null, "1. Savol"),
+      phraseBox(x.q, true),
+      h("div", { class: "row" },
+        btn("🔊", "Tinglash", () => say(x.q.ru)),
+        btn("🐢", "Sekin", () => say(x.q.ru, { slow: true }))),
+      h("h2", null, "2. Foydali iboralar (" + x.phrases.length + ")"),
+      h("p", { class: "hint" }, "Har birini tinglang va ovoz chiqarib takrorlang. «...» o‘rniga o‘zingiz haqingizda gapiring."),
+      phraseRows,
+      h("h2", null, "3. Namuna javob"),
+      h("p", { class: "hint" }, "Avval tinglang. Javobingiz shunga o‘xshash bo‘lishi mumkin, lekin o‘zingiz haqingizda gapiring."),
+      h("div", { class: "row wrap" },
+        btn("▶", "Namunani tinglash", () => playSample(false), "primary"),
+        btn("🐢", "Sekin", () => playSample(true)),
+        btn("⏹", "To‘xtatish", () => { stopSample(); Speech.stopAll(); })),
+      h("div", { class: "sp-sample" }, sampleRows),
+      h("h2", null, "4. Endi o‘zingiz gapiring"),
+      h("p", { class: "hint" }, "30–60 soniya gapiring. Iboralardan foydalaning. Keyin yozuvni tinglab, namuna bilan solishtiring."),
+      recorderWidget(x, stopSample));
+  }
+
+  /* Voice recorder (30-60 s). The recording stays only in this screen's memory: it is never saved or sent anywhere. */
+  function recorderWidget(task, beforeStart) {
+    const MIN = 30, MAX = 60;
+    const v = viewTok;
+    const box = h("div", { class: "recorder" });
+    const time = h("div", { class: "rec-time", "aria-live": "off" }, "0:00 / 1:00");
+    const fill = h("span", { class: "rec-fill" });
+    const bar = h("div", { class: "rec-bar", "aria-hidden": "true" }, h("span", { class: "rec-min" }), fill);
+    const fb = h("div", { class: "feedback", role: "status" });
+    const controls = h("div", { class: "rec-controls" });
+    const playWrap = h("div");
+    let rec = null, stream = null, timer = null, started = 0, url = null, secs = 0;
+    const fmt = t => Math.floor(t / 60) + ":" + String(Math.floor(t % 60)).padStart(2, "0");
+
+    function cleanup() {
+      clearInterval(timer);
+      timer = null;
+      if (rec && rec.state !== "inactive") { rec.onstop = null; try { rec.stop(); } catch (e) { /* ignore */ } }
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      stream = null;
+      rec = null;
+    }
+    onLeave(() => { cleanup(); if (url) URL.revokeObjectURL(url); });
+
+    function setControls(nodes) { controls.textContent = ""; add(controls, nodes); }
+    function idle(label) {
+      setControls(btn("🔴", label || "Yozishni boshlash", start, "rec-btn big"));
+    }
+    function tick() {
+      const t = (Date.now() - started) / 1000;
+      time.textContent = fmt(Math.min(t, MAX)) + " / " + fmt(MAX);
+      fill.style.width = Math.min(100, (t / MAX) * 100) + "%";
+      fill.classList.toggle("enough", t >= MIN);
+      if (t >= MAX) stop();
+    }
+
+    async function start() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+        fb.className = "feedback warn";
+        fb.textContent = "🎤 Bu brauzer ovoz yozishni qo‘llamaydi. Ilovani Chrome yoki Safari brauzerining yangi versiyasida oching.";
+        return;
+      }
+      beforeStart && beforeStart();
+      Speech.stopAll();
+      fb.className = "feedback";
+      fb.textContent = "";
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (err) {
+        stream = null;
+        fb.className = "feedback warn";
+        fb.textContent = err && err.name === "NotFoundError"
+          ? "🎤 Mikrofon topilmadi. Mikrofon ulanganini tekshiring."
+          : "🎤 Mikrofonga ruxsat berilmagan. Brauzer so‘raganda «Ruxsat berish» (Allow) tugmasini bosing.";
+        return;
+      }
+      if (v !== viewTok) { stream.getTracks().forEach(t => t.stop()); stream = null; return; }
+      if (url) { URL.revokeObjectURL(url); url = null; }
+      playWrap.textContent = "";
+      const chunks = [];
+      try { rec = new MediaRecorder(stream); } catch (e) {
+        cleanup();
+        fb.className = "feedback warn";
+        fb.textContent = "🎤 Ovoz yozishni boshlab bo‘lmadi. Qaytadan urinib ko‘ring.";
+        return;
+      }
+      rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+      rec.onstop = () => {
+        const type = (rec && rec.mimeType) || (chunks[0] && chunks[0].type) || "audio/webm";
+        cleanup();
+        if (v !== viewTok) return;
+        finished(new Blob(chunks, { type }));
+      };
+      rec.start(250);
+      started = Date.now();
+      box.classList.add("on");
+      timer = setInterval(tick, 200);
+      tick();
+      setControls(btn("⏹", "To‘xtatish", stop, "rec-btn on big"));
+    }
+
+    function stop() {
+      if (!rec || rec.state === "inactive") return;
+      secs = Math.min(MAX, Math.round((Date.now() - started) / 1000));
+      clearInterval(timer);
+      timer = null;
+      box.classList.remove("on");
+      rec.stop();
+    }
+
+    function finished(blob) {
+      url = URL.createObjectURL(blob);
+      const audio = h("audio", { controls: true, preload: "auto", src: url, class: "rec-audio" });
+      add(playWrap, [
+        btn("▶", "Yozuvimni tinglash", () => { Speech.stopAll(); audio.currentTime = 0; audio.play().catch(() => {}); }, "primary big"),
+        audio
+      ]);
+      if (secs >= 3) {
+        S.speak = S.speak || {};
+        S.speak[task.id] = Math.max(S.speak[task.id] || 0, secs);
+        markActive();
+        save();
+      }
+      fb.className = "feedback " + (secs >= MIN ? "good" : "warn");
+      fb.textContent = "";
+      add(fb, secs >= MIN
+        ? [h("strong", null, "🌟 Barakalla! Siz " + secs + " soniya gapirdingiz."), h("div", null, "Yozuvni tinglang va namuna javob bilan solishtiring. Qaysi so‘zlarni yaxshiroq aytish mumkin?")]
+        : [h("strong", null, "⏱ Siz " + secs + " soniya gapirdingiz."), h("div", null, "Kamida 30 soniya gapirishga harakat qiling: yuqoridagi iboralardan foydalanib, fikringizni kengaytiring.")]);
+      idle("Qayta yozish");
+    }
+
+    idle();
+    add(box, [time, bar, controls, fb, playWrap,
+      h("p", { class: "hint small" }, "🔒 Yozuv faqat shu ekranda qoladi va hech qayerga yuborilmaydi.")]);
+    return box;
   }
 
   /* Best results are kept in S.tests: "<level>" for a one-part test, "<level>:<part>" for each part. */
@@ -1513,6 +1745,7 @@
       case "words": return p[1] ? wordsScreen(p[1]) : wordListsScreen();
       case "listen": return p[1] ? listenText(p[1]) : listenScreen();
       case "lq": return listenQuiz(p[1]);
+      case "speak": return p[1] ? speakTask(p[1]) : speakScreen();
       case "test": return testScreen();
       case "leveltest": return levelTestRoute(p[1], p[2]);
       case "lesson": return lessonRoute();

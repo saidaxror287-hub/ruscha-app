@@ -129,6 +129,10 @@ var RUSCHA_LEVELS = [
       "data/b1/listening/toy-hikoyasi.js",
       "data/b1/listening/piter-sayohat.js",
 
+      "data/b1/speaking/fikr-1.js",
+      "data/b1/speaking/fikr-2.js",
+      "data/b1/speaking/fikr-3.js",
+
       "data/b1/words/b1-part1.js",
       "data/b1/words/b1-part2.js",
       "data/b1/words/b1-part3.js",

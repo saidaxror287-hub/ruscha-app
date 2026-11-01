@@ -427,6 +427,33 @@ input[type="search"]:focus { border-color: var(--primary); box-shadow: 0 0 0 4px
 
 .ask-uz.read-text { font-size: 1.05rem; font-weight: 500; text-align: left; line-height: 1.55; white-space: pre-line; }
 
+/* ---------- 🗣 Fikr bildiring ---------- */
+.sp-phrase { margin-bottom: 12px; }
+.sp-phrase .item-row { margin-bottom: 6px; }
+.sp-tools { flex-wrap: wrap; }
+.sp-tools .btn { flex: 1 1 auto; }
+.sp-mic:empty { display: none; }
+.sp-mic { margin-top: 8px; }
+.row.wrap { flex-wrap: wrap; margin-bottom: 12px; }
+.row.wrap .btn { flex: 1 1 auto; }
+.sp-sample .item-row { margin-bottom: 8px; }
+.item-row.playing { border-color: var(--primary); background: var(--primary-soft); }
+.recorder {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm); padding: 16px; display: flex; flex-direction: column; gap: 12px;
+}
+.rec-time { font-size: 1.8rem; font-weight: 800; text-align: center; font-variant-numeric: tabular-nums; }
+.recorder.on .rec-time { color: var(--bad); }
+.rec-bar { position: relative; height: 10px; border-radius: 99px; background: var(--sunken); overflow: hidden; }
+.rec-fill { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--bad); border-radius: 99px; transition: width 0.2s linear; }
+.rec-fill.enough { background: var(--ok); }
+.rec-min { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: var(--line-strong); z-index: 1; }
+.rec-btn { border: 2px solid var(--bad); color: var(--bad); }
+.rec-btn.on { background: var(--bad); color: #fff; animation: pulse 1.2s infinite; }
+.rec-controls .btn, .recorder .btn.primary { width: 100%; }
+.rec-audio { width: 100%; margin-top: 8px; }
+.hint.small { font-size: 0.82rem; margin: 0; }
+
 /* ---------- Dialogues ---------- */
 .chat { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
 .bubble {

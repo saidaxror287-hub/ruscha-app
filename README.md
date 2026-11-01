@@ -68,6 +68,14 @@ use `parts: [{ id, title, icon, desc, comments: { top, good, mid, low }, questio
 instead of `questions`. Each part has its own best score and an Uzbek comment by result
 (85%+ / 70%+ / 50%+ / lower). A long `text` (a notice, a message) is shown as a reading passage.
 
+## Add speaking tasks (🗣 Fikr bildiring)
+
+`data/<level>/speaking/*.js` call `Ruscha.addSpeaking([...])` with tasks
+`{ id, title, icon, q: [ru, pr, uz], phrases: [[ru, pr, uz], ...], sample: [[ru, pr, uz], ...] }`
+(see `data/b1/speaking/fikr-1.js`). The section appears on the level's home screen as soon as the
+level has tasks. The user records 30–60 seconds; the recording stays in memory only and is never
+saved or sent. Only the longest recording time per task is stored in progress (`speak`).
+
 ## Add a new level (B1, B2, C1)
 
 The levels are already listed in `data/levels.js` with empty `files` (shown as "Tez orada").
