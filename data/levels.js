@@ -185,7 +185,9 @@ var RUSCHA_LEVELS = [
       "data/b2/jonli/maosh.js",
       "data/b2/jonli/buyurtma.js",
       "data/b2/jonli/usta.js",
-      "data/b2/jonli/qisqartmalar.js"
+      "data/b2/jonli/qisqartmalar.js",
+
+      "data/b2/test.js"
     ] },
   { id: "c1", name: "C1", color: "#be123c", desc: "Mukammal", files: [] }
 ];

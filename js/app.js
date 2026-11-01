@@ -388,6 +388,21 @@
       btn("🔊", "Tinglash", () => Speech.speak(ru, { role })),
       btn("🐢", "Sekin", () => Speech.speak(ru, { slow: true, role })));
   }
+  /* Test audio at real-life speed (q.natural). With q.slowOnce the 🐢 button works only once per question. */
+  function naturalSoundRow(q) {
+    let used = false;
+    const slow = btn("🐢", q.slowOnce ? "Sekin (1 marta)" : "Sekin", () => {
+      if (used) return;
+      if (q.slowOnce) {
+        used = true;
+        slow.disabled = true;
+        slow.lastChild.textContent = "Sekin tinglandi";
+      }
+      Speech.speak(q.audio, { slow: true, role: q.role });
+    });
+    return h("div", { class: "row" },
+      btn("🔊", "Yana tinglash", () => Speech.speak(q.audio, { natural: true, role: q.role })), slow);
+  }
   function phraseBox(it, big) {
     return h("div", { class: "phrase" + (big ? " big" : "") },
       h("div", { class: "ru", lang: "ru" }, it.ru),
@@ -664,7 +679,10 @@
       return b;
     });
     const top = [h("h2", { class: "qtitle" }, q.title)];
-    if (q.audio) {
+    if (q.audio && q.natural) {
+      top.push(naturalSoundRow(q));
+      later(() => Speech.speak(q.audio, { natural: true, role: q.role }), 350);
+    } else if (q.audio) {
       top.push(soundRow(q.audio, q.role));
       later(() => Speech.speak(q.audio, { role: q.role }), 350);
     }
@@ -1484,7 +1502,8 @@
       title: pt ? (pt.icon || "📝") + " " + pt.title : "🎓 " + L.name + " daraja testi",
       back: "#/test",
       crumbs: [L.name + " · Test"].concat(pt ? [T.title || "Daraja testi"] : []),
-      steps: qs.map(q => ({ type: "quiz", q: fileQuestion(q, { ru: q.full || q.audio || q.text || "", pr: q.pr || "", uz: q.uz || "" }) })),
+      steps: qs.map(q => ({ type: "quiz", q: Object.assign(fileQuestion(q, { ru: q.full || q.audio || q.text || "", pr: q.pr || "", uz: q.uz || "" }),
+        pt && pt.natural ? { natural: true, slowOnce: !!pt.slowOnce, role: q.role } : {}) })),
       finish: st => {
         const pct = st.asked ? Math.round((st.ok / st.asked) * 100) : 0;
         S.tests = S.tests || {};
