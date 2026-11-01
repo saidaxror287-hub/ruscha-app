@@ -665,6 +665,50 @@
   function noun(s) { return s.kind === "w" ? "so‘z" : s.kind === "q" ? "qisqartma" : s.kind === "f" ? "ibora va so‘z" : "ibora"; }
 
   /* =====================================================================
+     Telegram Mini App. Telegram's built-in browser usually has no Russian voice and no
+     speech recognition, so inside Telegram the sound and 🎤 controls are replaced by a card
+     that opens the app in Chrome. Outside Telegram (inTg = false) nothing changes.
+     ===================================================================== */
+  const tgApp = (window.Telegram && window.Telegram.WebApp) || null;
+  const inTg = (function () {
+    if (tgApp && (tgApp.initData || (tgApp.platform && tgApp.platform !== "unknown"))) return true;
+    try { return sessionStorage.getItem("rusbek_tg") === "1"; } catch (e) { return false; }
+  })();
+  if (inTg && tgApp) { try { tgApp.ready(); } catch (e) { /* ignore */ } }
+  const TG_NO_SOUND = "🔊 Telegram ichida ovoz ishlamaydi. Ovoz va gapirish mashqlari uchun ilovani brauzerda oching.";
+  const TG_NO_MIC = "🎤 Telegram ichida gapirish mashqlari ishlamaydi. Talaffuzni tekshirish uchun ilovani brauzerda oching.";
+  function browserUrl() { return location.origin + location.pathname.replace(/index\.html$/, "") + "?from=telegram"; }
+  function openInBrowser() {
+    const url = browserUrl();
+    if (tgApp) {
+      try { tgApp.openLink(url, { try_browser: "chrome" }); return; } catch (e) { /* older Telegram */ }
+      try { tgApp.openLink(url); return; } catch (e) { /* fall through */ }
+    }
+    window.open(url, "_blank");
+  }
+  function browserCard(text) {
+    return h("div", { class: "tg-card", role: "note" },
+      h("p", { class: "tg-card-text" }, text || TG_NO_SOUND),
+      btn("🌐", "Chrome’da ochish", openInBrowser, "primary big"),
+      h("p", { class: "tg-card-hint" }, h("strong", null, "Ochilmadimi? "), "Ochilgan sahifada ⋮ → «Chrome’da ochish» ni bosing."));
+  }
+  /* No usable Russian voice. final = voices had time to load (an empty list then means none). */
+  function tgNoVoice(final) {
+    const st = Speech.status();
+    return !st.tts || ((final || st.loaded) && !st.ru);
+  }
+  /* Sound controls; inside Telegram without a Russian voice → the browser card instead.
+     keep: nodes from inside `nodes` that still work without sound (e.g. «Matnni ko‘rsatish»). */
+  function soundOr(nodes, keep) {
+    if (!inTg) return nodes;
+    const box = h("div", { class: "sound-gate" });
+    const swap = () => { box.textContent = ""; add(box, [browserCard(TG_NO_SOUND), keep]); };
+    if (tgNoVoice(false)) swap();
+    else { add(box, nodes); later(() => { if (tgNoVoice(true)) swap(); }, 1500); }
+    return box;
+  }
+
+  /* =====================================================================
      Speaking check
      ===================================================================== */
   function micError(err) {
@@ -698,6 +742,7 @@
 
   function micWidget(expected) {
     if (!Speech.canListen()) {
+      if (inTg) return browserCard(TG_NO_MIC);
       return h("p", { class: "note" },
         "🗣 Ovoz chiqarib takrorlang. Talaffuzingizni tekshirish uchun ilovani Google Chrome brauzerida oching.");
     }
@@ -720,6 +765,7 @@
       const j = judge(expected, res);
       fb.className = "feedback " + j.cls;
       add(fb, j.nodes);
+      if (inTg && /not-allowed|language-not-supported|unsupported|start/.test(res.error || "")) add(fb, browserCard(TG_NO_MIC));
       if (!res.error) markActive();
     });
     return h("div", { class: "mic-wrap" }, b, fb);
@@ -913,10 +959,10 @@
     });
     const top = [h("h2", { class: "qtitle" }, q.title)];
     if (q.audio && q.natural) {
-      top.push(naturalSoundRow(q));
+      top.push(soundOr(naturalSoundRow(q)));
       later(() => Speech.speak(q.audio, { natural: true, role: q.role }), 350);
     } else if (q.audio) {
-      top.push(soundRow(q.audio, q.role));
+      top.push(soundOr(soundRow(q.audio, q.role)));
       later(() => Speech.speak(q.audio, { role: q.role }), 350);
     }
     if (q.prompt) top.push(q.prompt);
@@ -1131,6 +1177,11 @@
     const voiceNote = h("div");
     later(() => {
       const st = Speech.status();
+      if (inTg) {
+        if (tgNoVoice(true)) add(voiceNote, browserCard(TG_NO_SOUND));
+        else if (!st.listen) add(voiceNote, browserCard(TG_NO_MIC));
+        return;
+      }
       if (!st.tts) {
         add(voiceNote, h("p", { class: "note" }, "🔇 Bu brauzer ovoz chiqara olmaydi. Ilovani Google Chrome yoki Microsoft Edge brauzerida oching."));
       } else if (st.loaded && !st.ru) {
@@ -1336,10 +1387,11 @@
       h("p", { class: "hint" }, live
         ? "1. Avval tabiiy tezlikda tinglang — ruslar shunday gapiradi. 2. Tushunmasangiz, sekin tinglang. 3. Matnni oching: har bir gapni bossangiz, ovozi va o‘zbekcha ma’nosi chiqadi. 4. Savollarga javob bering."
         : "1. Matnni tinglang (bir necha marta bo‘lsa ham). 2. Savollarga javob bering. Qiyin bo‘lsa, matnni oching."),
-      btn("▶", live ? "Tabiiy tezlikda tinglash" : "Matnni tinglash", () => playAll(false), "primary big"),
-      h("div", { class: "grid2" },
-        btn("🐢", "Sekin tinglash", () => playAll(true)),
-        toggle),
+      soundOr([
+        btn("▶", live ? "Tabiiy tezlikda tinglash" : "Matnni tinglash", () => playAll(false), "primary big"),
+        h("div", { class: "grid2" },
+          btn("🐢", "Sekin tinglash", () => playAll(true)),
+          toggle)], toggle),
       allUz,
       text,
       x.questions.length ? btn("✅", "Savollarga javob berish (" + x.questions.length + " ta)", () => go("#/lq/" + x.id), "ok big") : null);
@@ -1635,6 +1687,7 @@
     async function start() {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
         fb.className = "feedback warn";
+        if (inTg) { fb.className = "feedback"; add(fb, browserCard(TG_NO_MIC)); return; }
         fb.textContent = "🎤 Bu brauzer ovoz yozishni qo‘llamaydi. Ilovani Chrome yoki Safari brauzerining yangi versiyasida oching.";
         return;
       }
@@ -1650,6 +1703,7 @@
         fb.textContent = err && err.name === "NotFoundError"
           ? "🎤 Mikrofon topilmadi. Mikrofon ulanganini tekshiring."
           : "🎤 Mikrofonga ruxsat berilmagan. Brauzer so‘raganda «Ruxsat berish» (Allow) tugmasini bosing.";
+        if (inTg) add(fb, browserCard(TG_NO_MIC));
         return;
       }
       if (v !== viewTok) { stream.getTracks().forEach(t => t.stop()); stream = null; return; }
@@ -2284,8 +2338,9 @@
       }
       show(header("💬 " + d.title, back, crumbsOf(t).concat("Suhbatlar")),
         h("p", { class: "hint" }, "1-qadam: suhbatni tinglang. 2-qadam: bitta rolni tanlab, o‘zingiz gapiring."),
-        btn("▶", "Suhbatni tinglash", () => playAll(false), "primary big"),
-        btn("🐢", "Sekin tinglash", () => playAll(true)),
+        soundOr([
+          btn("▶", "Suhbatni tinglash", () => playAll(false), "primary big"),
+          btn("🐢", "Sekin tinglash", () => playAll(true))]),
         h("div", { class: "chat" }, els),
         h("h2", null, "🎭 Rolni o‘ynang"),
         h("div", { class: "grid2" },
@@ -2448,8 +2503,10 @@
           "🔇 Ovoz chiqarish ishlamaydi — Google Chrome yoki Microsoft Edge tavsiya etiladi"),
         h("li", null, st.listen ? "🎤 Talaffuzni tekshirish: ishlaydi (internet kerak)" :
           "🎤 Talaffuzni tekshirish bu brauzerda yo‘q — Google Chrome tavsiya etiladi")),
+      inTg && (tgNoVoice(true) || !st.listen) ? browserCard(tgNoVoice(true) ? TG_NO_SOUND : TG_NO_MIC) : null,
       h("h2", null, "Natijalaringiz"),
       h("p", null, "Natijalaringiz faqat shu qurilmada, shu brauzerda saqlanadi. Ro‘yxatdan o‘tish shart emas. Dastur bepul."),
+      inTg ? h("p", { class: "note" }, "📱 Telegram ichida va Chrome’da natijalar alohida saqlanadi: Telegramda o‘rganganlaringiz Chrome’da ko‘rinmaydi (va aksincha). Qulay bo‘lsa, doim bitta joyda o‘rganing.") : null,
       resetBox);
   }
 

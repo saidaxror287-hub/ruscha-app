@@ -768,3 +768,14 @@ body.placing .bottom-nav { display: none; }
 .switch-row[aria-checked="true"] .switch { background: var(--ok); }
 .switch-row[aria-checked="true"] .knob { transform: translateX(1.4rem); }
 @media (prefers-reduced-motion: reduce) { .demo-pulse { animation: none; } }
+
+/* Telegram Mini App: "open in Chrome" card (js/app.js → browserCard) */
+.sound-gate { display: contents; }
+.tg-card {
+  margin: 12px 0; padding: 14px 16px;
+  border: 1px solid var(--line-strong); border-left: 5px solid var(--primary); border-radius: var(--r-lg);
+  background: var(--primary-soft); color: var(--text);
+}
+.tg-card-text { margin: 0 0 12px; font-weight: 700; }
+.tg-card .btn { width: 100%; margin: 0; }
+.tg-card-hint { margin: 10px 0 0; font-size: 0.9rem; color: var(--muted); }

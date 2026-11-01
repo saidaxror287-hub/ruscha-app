@@ -14,6 +14,15 @@
     /* Text size chosen in Yordam → Matn o‘lchami (applied before drawing, so the page doesn't jump). */
     try { var z = localStorage.getItem("rusbek_text_size"); if (z && z !== "oddiy") document.documentElement.setAttribute("data-size", z); } catch (e) {}
   </script>
+  <script>
+    /* Telegram Mini App: load Telegram's script only when the app is opened inside Telegram
+       (Telegram adds #tgWebApp… to the address). In a normal browser nothing extra is loaded. */
+    (function () {
+      var tg = /tgWebApp/.test(location.hash);
+      try { if (tg) sessionStorage.setItem("rusbek_tg", "1"); else tg = sessionStorage.getItem("rusbek_tg") === "1"; } catch (e) {}
+      if (tg || window.TelegramWebviewProxy) document.write('<script src="https://telegram.org/js/telegram-web-app.js"><\/script>');
+    })();
+  </script>
   <link rel="preload" href="fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/style.css">
 </head>

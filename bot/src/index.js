@@ -10,7 +10,10 @@
 // No user data is stored anywhere: each message is answered and forgotten.
 
 const APP_URL = "https://saidaxror287-hub.github.io/ruscha-app/";
-const BUTTON_TEXT = "📚 Ilovani ochish";
+const BROWSER_URL = APP_URL + "?from=bot";
+const BUTTON_TEXT = "📚 Ilovani ochish"; // other messages: one button
+const TG_BUTTON_TEXT = "📚 Telegramda ochish";
+const BROWSER_BUTTON_TEXT = "🔊 Brauzerda ochish (ovoz va mashq)";
 
 const WELCOME = (ism) => `Assalomu alaykum, ${ism}! 👋
 
@@ -21,16 +24,18 @@ Rusbek — rus tilini bepul va grammatikasiz o‘rganing:
 👷 Kasblar uchun iboralar: quruvchi, kuryer, haydovchi va boshqalar
 🎤 Talaffuz va gapirish mashqlari, darajalar bo‘yicha testlar
 
+🔊 Ovozli mashqlar uchun «Brauzerda ochish» tugmasini bosing (Chrome yoki Edge).
+
 Boshlash uchun «Ilovani ochish» tugmasini bosing.`;
 
 const APP_TEXT = "Rusbek ilovasini ochish uchun pastdagi tugmani bosing 👇";
 
 const HELP_TEXT = `ℹ️ Rusbek’dan qanday foydalanish:
 
-1️⃣ «Ilovani ochish» tugmasini yoki chap pastdagi menyu tugmasini bosing — ilova shu yerning o‘zida, Telegram ichida ochiladi.
+1️⃣ «Telegramda ochish» tugmasini yoki chap pastdagi menyu tugmasini bosing — ilova shu yerning o‘zida, Telegram ichida ochiladi.
 2️⃣ Darajangizni tanlang: A1 (boshlang‘ich) dan B2 gacha. Mavzuni oching, iboralarni tinglang va takrorlang.
 3️⃣ Yoqqan ibora yoki so‘zni ⭐ bilan saqlang — ular «⭐ Saqlanganlar» bo‘limida turadi, keyin takrorlab olasiz.
-4️⃣ 🎤 Gapirish va talaffuz mashqlari Chrome brauzerida eng yaxshi ishlaydi. Agar mikrofon ishlamasa, ilovani Chrome’da oching.
+4️⃣ 🔊 Ovoz va 🎤 gapirish mashqlari Telegram ichida ishlamasligi mumkin. Ular uchun «Brauzerda ochish» tugmasini bosing — ilova Chrome yoki Edge’da ochiladi.
 
 Buyruqlar:
 /start — boshlash
@@ -96,6 +101,7 @@ async function answer(msg, env) {
     : "";
 
   let reply;
+  let twoButtons = true;
   if (command === "start") {
     const ism = (msg.from && msg.from.first_name) || "do‘stim";
     reply = WELCOME(ism);
@@ -105,12 +111,13 @@ async function answer(msg, env) {
     reply = HELP_TEXT;
   } else {
     reply = OTHER_TEXT;
+    twoButtons = false;
   }
 
   await tg(env, "sendMessage", {
     chat_id: msg.chat.id,
     text: reply,
-    reply_markup: appButton(msg.chat.type),
+    reply_markup: twoButtons ? appButtons(msg.chat.type) : appButton(msg.chat.type),
   });
 }
 
@@ -121,6 +128,17 @@ function appButton(chatType) {
       ? { text: BUTTON_TEXT, web_app: { url: APP_URL } }
       : { text: BUTTON_TEXT, url: APP_URL };
   return { inline_keyboard: [[button]] };
+}
+
+// Two buttons, one per row: open inside Telegram, or in Chrome/Edge (sound + speaking work there).
+function appButtons(chatType) {
+  const inTelegram =
+    chatType === "private"
+      ? { text: TG_BUTTON_TEXT, web_app: { url: APP_URL } }
+      : { text: TG_BUTTON_TEXT, url: APP_URL };
+  return {
+    inline_keyboard: [[inTelegram], [{ text: BROWSER_BUTTON_TEXT, url: BROWSER_URL }]],
+  };
 }
 
 async function setupWebhook(url, env) {
