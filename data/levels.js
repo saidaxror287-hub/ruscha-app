@@ -96,7 +96,8 @@ var RUSCHA_LEVELS = [
     ]
   },
   { id: "b1", name: "B1", color: "#7c3aed", desc: "Erkin muloqot", files: [
-      "data/b1/words/b1-part1.js"
+      "data/b1/words/b1-part1.js",
+      "data/b1/words/b1-part2.js"
     ] },
   { id: "b2", name: "B2", color: "#c2410c", desc: "Ishonchli", files: [] },
   { id: "c1", name: "C1", color: "#be123c", desc: "Mukammal", files: [] }
