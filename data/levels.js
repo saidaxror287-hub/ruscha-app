@@ -174,7 +174,18 @@ var RUSCHA_LEVELS = [
       "data/b2/jonli/uy-egasi.js",
       "data/b2/jonli/ish-suhbati.js",
       "data/b2/jonli/pul-podkast.js",
-      "data/b2/jonli/avariya.js"
+      "data/b2/jonli/avariya.js",
+      "data/b2/jonli/poliklinika.js",
+      "data/b2/jonli/mfc.js",
+      "data/b2/jonli/taksida.js",
+      "data/b2/jonli/oqituvchi.js",
+      "data/b2/jonli/qurilish-bozori.js",
+      "data/b2/jonli/radio.js",
+      "data/b2/jonli/dugonalar.js",
+      "data/b2/jonli/maosh.js",
+      "data/b2/jonli/buyurtma.js",
+      "data/b2/jonli/usta.js",
+      "data/b2/jonli/qisqartmalar.js"
     ] },
   { id: "c1", name: "C1", color: "#be123c", desc: "Mukammal", files: [] }
 ];
