@@ -96,6 +96,15 @@ var RUSCHA_LEVELS = [
     ]
   },
   { id: "b1", name: "B1", color: "#7c3aed", desc: "Erkin muloqot", files: [
+      "data/b1/topics/ish-izlash.js",
+      "data/b1/topics/ish-muammolar.js",
+      "data/b1/topics/ijara-kommunal.js",
+      "data/b1/topics/shifoxona-sugurta.js",
+      "data/b1/topics/bank-kredit.js",
+      "data/b1/topics/migratsiya.js",
+      "data/b1/topics/farzandlar-talimi.js",
+      "data/b1/topics/politsiya-huquq.js",
+
       "data/b1/words/b1-part1.js",
       "data/b1/words/b1-part2.js",
       "data/b1/words/b1-part3.js",
