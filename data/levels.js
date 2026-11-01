@@ -142,6 +142,15 @@ var RUSCHA_LEVELS = [
       "data/b1/test.js"
     ] },
   { id: "b2", name: "B2", color: "#c2410c", desc: "Ishonchli", files: [
+      "data/b2/topics/muzokaralar.js",
+      "data/b2/topics/maosh-lavozim.js",
+      "data/b2/topics/yurist.js",
+      "data/b2/topics/mashina.js",
+      "data/b2/topics/rasmiy-shikoyat.js",
+      "data/b2/topics/shifokor-batafsil.js",
+      "data/b2/topics/biznes-boshlash.js",
+      "data/b2/topics/ota-onalar-yigilishi.js",
+
       "data/b2/words/b2-part1.js",
       "data/b2/words/b2-part2.js",
       "data/b2/words/b2-part3.js",
