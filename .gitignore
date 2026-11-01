@@ -1,0 +1,8 @@
+
+# Telegram bot (bot/): local secrets and build files — never commit
+bot/node_modules/
+bot/.wrangler/
+bot/.dev.vars
+bot/.dev.vars.*
+bot/.env
+bot/.env.*

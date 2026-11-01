@@ -1,0 +1,7 @@
+# Cloudflare Worker settings for the Rusbek Telegram bot.
+# NEVER put the bot token here. It is stored as a secret:
+#   npx wrangler secret put BOT_TOKEN
+name = "rusbek-bot"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+workers_dev = true

@@ -1,0 +1,11 @@
+{
+  "name": "rusbek-bot",
+  "private": true,
+  "description": "Rusbek Telegram bot (Cloudflare Worker). Run commands from this folder.",
+  "scripts": {
+    "login": "npx --yes wrangler@4 login",
+    "secret": "npx --yes wrangler@4 secret put BOT_TOKEN",
+    "deploy": "npx --yes wrangler@4 deploy",
+    "logs": "npx --yes wrangler@4 tail"
+  }
+}
