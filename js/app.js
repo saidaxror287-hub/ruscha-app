@@ -81,6 +81,9 @@
   R.addTest = function (x) {
     if (!x || !loadingLevel) return;
     x.level = loadingLevel;
+    /* A test may be split into parts: parts [{ id, title, icon, desc, questions, comments? }]. */
+    x.questions = x.questions || [];
+    x.parts = (x.parts || []).filter(pt => pt && pt.id && pt.questions && pt.questions.length);
     R.tests[loadingLevel] = x;
   };
 
@@ -781,8 +784,7 @@
           "#/words", "O‘rganilgan: " + seenIn(wordItems) + " / " + wordItems.length) : null,
         texts.length || dialogs ? navButton("🎧", "Tinglash",
           [texts.length ? texts.length + " ta matn" : "", dialogs ? dialogs + " ta suhbat" : ""].filter(Boolean).join(" · "), "#/listen") : null,
-        ready ? navButton("✅", "Test", test ? test.questions.length + " savollik daraja testi va mashqlar" : "Aralash mashq testi", "#/test",
-          S.tests && S.tests[L.id] != null ? "Eng yaxshi natija: " + S.tests[L.id] + "%" : null) : null,
+        ready ? navButton("✅", "Test", testSummary(test), "#/test", testBest(L)) : null,
         jobs.length ? navButton("👷", "Kasblar", jobs.length + " ta kasb: quruvchi, kuryer, taksi… (barcha darajalar uchun)", "#/jobs") : null),
       R.loadErrors.length ? h("p", { class: "note" }, "⚠️ Ba’zi fayllar yuklanmadi: " + R.loadErrors.join(", ")) : null);
   }
@@ -905,7 +907,7 @@
     return {
       title: q.q,
       audio: q.audio || null,
-      prompt: q.text ? h("div", { class: "ask-uz", lang: "ru" }, q.text) : null,
+      prompt: q.text ? h("div", { class: "ask-uz" + (q.text.length > 80 || q.text.includes("\n") ? " read-text" : ""), lang: "ru" }, q.text) : null,
       options: shuffle(q.options.map((o, k) => ({ text: o, ok: k === q.answer, ru: /[а-яё]/i.test(o) }))),
       reveal
     };
@@ -934,6 +936,21 @@
     });
   }
 
+  /* Best results are kept in S.tests: "<level>" for a one-part test, "<level>:<part>" for each part. */
+  function partKey(L, pt) { return pt ? L.id + ":" + pt.id : L.id; }
+  function bestOf(key) { return S.tests && S.tests[key] != null ? S.tests[key] : null; }
+  function testSummary(T) {
+    if (!T) return "Aralash mashq testi";
+    if (T.parts.length) return T.parts.length + " qismli daraja testi: " + T.parts.map(pt => pt.title.replace(/^\d+-qism\.\s*/, "")).join(", ");
+    return T.questions.length + " savollik daraja testi va mashqlar";
+  }
+  function testBest(L) {
+    const T = R.tests[L.id];
+    if (!T || !T.parts.length) return bestOf(L.id) != null ? "Eng yaxshi natija: " + bestOf(L.id) + "%" : null;
+    const done = T.parts.filter(pt => bestOf(partKey(L, pt)) != null);
+    return done.length ? "Topshirilgan qismlar: " + done.length + " / " + T.parts.length : null;
+  }
+
   /* ✅ Test: the level test (data/<level>/test.js) and a mixed practice test from the level's items. */
   function testScreen() {
     const L = level();
@@ -941,28 +958,46 @@
     const items = levelItems(L);
     const head = header("✅ Test", "#/", [L.name]);
     if (!T && !items.length) return show(head, soonBox(L));
-    const best = S.tests && S.tests[L.id];
+    const best = bestOf(L.id);
+    const partBtn = pt => navButton(pt.icon || "📝", pt.title, pt.questions.length + " ta savol" + (pt.desc ? ": " + pt.desc : ""),
+      "#/leveltest/" + L.id + "/" + pt.id, bestOf(partKey(L, pt)) != null ? "Eng yaxshi natija: " + bestOf(partKey(L, pt)) + "%" : null);
     show(head,
-      T ? navButton("🎓", L.name + " daraja testi", T.questions.length + " ta savol: tinglash va to‘g‘ri javobni tanlash",
+      T && T.parts.length ? h("p", { class: "section-label" }, "🎓 " + (T.title || L.name + " daraja testi")) : null,
+      T && T.parts.length ? T.parts.map(partBtn) : null,
+      T && T.parts.length ? h("p", { class: "hint" }, "Har bir qismni alohida topshirish mumkin.") : null,
+      T && !T.parts.length && T.questions.length ? navButton("🎓", L.name + " daraja testi", T.questions.length + " ta savol: tinglash va to‘g‘ri javobni tanlash",
         "#/leveltest/" + L.id, best != null ? "Eng yaxshi natija: " + best + "%" : null) : null,
       items.length ? navButton("🔀", "Aralash mashq", "10 ta savol — " + L.name + " iboralari va so‘zlaridan", "#/quiz/l/" + L.id) : null,
       h("p", { class: "hint" }, "Test faqat o‘zingiz uchun. Hech narsa yopilmaydi — xohlagan darajani o‘rganishingiz mumkin."));
   }
 
-  function levelTestRoute(id) {
+  function levelTestRoute(id, partId) {
     const L = R.levelById[id];
     const T = R.tests[id];
-    if (!L || !T || !T.questions.length) return redirect("#/test");
+    const pt = T && partId ? T.parts.find(x => x.id === partId) : null;
+    const qs = pt ? pt.questions : T && !T.parts.length ? T.questions : [];
+    if (!L || !qs.length) return redirect("#/test");
+    const key = partKey(L, pt);
     runSession({
-      title: "🎓 " + L.name + " daraja testi",
+      title: pt ? (pt.icon || "📝") + " " + pt.title : "🎓 " + L.name + " daraja testi",
       back: "#/test",
-      crumbs: [L.name + " · Test"],
-      steps: T.questions.map(q => ({ type: "quiz", q: fileQuestion(q, { ru: q.full || q.audio || q.text || "", pr: q.pr || "", uz: q.uz || "" }) })),
+      crumbs: [L.name + " · Test"].concat(pt ? [T.title || "Daraja testi"] : []),
+      steps: qs.map(q => ({ type: "quiz", q: fileQuestion(q, { ru: q.full || q.audio || q.text || "", pr: q.pr || "", uz: q.uz || "" }) })),
       finish: st => {
         const pct = st.asked ? Math.round((st.ok / st.asked) * 100) : 0;
         S.tests = S.tests || {};
-        S.tests[id] = Math.max(S.tests[id] || 0, pct);
+        S.tests[key] = Math.max(S.tests[key] || 0, pct);
         save();
+        if (pt) {
+          const c = pt.comments || {};
+          const msg = pct >= 85 ? (c.top || "🌟 A’lo natija!") : pct >= 70 ? (c.good || "👍 Yaxshi natija!")
+            : pct >= 50 ? (c.mid || "🙂 Yomon emas, lekin yana mashq qiling.") : (c.low || "💪 Hechqisi yo‘q! Takrorlab, qayta urinib ko‘ring.");
+          const others = T.parts.filter(x => x !== pt);
+          return doneView("🏁", pt.title + " — tugadi!", [h("p", { class: "score" }, st.ok + " / " + st.asked + " (" + pct + "%)"), msg], [
+            btn("🔁", "Qaytadan topshirish", () => route(), "primary big")
+          ].concat(others.map(x => btn(x.icon || "📝", x.title, () => go("#/leveltest/" + L.id + "/" + x.id))),
+            [btn("⬅", "Orqaga", () => goBack("#/test"))]));
+        }
         const next = R.levels[R.levels.indexOf(L) + 1];
         const msg = pct >= 70
           ? "🌟 Ajoyib! Siz " + L.name + " darajasini yaxshi bilasiz." + (next && hasContent(next) ? " " + next.name + " darajasini boshlashingiz mumkin." : "")
@@ -1479,7 +1514,7 @@
       case "listen": return p[1] ? listenText(p[1]) : listenScreen();
       case "lq": return listenQuiz(p[1]);
       case "test": return testScreen();
-      case "leveltest": return levelTestRoute(p[1]);
+      case "leveltest": return levelTestRoute(p[1], p[2]);
       case "lesson": return lessonRoute();
       case "ai": return aiScreen();
       case "help": return helpScreen();

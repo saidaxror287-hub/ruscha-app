@@ -63,6 +63,11 @@ says it, add a note at the end of `uz`, for example: `(ayol aytsa: «Я опоз
 and `full` (the complete right sentence), and `pr` / `uz` for the explanation.
 Add the file path to the level's `files` list.
 
+A test can also be split into parts that are taken separately (see `data/b1/test.js`):
+use `parts: [{ id, title, icon, desc, comments: { top, good, mid, low }, questions }]`
+instead of `questions`. Each part has its own best score and an Uzbek comment by result
+(85%+ / 70%+ / 50%+ / lower). A long `text` (a notice, a message) is shown as a reading passage.
+
 ## Add a new level (B1, B2, C1)
 
 The levels are already listed in `data/levels.js` with empty `files` (shown as "Tez orada").
