@@ -54,6 +54,41 @@
     R.topicById[t.id] = t;
   };
 
+  /* =====================================================================
+     Job packs (Kasblar). One file per job (data/kasblar/<job>.js):
+       Ruscha.addJob({ id: "kasb-kuryer", title: "Kuryer", icon: "🛵" });
+       Ruscha.addJobTab("kasb-kuryer", "boshlangich", { templates, phrases, dialogues });
+       Ruscha.addJobTab("kasb-kuryer", "orta", { … });
+     Each tab becomes its own topic. The "boshlangich" tab keeps the job's id (kasb-kuryer),
+     the others get a suffix (kasb-kuryer-orta, kasb-kuryer-yuqori). A tab with no part is "Tez orada".
+     "levels" = which app levels open this tab first (the last tab is used for any higher level).
+     ===================================================================== */
+  const JOB_TABS = [
+    { key: "boshlangich", title: "Boshlang‘ich", sub: "A1–A2", color: "#15803d", suffix: "", levels: ["a1", "a2"] },
+    { key: "orta", title: "O‘rta", sub: "B1", color: "#7c3aed", suffix: "-orta", levels: ["b1"] },
+    { key: "yuqori", title: "Yuqori", sub: "B2+", color: "#c2410c", suffix: "-yuqori", levels: ["b2", "c1"] }
+  ];
+  R.jobs = [];
+  R.jobById = {};
+  R.addJob = function (j) {
+    if (!j || !j.id || R.jobById[j.id]) return;
+    j.tabs = {}; // tab key → topic
+    R.jobs.push(j);
+    R.jobById[j.id] = j;
+  };
+  R.addJobTab = function (jobId, key, part) {
+    const j = R.jobById[jobId];
+    const tab = JOB_TABS.find(x => x.key === key);
+    if (!j || !tab || j.tabs[key]) return;
+    const t = Object.assign({}, part, { id: jobId + tab.suffix, section: "kasblar", title: j.title, icon: j.icon, job: j, tab });
+    R.addTopic(t);
+    j.tabs[key] = t;
+  };
+  /* After loading: every job gets all tabs (an empty one is shown as "Tez orada"). */
+  function finishJobs() {
+    R.jobs.forEach(j => JOB_TABS.forEach(tab => { if (!j.tabs[tab.key]) R.addJobTab(j.id, tab.key, {}); }));
+  }
+
   R.addWords = function (l) {
     if (!l || !l.id || R.listById[l.id]) return;
     l.kind = "w";
@@ -108,7 +143,7 @@
       .concat(...R.levels.map(l => l.files.map(f => ({ f, level: l.id }))));
     let i = 0;
     (function next() {
-      if (i >= files.length) { loadingLevel = ""; return done(); }
+      if (i >= files.length) { loadingLevel = ""; finishJobs(); return done(); }
       const f = files[i].f;
       loadingLevel = files[i++].level;
       const s = document.createElement("script");
@@ -666,11 +701,21 @@
       h("p", null, "«" + L.desc + "» darajasi ustida ishlayapmiz. Hozircha boshqa darajani tanlang yoki «Kasblar»ni o‘rganing."));
   }
 
+  /* Job tab that matches the chosen level (A1/A2 → Boshlang‘ich, B1 → O‘rta, B2 and higher → Yuqori). */
+  function levelTab(L) {
+    return JOB_TABS.find(tab => tab.levels.includes(L.id)) || JOB_TABS[JOB_TABS.length - 1];
+  }
+  /* "Kuryer · O‘rta" for a job tab, the plain title for anything else. */
+  function topicLabel(t) { return t.tab ? t.title + " · " + t.tab.title : t.title; }
+
   function planLesson() {
     const L = level();
     if (!hasContent(L)) return { reviews: [], fresh: [] };
     const reviews = dueItems().filter(i => inLevel(i, L)).slice(0, 15);
-    const phrases = levelTopics(L).concat(R.topics.filter(t => !t.level)).flatMap(t => t.items).filter(i => !S.cards[i.id]);
+    // New job phrases only come from tabs up to the level's own tab.
+    const maxTab = JOB_TABS.indexOf(levelTab(L));
+    const jobTopics = R.topics.filter(t => !t.level && (!t.tab || JOB_TABS.indexOf(t.tab) <= maxTab));
+    const phrases = levelTopics(L).concat(jobTopics).flatMap(t => t.items).filter(i => !S.cards[i.id]);
     const words = ofLevel(L, R.lists).flatMap(l => l.items).filter(i => !S.cards[i.id]);
     let nP = Math.min(4, phrases.length);
     let nW = Math.min(2, words.length);
@@ -705,7 +750,35 @@
   function crumbsOf(s) {
     if (s.kind === "l") return [s.title + " · Test"];
     if (s.kind === "w") return [levelName(s.level) + " · So‘zlar", s.title];
-    return placeOf(s).crumbs.concat(s.title);
+    return placeOf(s).crumbs.concat(topicLabel(s));
+  }
+
+  /* Tile on the Kasblar screen: opens the job at the tab that matches the level. */
+  function jobTile(j) {
+    const items = JOB_TABS.flatMap(tab => j.tabs[tab.key].items);
+    return h("button", { type: "button", class: "tile", onclick: () => go("#/job/" + j.id) },
+      h("span", { class: "tile-ic", "aria-hidden": "true" }, j.icon || "👷"),
+      h("span", { class: "tile-title" }, j.title),
+      h("span", { class: "tile-sub" }, seenIn(items) + " / " + items.length));
+  }
+  /* Boshlang‘ich · O‘rta · Yuqori, each with its own progress. Switching replaces the screen,
+     so "⬅ Orqaga" still goes straight back to Kasblar. */
+  function jobTabs(t) {
+    return h("div", { class: "level-switch job-tabs", role: "group", "aria-label": "Bosqichni tanlang" },
+      JOB_TABS.map(tab => {
+        const x = t.job.tabs[tab.key];
+        return h("button", {
+          type: "button", class: "lvl", style: "--lvl:" + tab.color, "aria-pressed": String(x === t),
+          onclick: () => { if (x !== t) redirect("#/topic/" + x.id); }
+        },
+          h("span", { class: "lvl-name" }, tab.title),
+          h("span", { class: "lvl-sub" }, tab.sub + " · " + (x.soon ? "Tez orada" : seenIn(x.items) + "/" + x.items.length)));
+      }));
+  }
+  function jobRoute(id) {
+    const j = R.jobById[id];
+    if (!j) return redirect("#/jobs");
+    redirect("#/topic/" + j.tabs[levelTab(level()).key].id);
   }
 
   function topicTile(t) {
@@ -768,7 +841,7 @@
     const lists = ofLevel(L, R.lists);
     const texts = ofLevel(L, R.listening);
     const dialogs = topics.reduce((n, t) => n + t.dialogues.length, 0);
-    const jobs = R.topics.filter(t => t.section === "kasblar");
+    const jobs = R.jobs;
     const test = R.tests[L.id];
     const speakTasks = ofLevel(L, R.speaking);
     const topicItems = topics.flatMap(t => t.items);
@@ -796,7 +869,7 @@
       suggest,
       last && (!last.level || last.level === L.id) ? h("button", { type: "button", class: "continue-btn", onclick: () => go("#/topic/" + last.id) },
         h("span", { class: "continue-ic", "aria-hidden": "true" }, last.icon || "📁"),
-        h("span", { class: "continue-text" }, "Davom ettirish: " + last.title),
+        h("span", { class: "continue-text" }, "Davom ettirish: " + topicLabel(last)),
         h("span", { class: "continue-arrow", "aria-hidden": "true" }, "→")) : null,
       h("p", { class: "section-label" }, L.name + " · Bo‘limlar"),
       ready ? null : soonBox(L),
@@ -810,7 +883,8 @@
         speakTasks.length ? navButton("🗣", "Fikr bildiring", speakTasks.length + " ta mavzu: savolga ruscha javob bering va ovozingizni yozib oling",
           "#/speak", "Gapirilgan: " + speakTasks.filter(x => S.speak && S.speak[x.id]).length + " / " + speakTasks.length) : null,
         ready ? navButton("✅", "Test", testSummary(test), "#/test", testBest(L)) : null,
-        jobs.length ? navButton("👷", "Kasblar", jobs.length + " ta kasb: quruvchi, kuryer, taksi… (barcha darajalar uchun)", "#/jobs") : null),
+        jobs.length ? navButton("👷", "Kasblar", jobs.length + " ta kasb: quruvchi, kuryer, taksi… (barcha darajalar uchun)", "#/jobs",
+          "Hozir ochiladi: " + levelTab(L).title + " (" + levelTab(L).sub + ")") : null),
       R.loadErrors.length ? h("p", { class: "note" }, "⚠️ Ba’zi fayllar yuklanmadi: " + R.loadErrors.join(", ")) : null);
   }
 
@@ -842,9 +916,12 @@
   }
 
   function jobsScreen() {
+    const tab = levelTab(level());
+    const loose = R.topics.filter(t => t.section === "kasblar" && !t.job); // old-style single-topic packs
     show(header("👷 Kasblar", "#/"),
-      h("p", { class: "hint" }, "Kasbingizni tanlang: ishda eshitadigan va aytadigan iboralar."),
-      h("div", { class: "tiles" }, R.topics.filter(t => t.section === "kasblar").map(topicTile)));
+      h("p", { class: "hint" }, "Kasbingizni tanlang: ishda eshitadigan va aytadigan iboralar. Har bir kasbda 3 bosqich bor: " +
+        JOB_TABS.map(x => x.title + " (" + x.sub + ")").join(", ") + ". Darajangizga ko‘ra «" + tab.title + "» ochiladi."),
+      h("div", { class: "tiles" }, R.jobs.map(jobTile), loose.map(topicTile)));
   }
 
   function wordListsScreen() {
@@ -1260,10 +1337,10 @@
       add(results, h("p", { class: "results-head" },
         here.length ? "🔍 Topildi: " + here.length + " ta" :
         other.length ? "🔍 " + L.name + " darajasida topilmadi." : "🔍 Hech narsa topilmadi. Boshqacha yozib ko‘ring."));
-      here.forEach(it => add(results, itemRow(it, "📂 " + it.src.title)));
+      here.forEach(it => add(results, itemRow(it, "📂 " + topicLabel(it.src))));
       if (other.length) {
         add(results, h("p", { class: "results-head" }, "Boshqa darajalarda: " + other.length + " ta"));
-        other.forEach(it => add(results, itemRow(it, "📂 " + levelName(it.level) + " · " + it.src.title)));
+        other.forEach(it => add(results, itemRow(it, "📂 " + levelName(it.level) + " · " + topicLabel(it.src))));
       }
       return here.length + other.length;
     }
@@ -1416,6 +1493,15 @@
     if (!t) return redirect("#/topics");
     const title = (t.icon || "") + " " + t.title;
     const place = placeOf(t);
+    const tabs = t.job ? jobTabs(t) : null;
+    if (t.soon && t.job) {
+      show(header(title, place.back, place.crumbs), tabs,
+        h("div", { class: "soon-box" },
+          h("div", { class: "big-ic", "aria-hidden": "true" }, "⏳"),
+          h("h2", null, t.tab.title + " (" + t.tab.sub + ") — tez orada"),
+          h("p", null, "Bu bosqich ustida ishlayapmiz. Hozircha yuqoridagi boshqa bosqichni tanlang.")));
+      return;
+    }
     if (t.soon) {
       show(header(title, place.back, place.crumbs),
         h("div", { class: "soon-box" },
@@ -1429,7 +1515,8 @@
     save();
     const seen = seenIn(t.items);
     show(header(title, place.back, place.crumbs),
-      h("p", { class: "topic-progress" }, "O‘rganilgan: " + seen + " / " + t.items.length),
+      tabs,
+      h("p", { class: "topic-progress" }, (t.tab ? t.tab.title + " · " : "") + "O‘rganilgan: " + seen + " / " + t.items.length),
       progressBar(Math.round((seen / t.items.length) * 100)),
       btn("🎧", "Tinglash va takrorlash", () => go("#/learn/t/" + t.id), "primary big"),
       h("div", { class: "grid2" },
@@ -1734,6 +1821,7 @@
       case "topics": return topicsScreen();
       case "group": return groupScreen(p[1]);
       case "jobs": return jobsScreen();
+      case "job": return jobRoute(p[1]);
       case "search": return searchScreen();
       case "review": return reviewRoute();
       case "topic": return topicScreen(p[1]);

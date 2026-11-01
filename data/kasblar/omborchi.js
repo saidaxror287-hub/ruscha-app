@@ -1,8 +1,13 @@
-Ruscha.addTopic({
-  id: "kasb-omborchi",
-  section: "kasblar",
-  title: "Omborchi",
-  icon: "📦",
+/*
+  Omborchi — job pack (Kasblar). One part per tab:
+    boshlangich = Boshlang‘ich (A1–A2) · orta = O‘rta (B1) · yuqori = Yuqori (B2+).
+  A tab without a part is shown as "Tez orada". See README.md → "Add a job pack".
+  Never change "id" or a published "ru": saved progress depends on them.
+*/
+Ruscha.addJob({ id: "kasb-omborchi", title: "Omborchi", icon: "📦" });
+
+/* ==================== Boshlang‘ich (A1–A2) ==================== */
+Ruscha.addJobTab("kasb-omborchi", "boshlangich", {
   templates: [
     { ru: "Поставь на ...", pr: "Pastaf na ...", uz: "...ga qo‘y", ex: ["Поставь на верхнюю полку.", "Поставь на поддон."] },
     { ru: "Сколько ...?", pr: "Skolka ...?", uz: "Nechta ...?", ex: ["Сколько коробок?", "Сколько штук в коробке?"] },
@@ -70,3 +75,65 @@ Ruscha.addTopic({
     }
   ]
 });
+
+/* ==================== O‘rta (B1) ==================== */
+Ruscha.addJobTab("kasb-omborchi", "orta", {
+  phrases: [
+    { ru: "Сканер разрядился.", pr: "Skanir razridilsa.", uz: "Skanerning quvvati tugadi." },
+    { ru: "Пришёл не тот товар.", pr: "Prishol ne tot tovar.", uz: "Noto‘g‘ri tovar kelibdi." },
+    { ru: "В накладной одно, а в коробке другое.", pr: "V nakladnoy adno, a f karopke drugoye.", uz: "Yuk xatida bir narsa yozilgan, qutida esa boshqa narsa.", sit: "Qutini ochdingiz, ichidagi tovar hujjatdagidan boshqacha." },
+    { ru: "Погрузчик не заводится.", pr: "Pagruschik ne zavoditsa.", uz: "Yuklagich o‘t olmayapti." },
+    { ru: "Я уронил коробку, кажется, там всё разбилось.", pr: "Ya uranil karopku, kajitsa, tam fsyo razbilas.", uz: "Qutini tushirib yubordim, ichidagi hammasi singanga o‘xshaydi. (ayol aytsa: «Я уронила коробку, кажется, там всё разбилось»)", sit: "Qutini ko‘tarib ketayotganda qo‘lingizdan tushib ketdi, ichidan shisha ovozi chiqdi." },
+    { ru: "Машина опаздывает на два часа.", pr: "Mashina apazdivayet na dva chisa.", uz: "Mashina ikki soatga kechikyapti." },
+    { ru: "Я не успею собрать все заказы до обеда.", pr: "Ya ne uspeyu sabrat fse zakazi da abeda.", uz: "Hamma buyurtmalarni tushlikkacha yig‘ib ulgurmayman." },
+    { ru: "Что сначала: разгрузка или сборка?", pr: "Shto snachala: razgruska ili sborka?", uz: "Avval nima qilay: yuk tushirishmi yoki buyurtma yig‘ishmi?" },
+    { ru: "Почему мне поставили прогул?", pr: "Pachimu mne pastavili pragul?", uz: "Nega meni sababsiz ishga kelmagan deb belgilashdi?", sit: "Bir kun kasal bo‘lib keldingiz, ish jadvalida «sababsiz» deb yozilgan." },
+    { ru: "Я предупреждал, что опоздаю.", pr: "Ya priduprijdal, shto apazdayu.", uz: "Kechikishimni oldindan aytgan edim. (ayol aytsa: «Я предупреждала, что опоздаю»)" },
+    { ru: "Мне нужно обучение на погрузчик.", pr: "Mne nujna abucheniye na pagruschik.", uz: "Menga yuklagich bo‘yicha o‘qish kerak." },
+    { ru: "Ходи только по жёлтой линии.", pr: "Xadi tolka pa jyoltay linii.", uz: "Faqat sariq chiziq bo‘ylab yur." },
+    { ru: "Не поднимай больше двадцати килограммов.", pr: "Ne padnimay bolshe dvatsati kilagramaf.", uz: "Yigirma kilogrammdan og‘ir narsani ko‘tarma." },
+    { ru: "Поднимай ногами, а не спиной.", pr: "Padnimay nagami, a ne spinoy.", uz: "Bel bilan emas, oyoq kuchi bilan ko‘tar." },
+    { ru: "Не ходи под поднятым грузом.", pr: "Ne xadi pat podnitim gruzam.", uz: "Ko‘tarilgan yuk tagidan yurma." },
+    { ru: "Обувь должна быть с защитой.", pr: "Obuf daljna bit s zashitay.", uz: "Poyabzal himoyali bo‘lishi kerak." },
+    { ru: "Ночная смена — с восьми вечера до восьми утра.", pr: "Nachnaya smena — s vasmi vechira da vasmi utra.", uz: "Tungi smena — kechki sakkizdan ertalabki sakkizgacha." },
+    { ru: "На следующей неделе я в ночь.", pr: "Na sleduyushey nidele ya v noch.", uz: "Kelasi hafta tungi smenadaman." },
+    { ru: "Сколько у нас перерывов за смену?", pr: "Skolka u nas piririvaf za smenu?", uz: "Bir smenada nechta tanaffusimiz bor?" },
+    { ru: "Переработку оплачивают отдельно?", pr: "Pirirabotku aplachivayut atdelna?", uz: "Qo‘shimcha ish alohida to‘lanadimi?" }
+  ],
+  dialogues: [
+    {
+      title: "Yuk xatida xato",
+      a: "Omborchi",
+      b: "Smena boshlig‘i",
+      lines: [
+        ["a", "Начальник, в накладной одно, а в коробке другое.", "Nachalnik, v nakladnoy adno, a f karopke drugoye.", "Boshliq, yuk xatida bir narsa yozilgan, qutida esa boshqa narsa."],
+        ["b", "Что именно?", "Shto imenna?", "Aniq nima?"],
+        ["a", "Написано сто чайников, а в коробках утюги.", "Napisana sto chaynikaf, a f karopkax utyugi.", "Yuzta choynak deb yozilgan, qutilarda esa dazmollar."],
+        ["b", "Сколько коробок с утюгами?", "Skolka karopak s utyugami?", "Dazmolli qutilar nechta?"],
+        ["a", "Десять. Я пересчитал два раза.", "Desit. Ya pirishital dva raza.", "O‘nta. Ikki marta qayta sanadim."],
+        ["b", "Хорошо. Не принимай этот товар, отложи в сторону.", "Xarasho. Ne prinimay etat tovar, atlaji f staranu.", "Yaxshi. Bu tovarni qabul qilma, chetga qo‘y."],
+        ["a", "А накладную подписывать?", "A nakladnuyu patpisivat?", "Yuk xatiga imzo qo‘yaymi?"],
+        ["b", "Нет, не подписывай. Я сам позвоню поставщику.", "Net, ne patpisivay. Ya sam pazvanyu pastafshiku.", "Yo‘q, imzolama. Yetkazib beruvchiga o‘zim qo‘ng‘iroq qilaman."],
+        ["a", "Понял. Тогда я пока займусь сборкой заказов.", "Ponil. Tagda ya paka zaymus sborkay zakazaf.", "Tushundim. Unda hozircha buyurtmalarni yig‘ish bilan shug‘ullanaman."]
+      ]
+    },
+    {
+      title: "Tungi smena",
+      a: "Omborchi",
+      b: "Kadrlar menejeri",
+      lines: [
+        ["a", "Здравствуйте. У меня вопрос по графику.", "Zdrastvuyte. U minya vapros pa grafiku.", "Assalomu alaykum. Ish jadvali bo‘yicha savolim bor."],
+        ["b", "Слушаю вас.", "Slushayu vas.", "Eshitaman."],
+        ["a", "На следующей неделе я в ночь. Переработку оплачивают отдельно?", "Na sleduyushey nidele ya v noch. Pirirabotku aplachivayut atdelna?", "Kelasi hafta tungi smenadaman. Qo‘shimcha ish alohida to‘lanadimi?"],
+        ["b", "Да. Ночные часы и переработка оплачиваются в полтора раза больше.", "Da. Nachniye chisi i pirirabotka aplachivayutsa f poltara raza bolshe.", "Ha. Tungi soatlar va qo‘shimcha ish bir yarim barobar ko‘p to‘lanadi."],
+        ["a", "А сколько у нас перерывов за смену?", "A skolka u nas piririvaf za smenu?", "Bir smenada nechta tanaffusimiz bor?"],
+        ["b", "Два по пятнадцать минут и обед — полчаса.", "Dva pa pitnatsat minut i abet — polchisa.", "O‘n besh daqiqadan ikkita va tushlik — yarim soat."],
+        ["a", "Понятно. И ещё: мне нужно обучение на погрузчик.", "Panyatna. I yishyo: mne nujna abucheniye na pagruschik.", "Tushunarli. Yana: menga yuklagich bo‘yicha o‘qish kerak."],
+        ["b", "Запишу вас на курс. Он будет в начале месяца.", "Zapishu vas na kurs. On budit v nachale mesitsa.", "Sizni kursga yozib qo‘yaman. U oy boshida bo‘ladi."]
+      ]
+    }
+  ]
+});
+
+/* ==================== Yuqori (B2+) ==================== */
+/* Tez orada: Ruscha.addJobTab("kasb-omborchi", "yuqori", { phrases: [...], dialogues: [...] }); */

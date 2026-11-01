@@ -1,8 +1,13 @@
-Ruscha.addTopic({
-  id: "kasb-taksi",
-  section: "kasblar",
-  title: "Haydovchi / Taksi",
-  icon: "🚕",
+/*
+  Haydovchi / Taksi — job pack (Kasblar). One part per tab:
+    boshlangich = Boshlang‘ich (A1–A2) · orta = O‘rta (B1) · yuqori = Yuqori (B2+).
+  A tab without a part is shown as "Tez orada". See README.md → "Add a job pack".
+  Never change "id" or a published "ru": saved progress depends on them.
+*/
+Ruscha.addJob({ id: "kasb-taksi", title: "Haydovchi / Taksi", icon: "🚕" });
+
+/* ==================== Boshlang‘ich (A1–A2) ==================== */
+Ruscha.addJobTab("kasb-taksi", "boshlangich", {
   templates: [
     { ru: "Поедем через ...?", pr: "Payedim chiriz ...?", uz: "... orqali boramizmi?", ex: ["Поедем через центр?", "Поедем через мост?"] },
     { ru: "Здесь нельзя ...", pr: "Zdes nilzya ...", uz: "Bu yerda ... mumkin emas", ex: ["Здесь нельзя останавливаться.", "Здесь нельзя парковаться."] },
@@ -70,3 +75,66 @@ Ruscha.addTopic({
     }
   ]
 });
+
+/* ==================== O‘rta (B1) ==================== */
+Ruscha.addJobTab("kasb-taksi", "orta", {
+  phrases: [
+    { ru: "Машина плохо заводится.", pr: "Mashina ploxa zavoditsa.", uz: "Mashina qiyin o‘t olyapti.", sit: "Ertalab mashinani yurgizmoqchi bo‘ldingiz, lekin motor zo‘rg‘a ishladi." },
+    { ru: "Загорелась лампочка двигателя.", pr: "Zagarelas lampachka dvigatilya.", uz: "Dvigatel chirog‘i yonib qoldi." },
+    { ru: "Тормоза стали хуже работать.", pr: "Tarmaza stali xuje rabotat.", uz: "Tormozlar yomonroq ishlay boshladi." },
+    { ru: "Пассажир отказывается платить.", pr: "Passajir atkazivayetsa platit.", uz: "Yo‘lovchi pul to‘lashdan bosh tortyapti.", sit: "Manzilga yetib keldingiz, yo‘lovchi pul to‘lamay ketmoqchi, dispetcherga qo‘ng‘iroq qilasiz." },
+    { ru: "Пассажир забыл в машине сумку.", pr: "Passajir zabil v mashine sumku.", uz: "Yo‘lovchi mashinada sumkasini unutib qoldirdi." },
+    { ru: "Навигатор ведёт не туда.", pr: "Navigatar vidyot ne tuda.", uz: "Navigator noto‘g‘ri tomonga olib boryapti." },
+    { ru: "Мне нужно поговорить с диспетчером.", pr: "Mne nujna pagavarit s dispetchiram.", uz: "Dispetcher bilan gaplashishim kerak." },
+    { ru: "Машину нужно отогнать в сервис.", pr: "Mashinu nujna atagnat f servis.", uz: "Mashinani servisga olib borish kerak." },
+    { ru: "Кто будет платить за ремонт?", pr: "Kto budit platit za rimont?", uz: "Ta’mirga kim pul to‘laydi?", sit: "Ijaradagi mashina buzildi, park boshlig‘i bilan gaplashyapsiz." },
+    { ru: "Сколько стоит аренда машины в день?", pr: "Skolka stoit arenda mashini v den?", uz: "Mashina ijarasi kuniga qancha turadi?" },
+    { ru: "Почему мне снизили рейтинг?", pr: "Pachimu mne snizili reyting?", uz: "Nega reytingimni pasaytirishdi?" },
+    { ru: "Пассажир вёл себя грубо.", pr: "Passajir vyol sibya gruba.", uz: "Yo‘lovchi qo‘pol muomala qildi." },
+    { ru: "Перед сменой надо пройти медосмотр.", pr: "Peret smenay nada prayti medasmotr.", uz: "Smenadan oldin tibbiy ko‘rikdan o‘tish kerak." },
+    { ru: "Больше двенадцати часов работать нельзя.", pr: "Bolshe dvinatsati chisof rabotat nilzya.", uz: "O‘n ikki soatdan ortiq ishlash mumkin emas." },
+    { ru: "Я очень устал, мне нужен перерыв.", pr: "Ya ochin ustal, mne nujen piririf.", uz: "Juda charchadim, menga tanaffus kerak. (ayol aytsa: «Я очень устала, мне нужен перерыв»)", sit: "Ketma-ket o‘n soat ishladingiz, ko‘zingiz yumilib ketyapti." },
+    { ru: "Зимой надо ставить зимнюю резину.", pr: "Zimoy nada stavit zimnyuyu rizinu.", uz: "Qishda qishki shina qo‘yish kerak." },
+    { ru: "Дети должны ехать в детском кресле.", pr: "Deti daljni yexat v detskam kresle.", uz: "Bolalar maxsus bolalar o‘rindig‘ida o‘tirishi kerak." },
+    { ru: "На этой неделе у меня ночные смены.", pr: "Na etay nidele u minya nachniye smeni.", uz: "Bu hafta smenalarim tunda." },
+    { ru: "Во сколько нужно сдать машину?", pr: "Va skolka nujna sdat mashinu?", uz: "Mashinani soat nechada topshirish kerak?" },
+    { ru: "Можно завтра выйти попозже?", pr: "Mojna zaftra viyti papojje?", uz: "Ertaga ishga kechroq chiqsam bo‘ladimi?" }
+  ],
+  dialogues: [
+    {
+      title: "Dispetcher bilan",
+      a: "Haydovchi",
+      b: "Dispetcher",
+      lines: [
+        ["a", "Алло, это водитель Рустам, машина сорок семь.", "Alo, eta vaditil Rustam, mashina sorak sem.", "Allo, bu haydovchi Rustam, qirq yettinchi mashina."],
+        ["b", "Да, Рустам, слушаю.", "Da, Rustam, slushayu.", "Ha, Rustam, eshitaman."],
+        ["a", "Загорелась лампочка двигателя, и машина плохо едет.", "Zagarelas lampachka dvigatilya, i mashina ploxa yedit.", "Dvigatel chirog‘i yonib qoldi, mashina yomon yuryapti."],
+        ["b", "У вас сейчас есть пассажир?", "U vas sichas yest passajir?", "Hozir yo‘lovchingiz bormi?"],
+        ["a", "Нет, я только что высадил пассажира.", "Net, ya tolka shto visadil passajira.", "Yo‘q, hozirgina yo‘lovchini tushirdim."],
+        ["b", "Тогда не берите новые заказы. Отгоните машину в сервис.", "Tagda ne berite noviye zakazi. Atganite mashinu f servis.", "Unda yangi buyurtma olmang. Mashinani servisga olib boring."],
+        ["a", "А кто будет платить за ремонт?", "A kto budit platit za rimont?", "Ta’mirga kim to‘laydi?"],
+        ["b", "Парк заплатит, вы ни в чём не виноваты.", "Park zaplatit, vi ni f chom ne vinavati.", "Park to‘laydi, siz hech narsada aybdor emassiz."],
+        ["a", "Понял. А смену мне засчитают?", "Ponil. A smenu mne zashitayut?", "Tushundim. Smena hisobimga yoziladimi?"],
+        ["b", "Да, не переживайте. Сообщите, когда будете в сервисе.", "Da, ne pirijivayte. Saapshite, kagda budite f servise.", "Ha, xavotir olmang. Servisga yetganingizda xabar bering."]
+      ]
+    },
+    {
+      title: "Ish jadvalini o‘zgartirish",
+      a: "Haydovchi",
+      b: "Park boshlig‘i",
+      lines: [
+        ["a", "Здравствуйте. Можно поменять мой график?", "Zdrastvuyte. Mojna paminyat moy grafik?", "Assalomu alaykum. Ish jadvalimni o‘zgartirsa bo‘ladimi?"],
+        ["b", "А что случилось?", "A shto sluchilas?", "Nima bo‘ldi?"],
+        ["a", "Я работаю в ночную смену уже месяц и очень устаю.", "Ya rabotayu v nachnuyu smenu uje mesits i ochin ustayu.", "Bir oydan beri tungi smenada ishlayapman va juda charchayapman."],
+        ["b", "Понимаю. Усталость за рулём — это опасно.", "Panimayu. Ustalast za rulyom — eta apasna.", "Tushunaman. Rul ortida charchoq — bu xavfli."],
+        ["a", "Можно мне дневные смены, хотя бы три дня в неделю?", "Mojna mne dnevniye smeni, xatya bi tri dnya v nidelyu?", "Menga kunduzgi smenalar bersangiz bo‘ladimi, hech bo‘lmasa haftada uch kun?"],
+        ["b", "Хорошо. С понедельника по среду — днём, с восьми до восьми.", "Xarasho. S panidelnika pa sredu — dnyom, s vasmi da vasmi.", "Xo‘p. Dushanbadan chorshanbagacha — kunduzi, sakkizdan sakkizgacha."],
+        ["a", "Спасибо! А медосмотр утром во сколько?", "Spasiba! A medasmotr utram va skolka?", "Rahmat! Ertalab tibbiy ko‘rik soat nechada?"],
+        ["b", "В половине восьмого. Не опаздывайте.", "F palavine vasmova. Ne apazdivayte.", "Yetti yarimda. Kechikmang."]
+      ]
+    }
+  ]
+});
+
+/* ==================== Yuqori (B2+) ==================== */
+/* Tez orada: Ruscha.addJobTab("kasb-taksi", "yuqori", { phrases: [...], dialogues: [...] }); */

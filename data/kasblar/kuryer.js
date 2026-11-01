@@ -1,8 +1,13 @@
-Ruscha.addTopic({
-  id: "kasb-kuryer",
-  section: "kasblar",
-  title: "Kuryer",
-  icon: "🛵",
+/*
+  Kuryer — job pack (Kasblar). One part per tab:
+    boshlangich = Boshlang‘ich (A1–A2) · orta = O‘rta (B1) · yuqori = Yuqori (B2+).
+  A tab without a part is shown as "Tez orada". See README.md → "Add a job pack".
+  Never change "id" or a published "ru": saved progress depends on them.
+*/
+Ruscha.addJob({ id: "kasb-kuryer", title: "Kuryer", icon: "🛵" });
+
+/* ==================== Boshlang‘ich (A1–A2) ==================== */
+Ruscha.addJobTab("kasb-kuryer", "boshlangich", {
   templates: [
     { ru: "Вы заказывали ...?", pr: "Vi zakazivali ...?", uz: "Siz ... buyurtma qilganmisiz?", ex: ["Вы заказывали пиццу?", "Вы заказывали продукты?"] },
     { ru: "Я буду через ...", pr: "Ya budu chiriz ...", uz: "...da yetib boraman", ex: ["Я буду через десять минут.", "Я буду через пять минут."] },
@@ -69,3 +74,66 @@ Ruscha.addTopic({
     }
   ]
 });
+
+/* ==================== O‘rta (B1) ==================== */
+Ruscha.addJobTab("kasb-kuryer", "orta", {
+  phrases: [
+    { ru: "Приложение зависло, я не вижу адрес.", pr: "Prilajeniye zavisla, ya ne viju adris.", uz: "Ilova qotib qoldi, manzilni ko‘rmayapman.", sit: "Yo‘lda ketayotganingizda telefondagi ilova ishlamay qoldi." },
+    { ru: "Я попал в небольшую аварию.", pr: "Ya papal v nibalshuyu avariyu.", uz: "Kichik avariyaga uchradim. (ayol aytsa: «Я попала в небольшую аварию»)", sit: "Velosipedda yiqildingiz va operatorga qo‘ng‘iroq qilyapsiz." },
+    { ru: "Упаковка порвалась по дороге.", pr: "Upakofka parvalas pa daroge.", uz: "Yo‘lda qadoq yirtilib ketdi." },
+    { ru: "Клиент не отвечает уже десять минут.", pr: "Kliyent ne atvichayet uje desit minut.", uz: "Mijoz o‘n daqiqadan beri javob bermayapti.", sit: "Manzilga keldingiz, mijoz telefonni ko‘tarmayapti, qo‘llab-quvvatlashga yozasiz." },
+    { ru: "Что мне делать с заказом?", pr: "Shto mne delat s zakazam?", uz: "Buyurtmani nima qilay?" },
+    { ru: "У меня сел телефон.", pr: "U minya sel tilifon.", uz: "Telefonimning quvvati tugadi." },
+    { ru: "Можно поговорить с менеджером?", pr: "Mojna pagavarit s menedjiram?", uz: "Menejer bilan gaplashsam bo‘ladimi?" },
+    { ru: "Мне не засчитали заказ.", pr: "Mne ne zashitali zakas.", uz: "Buyurtmani hisobimga yozishmadi." },
+    { ru: "Почему у меня штраф?", pr: "Pachimu u minya shtraf?", uz: "Nega menga jarima solindi?", sit: "Ilovada maoshingizdan pul ushlab qolinganini ko‘rdingiz." },
+    { ru: "Я не виноват, ресторан задержал заказ.", pr: "Ya ne vinavat, ristaran zadirjal zakas.", uz: "Men aybdor emasman, restoran buyurtmani kechiktirdi. (ayol aytsa: «Я не виновата, ресторан задержал заказ»)" },
+    { ru: "Когда будет выплата?", pr: "Kagda budit viplata?", uz: "Pul qachon to‘lanadi?" },
+    { ru: "В дождь надо ехать медленнее.", pr: "V dosht nada yexat medlinniye.", uz: "Yomg‘irda sekinroq yurish kerak." },
+    { ru: "Ночью обязательно включай фары.", pr: "Nochyu abizatilna fklyuchay fari.", uz: "Kechasi chiroqlarni albatta yoq." },
+    { ru: "Без шлема на смену не выходи.", pr: "Bez shlema na smenu ne vixadi.", uz: "Dubulg‘asiz smenaga chiqma." },
+    { ru: "Не пользуйся телефоном за рулём.", pr: "Ne polzuysya tilifonam za rulyom.", uz: "Rul ortida telefondan foydalanma." },
+    { ru: "Какой у меня график на неделю?", pr: "Kakoy u minya grafik na nidelyu?", uz: "Mening haftalik ish jadvalim qanaqa?" },
+    { ru: "Можно взять слот на выходные?", pr: "Mojna vzyat slot na vixadniye?", uz: "Dam olish kunlariga slot olsam bo‘ladimi?" },
+    { ru: "Я хочу поменять смену.", pr: "Ya xachu paminyat smenu.", uz: "Smenamni almashtirmoqchiman." },
+    { ru: "Завтра я не смогу выйти, я заболел.", pr: "Zaftra ya ne smagu viyti, ya zabalel.", uz: "Ertaga ishga chiqolmayman, kasal bo‘lib qoldim. (ayol aytsa: «Завтра я не смогу выйти, я заболела»)", sit: "Isitmangiz chiqdi, ertangi smena haqida menejerga yozyapsiz." },
+    { ru: "Сколько заказов в час в среднем?", pr: "Skolka zakazaf f chas f srednim?", uz: "O‘rtacha soatiga nechta buyurtma bo‘ladi?" }
+  ],
+  dialogues: [
+    {
+      title: "Avariyadan keyin",
+      a: "Kuryer",
+      b: "Operator",
+      lines: [
+        ["a", "Алло, поддержка? Это курьер, номер сорок два.", "Alo, paddershka? Eta kuryer, nomir sorak dva.", "Allo, qo‘llab-quvvatlashmi? Bu kuryer, raqami qirq ikki."],
+        ["b", "Слушаю вас. Что случилось?", "Slushayu vas. Shto sluchilas?", "Eshitaman. Nima bo‘ldi?"],
+        ["a", "Я упал с велосипеда, заказ немного пострадал.", "Ya upal s vilasipeda, zakas nimnoga pastradal.", "Velosipeddan yiqildim, buyurtma biroz shikastlandi."],
+        ["b", "Вы сами в порядке? Нужна помощь?", "Vi sami f paryatke? Nujna pomash?", "O‘zingiz yaxshimisiz? Yordam kerakmi?"],
+        ["a", "Со мной всё нормально, только колено болит.", "Sa mnoy fsyo narmalna, tolka kalena balit.", "Men yaxshiman, faqat tizzam og‘riyapti."],
+        ["b", "Сфотографируйте заказ и отправьте нам в чат.", "Sfatagrafiruyte zakas i atpravte nam f chat.", "Buyurtmani suratga olib, bizga chatga yuboring."],
+        ["a", "Хорошо. А штрафа не будет?", "Xarasho. A shtrafa ne budit?", "Xo‘p. Jarima bo‘lmaydimi?"],
+        ["b", "Нет, это не ваша вина. Клиенту отправим новый заказ.", "Net, eta ne vasha vina. Kliyentu atpravim novi zakas.", "Yo‘q, bu sizning aybingiz emas. Mijozga yangi buyurtma yuboramiz."],
+        ["a", "Спасибо. Я могу продолжить смену?", "Spasiba. Ya magu pradoljit smenu?", "Rahmat. Smenani davom ettirsam bo‘ladimi?"],
+        ["b", "Если чувствуете себя хорошо — да. Будьте осторожны.", "Yesli chustvuyite sibya xarasho — da. Butte astarojni.", "Agar o‘zingizni yaxshi his qilsangiz — ha. Ehtiyot bo‘ling."]
+      ]
+    },
+    {
+      title: "Ish jadvali haqida",
+      a: "Kuryer",
+      b: "Menejer",
+      lines: [
+        ["a", "Здравствуйте! Можно с вами поговорить о графике?", "Zdrastvuyte! Mojna s vami pagavarit a grafike?", "Assalomu alaykum! Siz bilan ish jadvali haqida gaplashsam bo‘ladimi?"],
+        ["b", "Да, конечно. Что вы хотите?", "Da, kanyeshna. Shto vi xatite?", "Ha, albatta. Nima xohlaysiz?"],
+        ["a", "Я хочу работать по вечерам, утром я учусь.", "Ya xachu rabotat pa vicheram, utram ya uchus.", "Kechqurunlari ishlamoqchiman, ertalab o‘qiyman."],
+        ["b", "Вечером много заказов, это хорошо. С шести до двенадцати подойдёт?", "Vecheram mnoga zakazaf, eta xarasho. S shesti da dvinatsati padaydyot?", "Kechqurun buyurtma ko‘p, bu yaxshi. Oltidan o‘n ikkigacha to‘g‘ri keladimi?"],
+        ["a", "Да, подойдёт. А в выходные?", "Da, padaydyot. A v vixadniye?", "Ha, to‘g‘ri keladi. Dam olish kunlari-chi?"],
+        ["b", "В субботу нужны курьеры на весь день.", "F subotu nujni kuryeri na ves den.", "Shanba kuni kun bo‘yi kuryerlar kerak."],
+        ["a", "Хорошо, в субботу я могу. Когда будет выплата?", "Xarasho, f subotu ya magu. Kagda budit viplata?", "Yaxshi, shanba kuni chiqa olaman. Pul qachon to‘lanadi?"],
+        ["b", "Каждую неделю, по понедельникам.", "Kajduyu nidelyu, pa panidelnikam.", "Har hafta, dushanba kunlari."]
+      ]
+    }
+  ]
+});
+
+/* ==================== Yuqori (B2+) ==================== */
+/* Tez orada: Ruscha.addJobTab("kasb-kuryer", "yuqori", { phrases: [...], dialogues: [...] }); */

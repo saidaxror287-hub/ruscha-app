@@ -1,8 +1,13 @@
-Ruscha.addTopic({
-  id: "kasb-oshpaz",
-  section: "kasblar",
-  title: "Oshpaz",
-  icon: "🍳",
+/*
+  Oshpaz — job pack (Kasblar). One part per tab:
+    boshlangich = Boshlang‘ich (A1–A2) · orta = O‘rta (B1) · yuqori = Yuqori (B2+).
+  A tab without a part is shown as "Tez orada". See README.md → "Add a job pack".
+  Never change "id" or a published "ru": saved progress depends on them.
+*/
+Ruscha.addJob({ id: "kasb-oshpaz", title: "Oshpaz", icon: "🍳" });
+
+/* ==================== Boshlang‘ich (A1–A2) ==================== */
+Ruscha.addJobTab("kasb-oshpaz", "boshlangich", {
   templates: [
     { ru: "Нарежь ...", pr: "Narej ...", uz: "...ni to‘g‘ra", ex: ["Нарежь лук.", "Нарежь мясо кубиками.", "Нарежь морковь соломкой."] },
     { ru: "Сколько ...?", pr: "Skolka ...?", uz: "Qancha ...? / Nechta ...?", ex: ["Сколько порций?", "Сколько соли класть?"] },
@@ -69,3 +74,65 @@ Ruscha.addTopic({
     }
   ]
 });
+
+/* ==================== O‘rta (B1) ==================== */
+Ruscha.addJobTab("kasb-oshpaz", "orta", {
+  phrases: [
+    { ru: "Холодильник сломался, продукты греются.", pr: "Xaladilnik slamalsa, pradukti greyutsa.", uz: "Muzlatgich buzildi, mahsulotlar isib ketyapti.", sit: "Ertalab oshxonaga kelib, muzlatgich ishlamayotganini ko‘rdingiz." },
+    { ru: "Мясо привезли несвежее.", pr: "Myasa privizli nisvejeye.", uz: "Olib kelingan go‘sht yangi emas." },
+    { ru: "Гость говорит, что суп холодный.", pr: "Gost gavarit, shto sup xalodni.", uz: "Mehmon sho‘rva sovuq deyapti." },
+    { ru: "У гостя аллергия на орехи.", pr: "U gostya alergiya na arexi.", uz: "Mehmonning yong‘oqqa allergiyasi bor.", sit: "Ofitsiant buyurtmani olib kelib, mehmon haqida ogohlantirdi." },
+    { ru: "Закончился рис, на плов не хватит.", pr: "Zakonchilsa ris, na plof ne xvatit.", uz: "Guruch tugadi, oshga yetmaydi." },
+    { ru: "Я сжёг лук, начну заново.", pr: "Ya zjok luk, nachnu zanova.", uz: "Piyozni kuydirib qo‘ydim, boshidan boshlayman. (ayol aytsa: «Я сожгла лук, начну заново»)" },
+    { ru: "Шеф, можно добавить это блюдо в меню?", pr: "Shef, mojna dabavit eta blyuda v menyu?", uz: "Shef, bu taomni menyuga qo‘shsa bo‘ladimi?" },
+    { ru: "Сколько порций готовить на банкет?", pr: "Skolka portsiy gatovit na banket?", uz: "Banket uchun necha porsiya tayyorlay?" },
+    { ru: "Я не успеваю, мне нужен помощник.", pr: "Ya ne uspivayu, mne nujen pamoshnik.", uz: "Ulgurmayapman, menga yordamchi kerak.", sit: "Bir vaqtda o‘nta buyurtma keldi, siz oshxonada yolg‘izsiz." },
+    { ru: "Надо заказать продукты на завтра.", pr: "Nada zakazat pradukti na zaftra.", uz: "Ertangi kunga mahsulot buyurtma qilish kerak." },
+    { ru: "Я хотел бы поговорить о зарплате.", pr: "Ya xatel bi pagavarit a zarplate.", uz: "Maosh haqida gaplashmoqchi edim. (ayol aytsa: «Я хотела бы поговорить о зарплате»)" },
+    { ru: "Сырое мясо режем на красной доске.", pr: "Siroye myasa rejem na krasnay daske.", uz: "Xom go‘shtni qizil taxtada to‘g‘raymiz." },
+    { ru: "Ножи не оставляй в раковине.", pr: "Naji ne astavlyay v rakavine.", uz: "Pichoqlarni rakovinada qoldirma." },
+    { ru: "Подпиши контейнер и поставь дату.", pr: "Patpishi kanteyner i pastaf datu.", uz: "Konteynerga yozib, sanasini qo‘y." },
+    { ru: "Без медицинской книжки работать нельзя.", pr: "Bez miditsinskay knijki rabotat nilzya.", uz: "Tibbiy daftarchasiz ishlash mumkin emas." },
+    { ru: "Если что-то горит, выключи газ.", pr: "Yesli shto-ta garit, viklyuchi gas.", uz: "Agar nimadir yonsa, gazni o‘chir." },
+    { ru: "Пол скользкий, ходи осторожно.", pr: "Pol skolzki, xadi astarojna.", uz: "Pol sirpanchiq, ehtiyot bo‘lib yur." },
+    { ru: "Завтра я выхожу с утра.", pr: "Zaftra ya vixaju s utra.", uz: "Ertaga ertalabdan ishga chiqaman." },
+    { ru: "Кухня открывается в десять, приходи в девять.", pr: "Kuxnya atkrivayetsa v desit, prixadi v devit.", uz: "Oshxona soat o‘nda ochiladi, to‘qqizda kel." },
+    { ru: "В субботу банкет, работаем до ночи.", pr: "F subotu banket, rabotayem da nochi.", uz: "Shanba kuni banket, tungacha ishlaymiz." }
+  ],
+  dialogues: [
+    {
+      title: "Muzlatgich buzildi",
+      a: "Oshpaz",
+      b: "Shef",
+      lines: [
+        ["a", "Шеф, у нас проблема: холодильник сломался.", "Shef, u nas prablema: xaladilnik slamalsa.", "Shef, muammo bor: muzlatgich buzildi."],
+        ["b", "Давно? Продукты тёплые?", "Davno? Pradukti tyopliye?", "Qachondan beri? Mahsulotlar iliqmi?"],
+        ["a", "Не знаю. Утром пришёл, а он уже не работал.", "Ne znayu. Utram prishol, a on uje ne rabotal.", "Bilmayman. Ertalab keldim, u allaqachon ishlamayotgan edi."],
+        ["b", "Проверь мясо и рыбу. Если пахнут — выбрасывай.", "Praver myasa i ribu. Yesli paxnut — vibrasivay.", "Go‘sht va baliqni tekshir. Hidi chiqqan bo‘lsa — tashlab yubor."],
+        ["a", "Мясо нормальное, а рыба уже плохая.", "Myasa narmalnaye, a riba uje ploxaya.", "Go‘sht yaxshi, baliq esa buzilib qolibdi."],
+        ["b", "Рыбу выбрось. Мясо переложи в морозилку.", "Ribu vibras. Myasa pirilaji v marazilku.", "Baliqni tashla. Go‘shtni muzlatish kamerasiga o‘tkaz."],
+        ["a", "А что делать с меню? Рыбы сегодня не будет.", "A shto delat s menyu? Ribi sivodnya ne budit.", "Menyu-chi? Bugun baliq bo‘lmaydi."],
+        ["b", "Скажи официантам, что рыбы нет. Я позвоню мастеру.", "Skaji afitsiantam, shto ribi net. Ya pazvanyu masteru.", "Ofitsiantlarga baliq yo‘qligini ayt. Men ustaga qo‘ng‘iroq qilaman."],
+        ["a", "Хорошо, шеф. И надо заказать продукты на завтра.", "Xarasho, shef. I nada zakazat pradukti na zaftra.", "Xo‘p, shef. Ertangi kunga mahsulot ham buyurtma qilish kerak."]
+      ]
+    },
+    {
+      title: "Banketga tayyorgarlik",
+      a: "Oshpaz",
+      b: "Menejer",
+      lines: [
+        ["b", "В субботу банкет на шестьдесят человек.", "F subotu banket na shizdisyat chilavek.", "Shanba kuni oltmish kishilik banket bor."],
+        ["a", "Что будем готовить?", "Shto budim gatovit?", "Nima tayyorlaymiz?"],
+        ["b", "Плов, салаты и шашлык. Сколько тебе нужно помощников?", "Plof, salati i shashlik. Skolka tibe nujna pamoshnikaf?", "Osh, salatlar va shashlik. Senga nechta yordamchi kerak?"],
+        ["a", "Двое. Один я не успею.", "Dvoye. Adin ya ne uspeyu.", "Ikkita. Yolg‘iz o‘zim ulgurmayman."],
+        ["b", "Хорошо. Начинаем в восемь утра, работаем до ночи.", "Xarasho. Nachinayem v vosim utra, rabotayem da nochi.", "Xo‘p. Ertalab sakkizda boshlaymiz, tungacha ishlaymiz."],
+        ["a", "А у гостей есть аллергия?", "A u gastey yest alergiya?", "Mehmonlarda allergiya bormi?"],
+        ["b", "У двоих аллергия на орехи. Готовь для них отдельно.", "U dvaix alergiya na arexi. Gatof dlya nix atdelna.", "Ikki kishida yong‘oqqa allergiya bor. Ular uchun alohida tayyorla."],
+        ["a", "Понял. Я подпишу их тарелки, чтобы не перепутать.", "Ponil. Ya patpishu ix tarelki, shtobi ne piriputat.", "Tushundim. Adashtirmaslik uchun ularning likopchalarini belgilab qo‘yaman."]
+      ]
+    }
+  ]
+});
+
+/* ==================== Yuqori (B2+) ==================== */
+/* Tez orada: Ruscha.addJobTab("kasb-oshpaz", "yuqori", { phrases: [...], dialogues: [...] }); */

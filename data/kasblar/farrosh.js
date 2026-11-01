@@ -1,8 +1,13 @@
-Ruscha.addTopic({
-  id: "kasb-farrosh",
-  section: "kasblar",
-  title: "Farrosh",
-  icon: "🧹",
+/*
+  Farrosh — job pack (Kasblar). One part per tab:
+    boshlangich = Boshlang‘ich (A1–A2) · orta = O‘rta (B1) · yuqori = Yuqori (B2+).
+  A tab without a part is shown as "Tez orada". See README.md → "Add a job pack".
+  Never change "id" or a published "ru": saved progress depends on them.
+*/
+Ruscha.addJob({ id: "kasb-farrosh", title: "Farrosh", icon: "🧹" });
+
+/* ==================== Boshlang‘ich (A1–A2) ==================== */
+Ruscha.addJobTab("kasb-farrosh", "boshlangich", {
   templates: [
     { ru: "Помой ...", pr: "Pamoy ...", uz: "...ni yuv", ex: ["Помой пол.", "Помой окна."] },
     { ru: "Протри ...", pr: "Pratri ...", uz: "...ni art", ex: ["Протри стол.", "Протри зеркало.", "Протри пыль."] },
@@ -69,3 +74,65 @@ Ruscha.addTopic({
     }
   ]
 });
+
+/* ==================== O‘rta (B1) ==================== */
+Ruscha.addJobTab("kasb-farrosh", "orta", {
+  phrases: [
+    { ru: "На втором этаже засорился унитаз.", pr: "Na ftarom etaje zasarilsa unitas.", uz: "Ikkinchi qavatda unitaz tiqilib qoldi." },
+    { ru: "В туалете течёт кран.", pr: "F tualete tichyot kran.", uz: "Hojatxonada jo‘mrak oqyapti." },
+    { ru: "Я разбил стакан, сейчас уберу.", pr: "Ya razbil stakan, sichas uberu.", uz: "Stakanni sindirib qo‘ydim, hozir yig‘ishtiraman. (ayol aytsa: «Я разбила стакан, сейчас уберу»)", sit: "Stolni artayotganda stakan qo‘lingizdan tushib sindi, yonida odamlar bor." },
+    { ru: "Гость жалуется на шум пылесоса.", pr: "Gost jaluyetsa na shum pilisosa.", uz: "Mehmon changyutgich shovqinidan shikoyat qilyapti." },
+    { ru: "Это пятно не отмывается.", pr: "Eta pitno ne atmivayetsa.", uz: "Bu dog‘ yuvilmayapti." },
+    { ru: "Потерялся ключ от подсобки.", pr: "Patiryalsa klyuch at patsopki.", uz: "Xo‘jalik xonasining kaliti yo‘qolib qoldi." },
+    { ru: "Мне не хватает времени на весь этаж.", pr: "Mne ne xvatayet vremini na ves etash.", uz: "Butun qavatga vaqtim yetmayapti.", sit: "Sizga yana beshta xona qo‘shishdi, smena tugashiga ulgurmayapsiz." },
+    { ru: "Можно мне другой участок?", pr: "Mojna mne drugoy uchastak?", uz: "Menga boshqa uchastka bersangiz bo‘ladimi?" },
+    { ru: "Я не брал вещи гостя.", pr: "Ya ne bral veshi gostya.", uz: "Mehmonning narsalarini olmadim. (ayol aytsa: «Я не брала вещи гостя»)", sit: "Mehmon xonasidan narsa yo‘qolibdi, administrator sizdan so‘rayapti." },
+    { ru: "Кто проверяет мою работу?", pr: "Kto praviryayet mayu rabotu?", uz: "Ishimni kim tekshiradi?" },
+    { ru: "Нужно купить новую швабру.", pr: "Nujna kupit novuyu shvabru.", uz: "Yangi shvabra sotib olish kerak." },
+    { ru: "С химией работай только в перчатках.", pr: "S ximiyey rabotay tolka f pirchatkax.", uz: "Kimyoviy vositalar bilan faqat qo‘lqopda ishla." },
+    { ru: "Хлорку не нюхай, проветри помещение.", pr: "Xlorku ne nyuxay, pravetri pamisheniye.", uz: "Xlorni hidlama, xonani shamollat." },
+    { ru: "Не вставай на стул, возьми стремянку.", pr: "Ne fstavay na stul, vazmi strimyanku.", uz: "Stul ustiga chiqma, narvonchani ol." },
+    { ru: "Мокрыми руками розетки не трогай.", pr: "Mokrimi rukami razetki ne trogay.", uz: "Ho‘l qo‘l bilan rozetkaga tegma." },
+    { ru: "Стекло и иголки — в отдельный пакет.", pr: "Stiklo i igolki — v atdelni paket.", uz: "Shisha va ignalar — alohida paketga." },
+    { ru: "Офис убираем после шести вечера.", pr: "Ofis ubirayem posli shesti vechira.", uz: "Ofisni kechki oltidan keyin tozalaymiz." },
+    { ru: "Генеральная уборка — по пятницам.", pr: "Giniralnaya uborka — pa pyatnitsam.", uz: "Umumiy tozalash — juma kunlari." },
+    { ru: "Я работаю через день.", pr: "Ya rabotayu chiriz den.", uz: "Kun ora ishlayman." },
+    { ru: "Можно взять отгул в среду?", pr: "Mojna vzyat atgul f sredu?", uz: "Chorshanba kuni javob olsam bo‘ladimi?" }
+  ],
+  dialogues: [
+    {
+      title: "Yo‘qolgan soat",
+      a: "Malika (farrosh)",
+      b: "Administrator",
+      lines: [
+        ["b", "Малика, гость из номера двести пять жалуется.", "Malika, gost iz nomira dvesti pyat jaluyetsa.", "Malika, ikki yuz beshinchi xonadagi mehmon shikoyat qilyapti."],
+        ["a", "Что случилось? Я убирала номер утром.", "Shto sluchilas? Ya ubirala nomir utram.", "Nima bo‘ldi? Xonani ertalab tozalagan edim."],
+        ["b", "Он говорит, что пропали часы.", "On gavarit, shto prapali chisi.", "U soati yo‘qolganini aytyapti."],
+        ["a", "Я не брала вещи гостя. Я только поменяла полотенца.", "Ya ne brala veshi gostya. Ya tolka paminyala palatintsa.", "Mehmonning narsalarini olmadim. Faqat sochiqlarni almashtirdim."],
+        ["b", "Я вам верю. Давайте вместе посмотрим в номере.", "Ya vam veryu. Davayte vmeste pasmotrim v nomire.", "Sizga ishonaman. Keling, xonani birga ko‘rib chiqamiz."],
+        ["a", "Хорошо. Может быть, они упали за кровать.", "Xarasho. Mojit bit, ani upali za kravat.", "Xo‘p. Balki karavot orqasiga tushib ketgandir."],
+        ["b", "Вот они! Под кроватью.", "Vot ani! Pat kravatyu.", "Mana! Karavot tagida ekan."],
+        ["a", "Слава богу! Можно я пойду убирать дальше?", "Slava bogu! Mojna ya paydu ubirat dalshe?", "Xudoga shukur! Tozalashni davom ettirsam bo‘ladimi?"],
+        ["b", "Да, конечно. Спасибо за помощь.", "Da, kanyeshna. Spasiba za pomash.", "Ha, albatta. Yordamingiz uchun rahmat."]
+      ]
+    },
+    {
+      title: "Vaqt yetmayapti",
+      a: "Farrosh",
+      b: "Menejer",
+      lines: [
+        ["a", "Можно с вами поговорить? Мне не хватает времени на весь этаж.", "Mojna s vami pagavarit? Mne ne xvatayet vremini na ves etash.", "Siz bilan gaplashsam bo‘ladimi? Butun qavatga vaqtim yetmayapti."],
+        ["b", "Почему? Раньше вы успевали.", "Pachimu? Ranshe vi uspivali.", "Nega? Avval ulgurardingiz."],
+        ["a", "Теперь на этаже двадцать номеров, а не пятнадцать.", "Tipyer na etaje dvatsat namirof, a ne pitnatsat.", "Endi qavatda o‘n beshta emas, yigirmata xona bor."],
+        ["b", "Понятно. Можно дать вам помощницу на утро.", "Panyatna. Mojna dat vam pamoshnitsu na utra.", "Tushunarli. Ertalabga sizga yordamchi bersak bo‘ladi."],
+        ["a", "Спасибо. И ещё: нужно купить новую швабру, старая сломалась.", "Spasiba. I yishyo: nujna kupit novuyu shvabru, staraya slamalas.", "Rahmat. Yana: yangi shvabra olish kerak, eskisi sinib qoldi."],
+        ["b", "Напишите список, что нужно, я закажу.", "Napishite spisak, shto nujna, ya zakaju.", "Nima kerakligini ro‘yxat qilib yozing, buyurtma beraman."],
+        ["a", "Хорошо. А генеральная уборка в эту пятницу будет?", "Xarasho. A giniralnaya uborka v etu pyatnitsu budit?", "Xo‘p. Bu juma umumiy tozalash bo‘ladimi?"],
+        ["b", "Да, как всегда. Начинаем в семь утра.", "Da, kak fsigda. Nachinayem f sem utra.", "Ha, har doimgidek. Ertalab yettida boshlaymiz."]
+      ]
+    }
+  ]
+});
+
+/* ==================== Yuqori (B2+) ==================== */
+/* Tez orada: Ruscha.addJobTab("kasb-farrosh", "yuqori", { phrases: [...], dialogues: [...] }); */

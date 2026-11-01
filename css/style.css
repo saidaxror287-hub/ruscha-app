@@ -205,6 +205,10 @@ header.top h1 { flex: 1; }
 .lvl[aria-pressed="true"] { background: var(--lvl); color: #fff; box-shadow: 0 6px 14px -8px var(--lvl); }
 .lvl[aria-pressed="true"] .lvl-name, .lvl[aria-pressed="true"] .lvl-sub { color: #fff; }
 @media (max-width: 360px) { .lvl-sub { font-size: 0.62rem; } }
+/* Job tabs (Boshlang‘ich · O‘rta · Yuqori) reuse the level-switch look. */
+.job-tabs { grid-template-columns: repeat(3, 1fr); margin: 4px 0 12px; }
+.job-tabs .lvl-name { font-size: 0.95rem; text-align: center; }
+.job-tabs .lvl-sub { white-space: normal; text-align: center; }
 
 .suggest {
   margin: 14px 0 0; padding: 14px 16px;

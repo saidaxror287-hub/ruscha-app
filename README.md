@@ -15,7 +15,7 @@ data/
     test.js          level test         (Ruscha.addTest) — optional
   a2/  …same folders…
   b1/, b2/, c1/      (create them when you add content)
-  kasblar/           job phrase packs — shown at every level
+  kasblar/           job packs (one file per job, 3 tabs inside) — shown at every level
 ```
 
 **Rules that keep users' saved progress working:**
@@ -88,10 +88,42 @@ That's all: the level switch, sections, search and progress pick it up automatic
 To add a completely new level, add one more line like
 `{ id: "c2", name: "C2", color: "#0f766e", desc: "…", files: [] }`.
 
-## Add a job pack (Kasblar)
+## Job packs (Kasblar)
 
-Copy `data/kasblar/quruvchi.js`, keep `section: "kasblar"`, give it an `id` starting with `kasb-`,
-and add the path to `RUSCHA_SHARED` in `data/levels.js`.
+There is one "👷 Kasblar" button and one file per job in `data/kasblar/` (e.g. `kuryer.js`).
+Inside each job there are 3 tabs, and each tab is its own part of the file:
+
+| Tab key        | Shown as       | For levels | Topic id (progress)   |
+|----------------|----------------|------------|-----------------------|
+| `boshlangich`  | Boshlang‘ich   | A1–A2      | `kasb-kuryer`         |
+| `orta`         | O‘rta          | B1         | `kasb-kuryer-orta`    |
+| `yuqori`       | Yuqori         | B2 and up  | `kasb-kuryer-yuqori`  |
+
+A job opens on the tab that matches the user's level; the user can switch tabs freely.
+Every tab has its own progress, learning, cards, test and dialogues. A tab with no part shows "Tez orada".
+(The tabs and their levels are listed in `JOB_TABS` at the top of `js/app.js`.)
+
+A job file looks like this:
+
+```js
+Ruscha.addJob({ id: "kasb-kuryer", title: "Kuryer", icon: "🛵" });
+
+Ruscha.addJobTab("kasb-kuryer", "boshlangich", { templates: [...], phrases: [...], dialogues: [...] });
+Ruscha.addJobTab("kasb-kuryer", "orta", { phrases: [...], dialogues: [...] });
+// Ruscha.addJobTab("kasb-kuryer", "yuqori", { ... });   <- not written yet
+```
+
+Phrases, dialogues and templates use the same format as topics (see "Add a topic").
+
+**Fill a tab** (e.g. Yuqori): in the job's file, replace the `Tez orada` comment at the end with
+`Ruscha.addJobTab("kasb-<job>", "yuqori", { phrases: [...], dialogues: [...] });`.
+Don't repeat phrases from the job's other tabs (or anywhere else in the app).
+
+**Add a new job:** copy `data/kasblar/quruvchi.js` to a new name, change the `id` (starting with `kasb-`)
+in `addJob` and in every `addJobTab`, change `title`, `icon` and the content, then add the path to
+`RUSCHA_SHARED` in `data/levels.js`.
+
+**Never change** a job's `id` or the `ru` of a published phrase: saved progress depends on them.
 
 ---
 
