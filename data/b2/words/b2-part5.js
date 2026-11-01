@@ -103,7 +103,7 @@ Ruscha.addWords({
         ["процесс", "pratsess", "jarayon"],
         ["этап", "etap", "bosqich"],
         ["стадия", "stadiya", "bosqich, davr"],
-        ["продолжение", "pradalzheniye", "davomi"],
+        ["продолжение", "pradaljeniye", "davomi"],
         ["окончание", "akanchaniye", "tugash, oxiri"],
         ["завершение", "zavirsheniye", "yakunlash"],
         ["состояние", "sastayaniye", "holat, ahvol"],
