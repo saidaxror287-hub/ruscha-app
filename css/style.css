@@ -92,6 +92,15 @@ input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
 .loading { text-align: center; padding: 80px 0; color: var(--muted); }
 
+/* First load and "Yuklanmoqda…" on screens that wait for other levels: progress bar, or an error with «Qayta urinish». */
+.load-box { max-width: 340px; margin: 72px auto 0; text-align: center; }
+.load-title { color: var(--muted); margin: 0 0 14px; }
+.load-bar { height: 10px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.load-fill { display: block; height: 100%; width: 0; border-radius: inherit; background: var(--primary); transition: width 0.25s ease; }
+.load-pct { display: block; margin-top: 8px; color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+.load-error { margin-top: 48px; }
+.load-error .btn { width: 100%; margin-top: 12px; }
+
 /* ---------- Motion ---------- */
 @keyframes view-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @keyframes rise-in { from { opacity: 0; transform: translateY(14px) scale(0.985); } to { opacity: 1; transform: none; } }

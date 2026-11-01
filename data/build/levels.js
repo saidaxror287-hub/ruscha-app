@@ -1,0 +1,210 @@
+/*
+  Levels and every content file the app loads. See README.md for step-by-step instructions.
+
+  Each level has the same folders:
+    data/<level>/topics/      phrase topics      (Ruscha.addTopic)
+    data/<level>/words/       word lists         (Ruscha.addWords)
+    data/<level>/listening/   listening texts    (Ruscha.addListening)
+    data/<level>/test.js      level test         (Ruscha.addTest)
+
+  A level with an empty "files" list is shown as "Tez orada".
+  Topics appear in the order they are listed here.
+  "groups" (optional) sorts a level's topics into big tiles on the Mavzular screen.
+*/
+var RUSCHA_LEVELS = [
+  {
+    id: "a1", name: "A1", color: "#15803d", desc: "Yashab qolish",
+    groups: [
+      { id: "kundalik", icon: "🏡", title: "Kundalik hayot", topics: ["tanishuv", "raqamlar", "oila", "ob-havo", "bayramlar"] },
+      { id: "xarid", icon: "🛍️", title: "Xarid va ovqat", topics: ["bozor", "dokon", "kafe"] },
+      { id: "shahar", icon: "🏙️", title: "Shahar va safar", topics: ["transport", "yol-sorash", "aeroport", "mehmonxona", "pochta", "sartarosh"] },
+      { id: "salomatlik", icon: "🩺", title: "Sog‘liq va xavfsizlik", topics: ["shifokor", "favqulodda"] },
+      { id: "hujjat", icon: "📄", title: "Hujjatlar va pul", topics: ["hujjatlar", "bank", "telefon", "uy-ijarasi", "ish", "maktab"] }
+    ],
+    files: [
+      "data/a1/topics/tanishuv.js",
+      "data/a1/topics/raqamlar.js",
+      "data/a1/topics/bozor.js",
+      "data/a1/topics/dokon.js",
+      "data/a1/topics/kafe.js",
+      "data/a1/topics/transport.js",
+      "data/a1/topics/yol-sorash.js",
+      "data/a1/topics/shifokor.js",
+      "data/a1/topics/ish.js",
+      "data/a1/topics/uy-ijarasi.js",
+      "data/a1/topics/bank.js",
+      "data/a1/topics/telefon.js",
+      "data/a1/topics/hujjatlar.js",
+      "data/a1/topics/oila.js",
+      "data/a1/topics/ob-havo.js",
+      "data/a1/topics/favqulodda.js",
+      "data/a1/topics/aeroport.js",
+      "data/a1/topics/mehmonxona.js",
+      "data/a1/topics/pochta.js",
+      "data/a1/topics/sartarosh.js",
+      "data/a1/topics/maktab.js",
+      "data/a1/topics/bayramlar.js",
+
+      "data/a1/words/a1-part1.js",
+      "data/a1/words/a1-part2.js",
+      "data/a1/words/a1-part3.js",
+      "data/a1/words/a1-part4.js"
+    ]
+  },
+  {
+    id: "a2", name: "A2", color: "#0a53c4", desc: "Kundalik hayot",
+    files: [
+      "data/a2/topics/ish-kasb.js",
+      "data/a2/topics/uy-joy.js",
+      "data/a2/topics/soglik.js",
+      "data/a2/topics/sayohat.js",
+      "data/a2/topics/dostlar.js",
+      "data/a2/topics/telefonda.js",
+      "data/a2/topics/bank-hujjatlar.js",
+      "data/a2/topics/xarid-qaytarish.js",
+      "data/a2/topics/kafe-mehmon.js",
+      "data/a2/topics/shahar-transport.js",
+      "data/a2/topics/havo-fasllar.js",
+      "data/a2/topics/talim-kurslar.js",
+      "data/a2/topics/oila-bayramlar.js",
+      "data/a2/topics/sport-salomatlik.js",
+      "data/a2/topics/internet-xarid.js",
+      "data/a2/topics/muammo-shikoyat.js",
+
+      "data/a2/words/a2-part1.js",
+      "data/a2/words/a2-part2.js",
+      "data/a2/words/a2-part3.js",
+      "data/a2/words/a2-part4.js",
+
+      "data/a2/listening/yangi-ish.js",
+      "data/a2/listening/kvartira.js",
+      "data/a2/listening/shifokorda.js",
+      "data/a2/listening/dam-olish.js",
+      "data/a2/listening/qongiroq.js",
+      "data/a2/listening/vokzal.js",
+      "data/a2/listening/metro.js",
+      "data/a2/listening/supermarket.js",
+      "data/a2/listening/dost-xabari.js",
+      "data/a2/listening/ustaxona.js",
+      "data/a2/listening/dorixona.js",
+      "data/a2/listening/kuryer-kuni.js",
+      "data/a2/listening/maktabdan.js",
+      "data/a2/listening/kuryer-xabari.js",
+      "data/a2/listening/tugilgan-kun.js",
+
+      "data/a2/test.js"
+    ]
+  },
+  { id: "b1", name: "B1", color: "#7c3aed", desc: "Erkin muloqot", files: [
+      "data/b1/topics/ish-izlash.js",
+      "data/b1/topics/ish-muammolar.js",
+      "data/b1/topics/ijara-kommunal.js",
+      "data/b1/topics/shifoxona-sugurta.js",
+      "data/b1/topics/bank-kredit.js",
+      "data/b1/topics/migratsiya.js",
+      "data/b1/topics/farzandlar-talimi.js",
+      "data/b1/topics/politsiya-huquq.js",
+      "data/b1/topics/hayotim.js",
+      "data/b1/topics/rejalar-orzular.js",
+      "data/b1/topics/fikr-bahs.js",
+      "data/b1/topics/yangiliklar.js",
+      "data/b1/topics/tatil-rejasi.js",
+      "data/b1/topics/dostlik.js",
+      "data/b1/topics/soglom-turmush.js",
+      "data/b1/topics/madaniyat-kino.js",
+
+      "data/b1/listening/mfc-telefon.js",
+      "data/b1/listening/bank-karta.js",
+      "data/b1/listening/poliklinika-xabar.js",
+      "data/b1/listening/kadrlar-xabari.js",
+      "data/b1/listening/radio-yangiliklar.js",
+      "data/b1/listening/ob-havo-prognoz.js",
+      "data/b1/listening/aeroport.js",
+      "data/b1/listening/uy-elon.js",
+      "data/b1/listening/birinchi-ish.js",
+      "data/b1/listening/ish-suhbati.js",
+      "data/b1/listening/shifokor-qabuli.js",
+      "data/b1/listening/kvartira-korish.js",
+      "data/b1/listening/oqituvchi-qongiroq.js",
+      "data/b1/listening/toy-hikoyasi.js",
+      "data/b1/listening/piter-sayohat.js",
+
+      "data/b1/speaking/fikr-1.js",
+      "data/b1/speaking/fikr-2.js",
+      "data/b1/speaking/fikr-3.js",
+
+      "data/b1/words/b1-part1.js",
+      "data/b1/words/b1-part2.js",
+      "data/b1/words/b1-part3.js",
+      "data/b1/words/b1-part4.js",
+      "data/b1/words/b1-part5.js",
+
+      "data/b1/test.js"
+    ] },
+  { id: "b2", name: "B2", color: "#c2410c", desc: "Ishonchli", files: [
+      "data/b2/topics/muzokaralar.js",
+      "data/b2/topics/maosh-lavozim.js",
+      "data/b2/topics/yurist.js",
+      "data/b2/topics/mashina.js",
+      "data/b2/topics/rasmiy-shikoyat.js",
+      "data/b2/topics/shifokor-batafsil.js",
+      "data/b2/topics/biznes-boshlash.js",
+      "data/b2/topics/ota-onalar-yigilishi.js",
+      "data/b2/topics/yangiliklar-jamiyat.js",
+      "data/b2/topics/texnologiya.js",
+      "data/b2/topics/ekologiya-shahar.js",
+      "data/b2/topics/oila-avlodlar.js",
+      "data/b2/topics/talim-rivojlanish.js",
+      "data/b2/topics/tibbiyot-tizimi.js",
+      "data/b2/topics/madaniyat-anana.js",
+      "data/b2/topics/pul-tejash.js",
+
+      "data/b2/words/b2-part1.js",
+      "data/b2/words/b2-part2.js",
+      "data/b2/words/b2-part3.js",
+      "data/b2/words/b2-part4.js",
+      "data/b2/words/b2-part5.js",
+      "data/b2/words/b2-part6.js",
+      "data/b2/words/b2-part7.js",
+      "data/b2/words/b2-part8.js",
+      "data/b2/words/b2-part9.js",
+      "data/b2/words/b2-part10.js",
+
+      "data/b2/jonli/tushlik.js",
+      "data/b2/jonli/uy-egasi.js",
+      "data/b2/jonli/ish-suhbati.js",
+      "data/b2/jonli/pul-podkast.js",
+      "data/b2/jonli/avariya.js",
+      "data/b2/jonli/poliklinika.js",
+      "data/b2/jonli/mfc.js",
+      "data/b2/jonli/taksida.js",
+      "data/b2/jonli/oqituvchi.js",
+      "data/b2/jonli/qurilish-bozori.js",
+      "data/b2/jonli/radio.js",
+      "data/b2/jonli/dugonalar.js",
+      "data/b2/jonli/maosh.js",
+      "data/b2/jonli/buyurtma.js",
+      "data/b2/jonli/usta.js",
+      "data/b2/jonli/qisqartmalar.js",
+
+      "data/b2/test.js"
+    ] },
+  { id: "c1", name: "C1", color: "#be123c", desc: "Mukammal", files: [] }
+];
+
+/* Job phrase packs (Kasblar): shown at every level. Keep section: "kasblar" in these files. */
+var RUSCHA_SHARED = [
+  "data/kasblar/quruvchi.js",
+  "data/kasblar/kuryer.js",
+  "data/kasblar/taksi.js",
+  "data/kasblar/sotuvchi.js",
+  "data/kasblar/oshpaz.js",
+  "data/kasblar/farrosh.js",
+  "data/kasblar/omborchi.js"
+];
+
+/* All files together (the offline copy in sw.js uses this list). */
+var RUSCHA_FILES = RUSCHA_LEVELS.reduce(function (all, l) { return all.concat(l.files); }, RUSCHA_SHARED.slice());
+
+/* ---- Added by tools/build-data.js (do not edit here: edit data/levels.js and run the script) ---- */
+var RUSCHA_BUNDLES = [ { "id": "shared", "level": "", "file": "data/build/shared.js", "bytes": 186680, "v": "0a6de16c19" }, { "id": "a1", "level": "a1", "file": "data/build/a1.js", "bytes": 202810, "v": "98553aac52" }, { "id": "a2", "level": "a2", "file": "data/build/a2.js", "bytes": 242887, "v": "89b998822a" }, { "id": "b1", "level": "b1", "file": "data/build/b1.js", "bytes": 478611, "v": "ee5f1f1b26" }, { "id": "b2", "level": "b2", "file": "data/build/b2.js", "bytes": 574837, "v": "72a1401604" } ];

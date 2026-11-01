@@ -7,8 +7,9 @@
 const VERSION = "2026-11-01-2";
 const CACHE = "ruscha-" + VERSION;
 
-importScripts("data/levels.js"); // defines RUSCHA_FILES: every content file of every level
+importScripts("data/build/levels.js"); // defines RUSCHA_BUNDLES: one content file per level (made by tools/build-data.js)
 
+/* The app itself, plus the content bundles (a new bundle has a new ?v=, so no old copy is ever used). */
 const FILES = [
   "./",
   "index.html",
@@ -20,17 +21,25 @@ const FILES = [
   "js/speech.js",
   "js/app.js",
   "js/pwa.js",
-  "data/levels.js",
+  "data/build/levels.js",
   "icons/favicon.png",
   "icons/icon-192.png",
   "icons/icon-512.png",
   "icons/icon-maskable-512.png",
   "icons/apple-touch-icon.png"
-].concat(self.RUSCHA_FILES || []);
+].concat((self.RUSCHA_BUNDLES || []).map(b => b.file + "?v=" + b.v));
 
-/* Download all files into a new cache. The new version waits until the user taps "Yangilash". */
+/* Put all files into a new cache. The new version waits until the user taps "Yangilash".
+   First visit: js/pwa.js starts this only after the app has loaded every level, so the files are
+   taken from the browser's own cache (nothing is downloaded twice, the first screen is not slowed down).
+   Update: fresh copies are downloaded in the background while the old version keeps working. */
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES.map(f => new Request(f, { cache: "reload" })))));
+  e.waitUntil(
+    caches.keys().then(keys => {
+      const update = keys.some(k => k.startsWith("ruscha-"));
+      return caches.open(CACHE).then(c => c.addAll(FILES.map(f => new Request(f, { cache: update ? "reload" : "default" }))));
+    })
+  );
 });
 
 /* Delete caches of older versions. */

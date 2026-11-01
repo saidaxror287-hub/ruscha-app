@@ -1,7 +1,13 @@
 # Rusbek — rus tili o‘zbeklar uchun
 
-A simple Russian course app for Uzbek speakers. Plain HTML + JavaScript, no build step.
+A simple Russian course app for Uzbek speakers. Plain HTML + JavaScript.
 It works offline on phones (PWA) and is published on GitHub Pages.
+
+> **After changing data, run `node tools/build-data.js`.**
+> It combines the files of each level into one file (`data/build/a1.js`, `a2.js`, …, `shared.js` for Kasblar),
+> so phones download 6 files instead of ~150. You keep editing the files in `data/` as before;
+> the app only reads `data/build/`, so a change shows up only after you run the script.
+> `node tools/build-data.js --check` tells you if `data/build` is out of date.
 
 ## How the content is organised
 
@@ -16,7 +22,11 @@ data/
   a2/  …same folders…
   b1/, b2/, c1/      (create them when you add content)
   kasblar/           job packs (one file per job, 3 tabs inside) — shown at every level
+  build/             made by tools/build-data.js — never edit by hand
 ```
+
+The app first loads Kasblar and the user's level, opens, and loads the other levels in the background.
+Everything in a level's file belongs to that level, whatever order the files arrive in.
 
 **Rules that keep users' saved progress working:**
 
@@ -130,6 +140,7 @@ in `addJob` and in every `addJobTab`, change `title`, `icon` and the content, th
 ## Try it on your computer
 
 ```
+node tools/build-data.js
 python -m http.server 8766
 ```
 
@@ -137,7 +148,6 @@ Then open http://localhost:8766 in Chrome or Edge.
 
 ## Publish an update
 
-1. In `sw.js`, change `VERSION` (for example to today's date). Phones then show "Yangi versiya bor".
-2. Commit and push to GitHub. GitHub Pages updates in about a minute.
-
-Every file listed in `data/levels.js` must exist — if one is missing, phones cannot download the update.
+1. Run `node tools/build-data.js` (it stops with a message if a file is missing or broken).
+2. In `sw.js`, change `VERSION` (for example to today's date). Phones then show "Yangi versiya bor".
+3. Commit (including `data/build/`) and push to GitHub. GitHub Pages updates in about a minute.

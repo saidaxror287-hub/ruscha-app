@@ -40,7 +40,13 @@
     document.body.appendChild(bar);
   }
 
-  window.addEventListener("load", () => {
+  /* Start the offline copy only after the app has loaded every level (js/app.js sends "rusbek:loaded"),
+     so on the first visit it does not compete with the first screen, and the files come from the browser cache.
+     If some level cannot be loaded, start anyway a minute after the page has loaded. */
+  let started = false;
+  function start() {
+    if (started) return;
+    started = true;
     navigator.serviceWorker.register("sw.js").then(reg => {
       if (reg.waiting && navigator.serviceWorker.controller) showUpdate(reg.waiting);
       reg.addEventListener("updatefound", () => {
@@ -55,5 +61,8 @@
         if (document.visibilityState === "visible") reg.update().catch(() => {});
       });
     }).catch(() => { /* app still works, just not offline */ });
-  });
+  }
+  if (window.RusbekLoaded) start();
+  else window.addEventListener("rusbek:loaded", start);
+  window.addEventListener("load", () => setTimeout(start, 60000));
 })();

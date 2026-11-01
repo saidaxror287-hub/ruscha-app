@@ -6,6 +6,7 @@
      Content registry. Each file in data/ calls Ruscha.addTopic, addWords, addListening or addTest.
      Everything a file adds belongs to the level that file is listed under in data/levels.js
      (Kasblar files belong to no level and are shown at every level).
+     The app loads the files through bundles made by tools/build-data.js (see "Loading" below).
      ===================================================================== */
   const R = (window.Ruscha = {
     levels: window.RUSCHA_LEVELS || [], levelById: {},
@@ -14,7 +15,11 @@
     items: {}, lines: {}, loadErrors: []
   });
   R.levels.forEach(l => { R.levelById[l.id] = l; });
-  let loadingLevel = ""; // level of the file being loaded right now
+  let loadingLevel = ""; // level of the bundle being run right now
+  let loadingRank = 0;   // its place in data/levels.js (Kasblar = 0, A1 = 1, …): keeps lists in that order
+  let ord = 0;
+  /* Order key: bundles can arrive in any order, but lists and search stay in data/levels.js order. */
+  function nextOrd() { return loadingRank * 1e7 + (++ord); }
 
   /* Normalize text for search and comparison (Russian + Uzbek Latin, apostrophes ignored). */
   function sn(s) {
@@ -27,10 +32,14 @@
       .trim();
   }
 
+  /* The same Russian text twice: the first place in data/levels.js order wins, even if its level arrived later. */
   function addItem(kind, ru, pr, uz, sit, src) {
     const id = kind + ":" + sn(ru);
-    if (R.items[id]) return R.items[id];
-    const it = { id, kind, ru, pr: pr || "", uz: uz || "", sit: sit || "", src, level: src.level };
+    const old = R.items[id];
+    if (old && old._r <= loadingRank) return old;
+    const it = old || {};
+    delete it.theme;
+    Object.assign(it, { id, kind, ru, pr: pr || "", uz: uz || "", sit: sit || "", src, level: src.level, _r: loadingRank, _o: nextOrd() });
     it.search = sn(ru + " " + it.pr + " " + it.uz);
     R.items[id] = it;
     return it;
@@ -41,7 +50,10 @@
      The line object gets .sv = its saveable item. */
   function addLine(l, src, where) {
     const id = "d:" + sn(l.ru);
-    if (!R.lines[id]) R.lines[id] = { id, kind: "d", ru: l.ru, pr: l.pr || "", uz: l.uz || "", sit: "", src, level: src.level, where, who: l.who };
+    const old = R.lines[id];
+    if (!old || old._r > loadingRank) {
+      R.lines[id] = Object.assign(old || {}, { id, kind: "d", ru: l.ru, pr: l.pr || "", uz: l.uz || "", sit: "", src, level: src.level, where, who: l.who, _r: loadingRank, _o: nextOrd() });
+    }
     l.sv = R.lines[id];
   }
   /* Any card or line by its id (undefined if that content was removed). */
@@ -187,21 +199,155 @@
     R.tests[loadingLevel] = x;
   };
 
-  /* Load every file from data/levels.js, one after another (works from file://). */
-  function loadFiles(done) {
-    const files = (window.RUSCHA_SHARED || []).map(f => ({ f, level: "" }))
-      .concat(...R.levels.map(l => l.files.map(f => ({ f, level: l.id }))));
-    let i = 0;
-    (function next() {
-      if (i >= files.length) { loadingLevel = ""; finishJobs(); return done(); }
-      const f = files[i].f;
-      loadingLevel = files[i++].level;
+  /* =====================================================================
+     Loading. tools/build-data.js puts all files of a level into one bundle (data/build/a1.js, a2.js, …,
+     and data/build/shared.js for Kasblar), listed in RUSCHA_BUNDLES (data/build/levels.js).
+     A bundle calls Ruscha.bundle(id, [[file, function], …]). Everything inside gets the level of that
+     bundle, so bundles can be downloaded in parallel and arrive in any order.
+     Start: Kasblar + the chosen level → the app opens; the other levels follow in the background.
+     ===================================================================== */
+  const BUNDLES = (window.RUSCHA_BUNDLES || []).map((b, rank) => Object.assign({}, b, { rank, state: "idle", got: 0 }));
+  const bundleById = {};
+  BUNDLES.forEach(b => { bundleById[b.id] = b; });
+  const STALL_MS = 25000; // no new data for this long → show the error with «Qayta urinish»
+  const progressFns = new Set();
+  function progressChanged() { progressFns.forEach(fn => fn()); }
+  function allLoaded() { return BUNDLES.every(b => b.state === "done"); }
+  /* Is this level's content here yet? (A level without files has no bundle.) */
+  function loaded(L) { const b = L && bundleById[L.id]; return !b || b.state === "done"; }
+
+  R.bundle = function (id, parts) {
+    const b = bundleById[id];
+    if (!b || b.state === "done") return;
+    loadingLevel = b.level;
+    loadingRank = b.rank;
+    (parts || []).forEach(p => {
+      try { p[1](); } catch (e) { R.loadErrors.push(p[0]); }
+    });
+    if (!b.level) finishJobs(); // the shared bundle holds every job
+    loadingLevel = "";
+    // New entries go to their place in data/levels.js order.
+    [R.topics, R.lists, R.listening, R.live, R.shortcuts, R.speaking, R.jobs].forEach(list => {
+      list.forEach(x => { if (x._o == null) x._o = nextOrd(); });
+      list.sort((x, y) => x._o - y._o);
+    });
+    const byOrd = (x, y) => x[1]._o - y[1]._o;
+    R.items = Object.fromEntries(Object.entries(R.items).sort(byOrd));
+    R.lines = Object.fromEntries(Object.entries(R.lines).sort(byOrd));
+    b.state = "done";
+    b.got = b.bytes;
+    progressChanged();
+    if (ready) whenAllLoaded();
+  };
+
+  /* Run a downloaded bundle (as a script, so errors point to the right file in the browser console). */
+  function runBundle(text, url) {
+    const s = document.createElement("script");
+    s.textContent = text + "\n//# sourceURL=" + url;
+    document.head.appendChild(s);
+    s.remove();
+  }
+  /* Over http(s): fetch, so the progress bar can count the bytes as they arrive. */
+  function viaFetch(b, url) {
+    const ctl = window.AbortController ? new AbortController() : null;
+    let timer = 0;
+    const alive = () => { clearTimeout(timer); timer = setTimeout(() => { if (ctl) ctl.abort(); }, STALL_MS); };
+    alive();
+    return fetch(url, ctl ? { signal: ctl.signal } : undefined)
+      .then(res => {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        if (!res.body || !res.body.getReader || !window.TextDecoder) return res.text();
+        const reader = res.body.getReader();
+        const dec = new TextDecoder();
+        let text = "";
+        const pump = () => reader.read().then(r => {
+          if (r.done) return text + dec.decode();
+          alive();
+          b.got += r.value.length;
+          progressChanged();
+          text += dec.decode(r.value, { stream: true });
+          return pump();
+        });
+        return pump();
+      })
+      .then(text => { clearTimeout(timer); runBundle(text, url); }, e => { clearTimeout(timer); throw e; });
+  }
+  /* From a file on disk (file://) fetch is not allowed, so use a <script> tag. */
+  function viaScript(b, url) {
+    return new Promise((ok, fail) => {
       const s = document.createElement("script");
-      s.src = f;
-      s.onload = next;
-      s.onerror = () => { R.loadErrors.push(f); next(); };
-      document.body.appendChild(s);
-    })();
+      s.src = url;
+      s.onload = ok;
+      s.onerror = () => { s.remove(); fail(new Error("not found: " + url)); };
+      document.head.appendChild(s);
+    });
+  }
+  /* Download a bundle once (a failed one is tried again on the next call). */
+  function loadBundle(b) {
+    if (b.state === "done") return Promise.resolve();
+    if (b.promise) return b.promise;
+    b.state = "loading";
+    b.got = 0;
+    const local = location.protocol === "file:" || !window.fetch;
+    const url = local ? b.file : b.file + "?v=" + b.v; // a new version gets a new address, so no old copy is used
+    b.promise = (local ? viaScript(b, url) : viaFetch(b, url))
+      .then(() => { if (b.state !== "done") throw new Error("bundle did not run: " + url); })
+      .catch(e => {
+        if (b.state !== "done") { b.state = "error"; b.got = 0; }
+        b.promise = null;
+        progressChanged();
+        throw e;
+      });
+    return b.promise;
+  }
+  /* The other levels, in the background (after the first screen is shown). */
+  function loadRest() {
+    Promise.all(BUNDLES.map(b => loadBundle(b).catch(() => {}))).then(whenAllLoaded);
+  }
+  window.addEventListener("online", () => { if (ready && !allLoaded()) loadRest(); });
+
+  /* Everything is here: update the numbers that count all levels, and let js/pwa.js start the offline copy. */
+  let allAnnounced = false;
+  function whenAllLoaded() {
+    if (allAnnounced || !allLoaded()) return;
+    allAnnounced = true;
+    refreshScreenAfterLoad();
+    window.RusbekLoaded = true;
+    window.dispatchEvent(new Event("rusbek:loaded"));
+  }
+
+  /* "⏳ Yuklanmoqda…" with a progress bar until the bundles are here, then done().
+     If a download fails: an Uzbek message and «Qayta urinish». Leaving the screen cancels done(). */
+  function loadingView(list, done) {
+    const tok = viewTok;
+    const size = b => b.bytes || 1;
+    const total = list.reduce((n, b) => n + size(b), 0);
+    const fill = h("span", { class: "load-fill" });
+    const pct = h("span", { class: "load-pct" }, "0%");
+    const bar = h("div", { class: "load-bar", role: "progressbar", "aria-label": "Yuklanmoqda", "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": "0" }, fill);
+    const update = () => {
+      const got = list.reduce((n, b) => n + Math.min(b.state === "done" ? size(b) : b.got, size(b)), 0);
+      const p = Math.min(100, Math.round((got / total) * 100));
+      fill.style.width = p + "%";
+      pct.textContent = p + "%";
+      bar.setAttribute("aria-valuenow", String(p));
+    };
+    show(h("div", { class: "load-box" }, h("p", { class: "load-title" }, "⏳ Yuklanmoqda…"), bar, pct));
+    progressFns.add(update);
+    update();
+    Promise.all(list.map(loadBundle)).then(() => {
+      progressFns.delete(update);
+      if (tok === viewTok) done();
+    }, () => {
+      progressFns.delete(update);
+      if (tok !== viewTok) return;
+      show(h("div", { class: "load-box load-error", role: "alert" },
+        h("div", { class: "big-ic", "aria-hidden": "true" }, "📡"),
+        h("h2", null, "Yuklab bo‘lmadi"),
+        h("p", null, "Darslar yuklanmadi. Internet aloqasini tekshiring va qayta urinib ko‘ring."),
+        h("button", { type: "button", class: "btn primary big", onclick: () => { if (tok === viewTok) loadingView(list, done); } },
+          h("span", { "aria-hidden": "true" }, "🔄"), " Qayta urinish")));
+    });
   }
 
   /* =====================================================================
@@ -338,9 +484,11 @@
     Speech.stopAll();
     leaveFns.splice(0).forEach(fn => { try { fn(); } catch (e) { /* ignore */ } });
   }
+  let quietShow = false; // true: redraw the same screen without the entrance animation
   function show() {
     app.textContent = "";
     add(app, Array.from(arguments));
+    if (quietShow) return;
     // Entrance animation: the screen fades up, cards follow one after another (off for "reduce motion", see CSS).
     app.classList.remove("enter");
     void app.offsetWidth;
@@ -845,7 +993,7 @@
   function ofLevel(L, list) { return list.filter(x => x.level === L.id); }
   function levelTopics(L) { return ofLevel(L, R.topics); }
   function levelItems(L) { return levelTopics(L).concat(ofLevel(L, R.lists)).flatMap(s => s.items); }
-  function hasContent(L) { return levelItems(L).length > 0 || ofLevel(L, R.listening).length > 0 || ofLevel(L, R.speaking).length > 0 || ofLevel(L, R.live).length > 0 || !!R.tests[L.id]; }
+  function hasContent(L) { if (!loaded(L)) return L.files.length > 0; return levelItems(L).length > 0 || ofLevel(L, R.listening).length > 0 || ofLevel(L, R.speaking).length > 0 || ofLevel(L, R.live).length > 0 || !!R.tests[L.id]; }
   function levelPct(L) {
     const items = levelItems(L);
     return items.length ? Math.round((seenIn(items) / items.length) * 100) : 0;
@@ -967,7 +1115,7 @@
         onclick: () => { if (L.id !== cur.id) { setLevel(L.id); route(); } }
       },
         h("span", { class: "lvl-name" }, L.name),
-        h("span", { class: "lvl-sub" }, hasContent(L) ? levelPct(L) + "%" : "Tez orada"))));
+        h("span", { class: "lvl-sub" }, !hasContent(L) ? "Tez orada" : loaded(L) ? levelPct(L) + "%" : "…"))));
   }
 
   function home() {
@@ -2527,13 +2675,54 @@
      Router
      ===================================================================== */
   let ready = false;
+  let screenNow = "";
+
+  /* Bundles a screen needs before it can be drawn. Search, ⭐ Saqlanganlar, Takrorlash and the level check
+     use every level; the other screens need Kasblar + the chosen level (or the level of the opened content). */
+  function needs(p) {
+    const one = id => (bundleById[id] ? [bundleById[id]] : []);
+    const base = one("shared").concat(one(level().id));
+    const src = ["learn", "cards", "quiz"].includes(p[0]);
+    if (["search", "saved", "review"].includes(p[0]) || (p[0] === "daraja" && p[1] === "test") || (src && p[1] === "f")) return BUNDLES;
+    if (["daraja", "help", "ai"].includes(p[0])) return [];
+    if (p[0] === "leveltest") return one(p[1]);
+    if (src && p[1] === "l") return one(p[2]);
+    const id = p[1];
+    const known = !id ? true
+      : src ? !!srcOf(p[1], p[2])
+      : p[0] === "topic" || p[0] === "dialogs" || p[0] === "dialog" ? !!R.topicById[id]
+      : p[0] === "job" ? !!R.jobById[id]
+      : p[0] === "words" ? !!R.listById[id]
+      : p[0] === "short" || p[0] === "sq" ? !!R.shortcutById[id]
+      : p[0] === "listen" || p[0] === "live" || p[0] === "lq" ? !!R.listeningById[id]
+      : p[0] === "speak" ? !!R.speakingById[id]
+      : true;
+    return known ? base : BUNDLES; // a link to another level's content: wait for everything
+  }
+
+  /* All levels arrived while the app is open: refresh the bottom badges and the home screen numbers. */
+  function refreshScreenAfterLoad() {
+    if (!ready) return;
+    updateBottomNav(screenNow);
+    if (screenNow === "home" && app.querySelector(".hero")) {
+      const y = window.scrollY;
+      newView();
+      quietShow = true;
+      try { home(); } finally { quietShow = false; }
+      window.scrollTo(0, y);
+    }
+  }
+
   function route() {
     if (!ready) return;
     newView();
     window.scrollTo(0, 0);
     const p = (location.hash || "").replace(/^#\/?/, "").split("/").filter(Boolean).map(decodeURIComponent);
-    updateBottomNav(p[0] || "home");
+    screenNow = p[0] || "home";
+    updateBottomNav(screenNow);
     if (p[0] !== "daraja") document.body.classList.remove("placing");
+    const wait = needs(p).filter(b => b.state !== "done");
+    if (wait.length) return loadingView(wait, route);
     switch (p[0]) {
       case "daraja": return placementRoute(p);
       case "topics": return topicsScreen();
@@ -2565,9 +2754,17 @@
     }
   }
 
-  loadFiles(() => {
+  /* Start: Kasblar + the chosen level (A1 for a new user), then the first screen, then the other levels. */
+  if (!BUNDLES.length) {
+    show(h("div", { class: "load-box load-error", role: "alert" },
+      h("h2", null, "Yuklab bo‘lmadi"),
+      h("p", null, "Darslar ro‘yxati topilmadi. Sahifani yangilang.")));
+    return;
+  }
+  loadingView([bundleById.shared, bundleById[level().id]].filter(Boolean), () => {
     buildBottomNav();
     ready = true;
     route();
+    loadRest();
   });
 })();
