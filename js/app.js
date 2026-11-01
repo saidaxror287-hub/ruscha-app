@@ -2004,6 +2004,10 @@
         h("li", null, "Kartochkalarda halol javob bering: «Bilaman», «Qiyin» yoki «Bilmayman». Qiyin iboralar tez-tez qaytadi."),
         h("li", null, "Mavzulardagi «Suhbatlar»da rol o‘ynab, haqiqiy vaziyatga tayyorlaning."),
         h("li", null, "Pastdagi tugmalar har doim ko‘rinadi: 🏠 Bosh sahifa, 🔁 Takrorlash, 🔍 Qidirish, ❓ Yordam. «⬅ Orqaga» bir qadam orqaga qaytaradi.")),
+      h("button", { type: "button", class: "tile wide", onclick: () => go("#/daraja") },
+        h("span", { class: "tile-ic", "aria-hidden": "true" }, "🎯"),
+        h("span", { class: "tile-title" }, "Darajani qayta aniqlash"),
+        h("span", { class: "tile-sub" }, "3 daqiqalik tekshiruv. Natijalaringiz o‘chmaydi — faqat daraja tavsiya qilinadi.")),
       h("button", { type: "button", class: "tile wide", onclick: () => go("#/ai") },
         h("span", { class: "tile-ic", "aria-hidden": "true" }, "🤖"),
         h("span", { class: "tile-title" }, "AI suhbatdosh"),
@@ -2020,6 +2024,224 @@
   }
 
   /* =====================================================================
+     🎯 Darajangizni bilib oling — short adaptive level check.
+     Shown once to a brand-new user (no saved progress, no level chosen). Retake: Yordam → «Darajani qayta aniqlash».
+     The result is saved inside the progress (S.placement = { level, suggested, date, how, scores }),
+     so it is part of KEY. It only sets the level; it never deletes progress.
+     ===================================================================== */
+  const PLACE_LEVELS = ["a1", "a2", "b1", "b2"]; // never above B2
+  const PLACE_PER_LEVEL = 4;
+  const PLACE_ABOUT = {
+    a1: "Boshidan boshlaymiz: salomlashish, raqamlar, do‘kon va transportdagi eng kerakli iboralar.",
+    a2: "Siz oddiy iboralarni tushunasiz. Endi ish, uy, shifokor va telefondagi kundalik suhbatlarni o‘rganamiz.",
+    b1: "Siz kundalik mavzularda gaplasha olasiz. Endi uzunroq suhbatlarni o‘rganamiz.",
+    b2: "Siz rus tilini yaxshi bilasiz. Endi tabiiy tezlikdagi nutq, rasmiy vaziyatlar va murakkab mavzularni o‘rganamiz."
+  };
+  /* New user = nothing saved yet (no progress, no level). Decided once at start,
+     so a user with progress never sees the check automatically. */
+  const firstRun = (() => {
+    try {
+      return localStorage.getItem(KEY) === null && localStorage.getItem(LEVEL_KEY) === null;
+    } catch (e) { return false; } // storage blocked: don't force the check (it could not be remembered)
+  })();
+  let placementPending = firstRun;
+
+  function localDate() {
+    const d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  /* Save the result and open the home screen at that level. */
+  function finishPlacement(levelId, how, extra) {
+    S.placement = Object.assign({ level: levelId, date: localDate(), how }, extra || {});
+    save();
+    setLevel(levelId);
+    placementPending = false;
+    document.body.classList.remove("placing");
+    toast("🎯 " + levelName(levelId) + " darajasi tanlandi");
+    redirect("#/");
+  }
+  /* Uzbek meaning without the woman's-form note (that note contains the Russian answer). */
+  function plainUz(uz) { return String(uz || "").replace(/\s*\(ayol aytsa:[^)]*\)/g, "").trim(); }
+  function placeUsable(it) { return it.ru && it.uz && !/\.\.\.|…/.test(it.ru) && it.ru.length <= 70 && it.ru.replace(/[^а-яё]/gi, "").length >= 3; }
+  function placePool(id) {
+    const L = R.levelById[id];
+    return L ? levelItems(L).filter(placeUsable) : [];
+  }
+  /* No Russian voice → listening questions show the Russian text instead. */
+  function noVoice() { const st = Speech.status(); return !st.tts || (st.loaded && !st.ru); }
+
+  /* One question: "listen" (Russian audio → 4 Uzbek meanings) or "sit" (Uzbek situation → 4 Russian answers). */
+  function placeQuestion(type, it, pool) {
+    const key = type === "listen" ? x => sn(plainUz(x.uz)) : x => sn(x.ru);
+    const sameKind = shuffle(pool.filter(x => x.kind === it.kind && x !== it));
+    const opts = shuffle([it].concat(pickOthers(it, sameKind.concat(shuffle(pool.slice())), key, 3)));
+    if (type === "listen") return { type, it, options: opts.map(x => ({ text: plainUz(x.uz), ok: x === it })) };
+    return { type, it, options: opts.map(x => ({ text: x.ru, sub: x.pr, ok: x === it, ru: true })) };
+  }
+
+  /* Title bar: no "Orqaga" on first launch (the user just opened the app). */
+  function placeHeader(title, back) {
+    return placementPending ? h("header", { class: "top" }, h("div", { class: "titles" }, h("h1", null, title)))
+      : header(title, back, ["Yordam"]);
+  }
+
+  function placementIntro() {
+    if (placementPending) document.body.classList.add("placing");
+    const choice = (icon, label, sub, fn) =>
+      h("button", { type: "button", class: "tile wide place-choice", onclick: fn },
+        h("span", { class: "tile-ic", "aria-hidden": "true" }, icon),
+        h("span", { class: "tile-title" }, label),
+        h("span", { class: "tile-sub" }, sub));
+    show(placeHeader("🎯 Darajangizni bilib oling", "#/help"),
+      h("p", { class: "place-lead" }, "Qayerdan boshlashni birga aniqlaymiz. Bu taxminan 3 daqiqa vaqt oladi."),
+      h("h2", { class: "place-q" }, "Rus tilini qanchalik bilasiz?"),
+      choice("🌱", "Umuman bilmayman", "A1 darajasidan boshlaymiz", () => finishPlacement("a1", "none")),
+      choice("🙂", "Ozgina bilaman", "Qisqa tekshiruv A1 dan boshlanadi", () => go("#/daraja/test/a1")),
+      choice("💪", "Yaxshi bilaman", "Qisqa tekshiruv A2 dan boshlanadi", () => go("#/daraja/test/a2")),
+      placementPending
+        ? h("button", { type: "button", class: "link-btn", onclick: () => finishPlacement("a1", "skip") }, "O‘tkazib yuborish")
+        : h("p", { class: "hint" }, "Natijalaringiz o‘chmaydi — tekshiruv faqat darajani tavsiya qiladi."));
+  }
+
+  /* Adaptive check: up to 4 questions per level. 3 right → next level; 2 wrong → stop at this level. */
+  function placementCheck(startId) {
+    if (placementPending) document.body.classList.add("placing");
+    const first = Math.max(0, PLACE_LEVELS.indexOf(startId));
+    let li = first;
+    const scores = {}; // level → { ok, asked }
+    const used = new Set();
+    let asked = 0;
+    let typeFlip = Math.random() < 0.5;
+
+    function nextQuestion() {
+      const id = PLACE_LEVELS[li];
+      const all = placePool(id);
+      const pool = all.filter(x => !used.has(x.id));
+      const phrases = pool.filter(x => x.kind === "p");
+      typeFlip = !typeFlip;
+      const type = typeFlip && phrases.length ? "sit" : "listen";
+      // Situation questions prefer phrases with a written situation (sit); levels without them use the meaning.
+      const withSit = phrases.filter(x => x.sit);
+      const cands = type === "sit" ? (withSit.length && Math.random() < 0.8 ? withSit : phrases) : pool;
+      if (!cands.length) return null;
+      const it = cands[Math.floor(Math.random() * cands.length)];
+      used.add(it.id);
+      const q = placeQuestion(type, it, all);
+      return q.options.length >= 2 ? q : null;
+    }
+
+    function finish() {
+      placementResult(PLACE_LEVELS[li], PLACE_LEVELS.slice(first, li + 1).map(id => ({ id, s: scores[id] || { ok: 0, asked: 0 } })), first);
+    }
+
+    function answer(ok) {
+      const id = PLACE_LEVELS[li];
+      const s = scores[id] = scores[id] || { ok: 0, asked: 0 };
+      s.asked++;
+      asked++;
+      if (ok) s.ok++;
+      if (s.asked - s.ok >= 2) return finish();           // 2 wrong: this is the level to learn
+      if (s.ok >= 3 || s.asked >= PLACE_PER_LEVEL) {       // passed this level
+        if (li >= PLACE_LEVELS.length - 1) return finish(); // B2 is the top
+        li++;
+      }
+      render();
+    }
+
+    function render() {
+      newView();
+      window.scrollTo(0, 0);
+      const q = nextQuestion();
+      if (!q) { // no usable content at this level: go on if the next level has some, otherwise stop
+        if (li < PLACE_LEVELS.length - 1 && placePool(PLACE_LEVELS[li + 1]).length) { li++; return render(); }
+        return finish();
+      }
+      const s = scores[PLACE_LEVELS[li]] || { asked: 0 };
+      // Expected number of questions: 3 per level (a 4th one only after a mistake), so the count stays honest.
+      const total = asked + (s.asked < 3 ? 3 - s.asked : 1) + 3 * (PLACE_LEVELS.length - 1 - li);
+      let answered = false;
+      const opts = q.options.concat([{ text: "🤷 Bilmayman", ok: false, dunno: true }]).map(o => {
+        const b = h("button", { type: "button", class: "opt" + (o.dunno ? " opt-dunno" : ""), lang: o.ru ? "ru" : null },
+          h("span", { class: "opt-main" }, o.text),
+          o.sub ? h("span", { class: "opt-sub" }, o.sub) : null);
+        b.addEventListener("click", () => {
+          if (answered) return;
+          answered = true;
+          b.classList.add("picked");
+          later(() => answer(o.ok), 350);
+        });
+        return b;
+      });
+      let body;
+      if (q.type === "listen" && !noVoice()) {
+        later(() => Speech.speak(q.it.ru), 350);
+        body = [
+          h("h2", { class: "qtitle" }, "🎧 Tinglang va ma’nosini tanlang"),
+          h("button", { type: "button", class: "bigsound", onclick: () => Speech.speak(q.it.ru) }, "🔊", h("span", null, "Yana tinglash")),
+          btn("🐢", "Sekin tinglash", () => Speech.speak(q.it.ru, { slow: true }))
+        ];
+      } else if (q.type === "listen") {
+        body = [
+          h("h2", { class: "qtitle" }, "📖 O‘qing va ma’nosini tanlang"),
+          h("div", { class: "ask-uz", lang: "ru" }, q.it.ru),
+          h("p", { class: "hint" }, "🔇 Ruscha ovoz topilmadi, shuning uchun matn ko‘rsatildi.")
+        ];
+      } else {
+        body = [
+          h("h2", { class: "qtitle" }, "🤔 Bu vaziyatda nima deysiz?"),
+          h("div", { class: "situation" }, q.it.sit ? "📍 " + q.it.sit : "📍 Siz shuni aytmoqchisiz: «" + plainUz(q.it.uz) + "»")
+        ];
+      }
+      show(placeHeader("🎯 Darajangizni bilib oling", "#/daraja"),
+        progressBar(Math.round((asked / total) * 100)),
+        h("p", { class: "count" }, (asked + 1) + " / " + total),
+        body,
+        h("div", { class: "options" }, opts),
+        h("p", { class: "hint" }, "Vaqt cheklanmagan. Bilmasangiz, «Bilmayman»ni bosing — taxmin qilish shart emas."));
+    }
+    render();
+  }
+
+  function placementResult(id, rows, first) {
+    newView();
+    window.scrollTo(0, 0);
+    const L = R.levelById[id];
+    const extra = { suggested: id, scores: {} };
+    rows.forEach(r => { extra.scores[r.id] = r.s.ok + "/" + r.s.asked; });
+    const listBox = h("div");
+    function chooseOther() {
+      listBox.textContent = "";
+      add(listBox, [
+        h("p", { class: "section-label" }, "Darajani tanlang"),
+        R.levels.filter(hasContent).map(x => h("button", { type: "button", class: "tile wide place-choice",
+          onclick: () => finishPlacement(x.id, "test", extra) },
+          h("span", { class: "tile-ic place-lvl", style: "background:" + x.color, "aria-hidden": "true" }, x.name),
+          h("span", { class: "tile-title" }, x.name + " — " + x.desc),
+          x.id === id ? h("span", { class: "tile-sub" }, "⭐ Sizga tavsiya etilgan") : null))
+      ]);
+      listBox.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    show(placeHeader("🎯 Natija", "#/daraja"),
+      h("div", { class: "done" },
+        h("div", { class: "big-ic", "aria-hidden": "true" }, "🎉"),
+        h("p", { class: "hint" }, "Sizga tavsiya etilgan daraja:"),
+        h("p", { class: "score", style: "color:" + L.color }, L.name),
+        h("p", null, h("strong", null, L.name + " — " + L.desc + ": "), PLACE_ABOUT[id] || "")),
+      h("ul", { class: "status-list" },
+        first > 0 ? h("li", null, "A1 — tekshirilmadi («Yaxshi bilaman»)") : null,
+        rows.map(r => h("li", null, levelName(r.id) + ": " + r.s.ok + " / " + r.s.asked + " to‘g‘ri" + (r.s.ok >= 3 ? " ✅" : "")))),
+      btn("✅", "Shu darajadan boshlash", () => finishPlacement(id, "test", extra), "primary big"),
+      btn("📋", "Boshqa darajani tanlash", chooseOther, "big"),
+      listBox,
+      placementPending ? null : h("p", { class: "hint" }, "Natijalaringiz o‘chmaydi. Darajani bosh sahifada xohlagan vaqt almashtirishingiz mumkin."));
+  }
+
+  function placementRoute(p) {
+    if (p[1] === "test") return placementCheck(p[2]);
+    return placementIntro();
+  }
+
+  /* =====================================================================
      Router
      ===================================================================== */
   let ready = false;
@@ -2029,7 +2251,9 @@
     window.scrollTo(0, 0);
     const p = (location.hash || "").replace(/^#\/?/, "").split("/").filter(Boolean).map(decodeURIComponent);
     updateBottomNav(p[0] || "home");
+    if (p[0] !== "daraja") document.body.classList.remove("placing");
     switch (p[0]) {
+      case "daraja": return placementRoute(p);
       case "topics": return topicsScreen();
       case "group": return groupScreen(p[1]);
       case "jobs": return jobsScreen();
@@ -2054,7 +2278,7 @@
       case "lesson": return lessonRoute();
       case "ai": return aiScreen();
       case "help": return helpScreen();
-      default: return home();
+      default: return placementPending ? redirect("#/daraja") : home();
     }
   }
 
